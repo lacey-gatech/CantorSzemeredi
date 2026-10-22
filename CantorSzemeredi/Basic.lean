@@ -39,4 +39,76 @@ def uniformFilter : Filter (ℕ × ℕ) :=
 noncomputable def uniformLiminf (a : ℕ → ℝ) : ℝ :=
   Filter.liminf (fun p : ℕ × ℕ => uniformAvg a p.1 p.2) uniformFilter
 
+/-- The sets `{(M, N) | L ≤ N - M}` are antitone in `L`, so they form a filter basis for
+`uniformFilter`. -/
+theorem uniformFilter_hasBasis :
+    uniformFilter.HasBasis (fun _ : ℕ => True) (fun L => {p : ℕ × ℕ | L ≤ p.2 - p.1}) := by
+  refine Filter.hasBasis_iInf_principal ?_ |>.to_hasBasis ?_ ?_
+  · intro L₁ L₂
+    refine ⟨max L₁ L₂, fun p hp => ?_, fun p hp => ?_⟩ <;> simp only [Set.mem_ofPred_eq] at hp ⊢ <;>
+      omega
+  · exact fun L _ => ⟨L, trivial, le_rfl⟩
+  · exact fun L _ => ⟨L, trivial, le_rfl⟩
+
+/-- Membership in `uniformFilter`: a set belongs to it iff it contains all pairs `(M, N)`
+whose length `N - M` is at least some threshold. -/
+theorem mem_uniformFilter_iff {s : Set (ℕ × ℕ)} :
+    s ∈ uniformFilter ↔ ∃ L : ℕ, ∀ M N : ℕ, L ≤ N - M → (M, N) ∈ s := by
+  rw [uniformFilter_hasBasis.mem_iff]
+  constructor
+  · rintro ⟨L, -, hL⟩
+    exact ⟨L, fun M N h => hL h⟩
+  · rintro ⟨L, hL⟩
+    exact ⟨L, trivial, fun p hp => hL p.1 p.2 hp⟩
+
+instance uniformFilter_neBot : uniformFilter.NeBot := by
+  refine uniformFilter_hasBasis.neBot_iff.2 ?_
+  intro L _
+  exact ⟨(0, L), by simp⟩
+
+/-- The uniform average of a non-negative sequence is non-negative. -/
+theorem uniformAvg_nonneg {a : ℕ → ℝ} (ha : ∀ n, 0 ≤ a n) (M N : ℕ) : 0 ≤ uniformAvg a M N := by
+  apply div_nonneg _ (by positivity)
+  exact Finset.sum_nonneg fun n _ => ha n
+
+open scoped Classical in
+/-- The filter on pairs `(M, N)` of *integers* with `N - M → ∞`; the `ℤ`-valued analogue of
+`uniformFilter`, used for upper Banach density. -/
+def uniformFilterInt : Filter (ℤ × ℤ) :=
+  ⨅ L : ℕ, Filter.principal {p : ℤ × ℤ | (L : ℤ) ≤ p.2 - p.1}
+
+open scoped Classical in
+/-- The upper Banach density of `A ⊆ ℤ`:
+`limsup_{N - M → ∞} |A ∩ [M, N)| / (N - M)`.  See `def:banach-density`. -/
+noncomputable def upperBanachDensity (A : Set ℤ) : ℝ :=
+  Filter.limsup
+    (fun p : ℤ × ℤ => (((Finset.Ico p.1 p.2).filter (· ∈ A)).card : ℝ) / (p.2 - p.1 : ℤ))
+    uniformFilterInt
+
+/-- **Lemma `lem:pos-liminf-syndetic`.**  If `a` is non-negative and its uniform `liminf` of
+averages is positive, then `{n | 0 < a n}` is syndetic. -/
+theorem syndetic_of_uniformLiminf_pos {a : ℕ → ℝ} (ha : ∀ n, 0 ≤ a n)
+    (hpos : 0 < uniformLiminf a) : Syndetic {n | 0 < a n} := by
+  have hbdd : Filter.IsBoundedUnder (· ≥ ·) uniformFilter
+      (fun p : ℕ × ℕ => uniformAvg a p.1 p.2) :=
+    ⟨0, Filter.eventually_map.2 (by filter_upwards with p using uniformAvg_nonneg ha p.1 p.2)⟩
+  have hev : ∀ᶠ p in uniformFilter, 0 < uniformAvg a p.1 p.2 :=
+    Filter.eventually_lt_of_lt_liminf hpos hbdd
+  obtain ⟨L, hL⟩ := mem_uniformFilter_iff.1 hev
+  refine ⟨L, fun n => ?_⟩
+  have hlen : L ≤ (n + L + 1) - n := by omega
+  have hsum : 0 < uniformAvg a n (n + L + 1) := hL _ _ hlen
+  have : 0 < ∑ k ∈ Finset.Ico n (n + L + 1), a k := by
+    by_contra h
+    push Not at h
+    have : ∑ k ∈ Finset.Ico n (n + L + 1), a k = 0 :=
+      le_antisymm h (Finset.sum_nonneg fun k _ => ha k)
+    rw [uniformAvg, this, zero_div] at hsum
+    exact lt_irrefl _ hsum
+  obtain ⟨k, hk, hk0⟩ := Finset.exists_lt_of_sum_lt
+    (show ∑ _k ∈ Finset.Ico n (n + L + 1), (0 : ℝ) < ∑ k ∈ Finset.Ico n (n + L + 1), a k by
+      simpa using this)
+  rw [Finset.mem_Ico] at hk
+  exact ⟨k, hk0, hk.1, by omega⟩
+
 end CantorSzemeredi

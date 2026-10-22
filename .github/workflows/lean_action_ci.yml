@@ -13,6 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Mathlib's oleans plus the cache archive leave very little room on the
+      # default runner image; drop the preinstalled toolchains we do not use.
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
+          df -h /
+
       - uses: leanprover/lean-action@v1
         with:
           use-mathlib-cache: true
