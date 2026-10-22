@@ -1,0 +1,193 @@
+\section{Weak Mixing Extensions} \label{sec:wm}
+
+We show that the CSZ property lifts through weakly mixing extensions.  Weakly mixing systems are the case of the trivial factor.
+Throughout, let $\mathcal C = \mathcal C_{b,D}=\{0=k_0<k_1<\cdots\}$ be a classical Cantor set, with $0\in D$, and set $\delta = \lvert D\rvert$ as in \eqref{e:delta}.
+All averages are uniform in the index, as in the definition \eqref{e:CSZdef} of the CSZ property.
+
+The results are stated for an increasing tuple of positive integer exponents $0<s_1 < \cdots < s_t$, rather than for the exponents $1,2 , \ldots, t$.
+This costs nothing, and the induction requires it: the reduction to mean zero factors passes to a \emph{subset} of the exponents,
+and the van der Corput step replaces the exponents $s_j$ by the differences $s_j - s_1$, which are again positive and increasing.
+The generality also absorbs the dilation parameter $i$ of \eqref{e:CSZdef}, which is the case $s_j = j b ^{i}$.
+
+Let $\mathcal D \subset \mathcal E$ be $T$-invariant sub-$\sigma$-algebras of $\mathcal A$.  We will use the hypothesis
+\begin{equation} \label{e:WM}
+\textup{every $f \in L ^{\infty}(\mathcal E)$ with $\mathbb E(f\mid \mathcal D) = 0$ is conditionally weakly mixing for $T$.}
+\end{equation}
+If $\mathcal E$ is a weakly mixing extension of $\mathcal D$, then \eqref{e:WM} holds, by definition;
+and if \eqref{e:WM} holds for $T$, then it holds for every power $T ^{k}$, $k \geq 1$, by Lemma \ref{l:powers}(2).
+
+\begin{lemma} \label{l:wmExtension}
+Let $\mathcal D \subset \mathcal E$ be $T$-invariant sub-$\sigma$-algebras satisfying \eqref{e:WM},
+let $0<s_1 < \cdots < s_t$ be integers, and let $f_1 ,\ldots, f_t\in L ^{\infty}(\mathcal E)$.   Then
+\begin{equation} \label{e:wmConclusion}
+  \lim_{N-M\to\infty}
+  \biggl \lVert  \Expectation_{M\leq n<N}  \Bigl[ \prod _{j=1}^t
+  T^{s_jk_n}f_j
+  -  \prod _{j=1}^t
+  T^{s_jk_n}\mathbb{E} (f_j \mid \mathcal D) \Bigr] \biggr\rVert _{L^2(X)} =0 .
+  \end{equation}
+\end{lemma}
+
+Since $\lVert\, \lVert g\rVert _{\mathcal E\mid \mathcal D}\rVert _{L^2(\mathcal D)} = \lVert g\rVert _{L^2(X)}$, this is convergence in the conditional norm, in $L^2(\mathcal D)$.
+The Lemma proves part (W) of Lemma \ref{l:Extensions}: if $\mathcal D$ is CSZ and $\mathcal E$ is a weakly mixing extension of it, then $\mathcal E$ is CSZ.
+Indeed \eqref{e:WM} holds, since a weakly mixing extension satisfies it for every $f$ in the Hilbert module, which contains $L^\infty(\mathcal E)$.
+Indeed, take $s_j = jb ^{i}$, take each $f_j = \mathbf 1_A$ with $A \in \mathcal E$ and $m(A)>0$, and set $g \coloneqq \mathbb E (\mathbf 1_A \mid \mathcal D)$.
+Pairing \eqref{e:wmConclusion} against $\mathbf 1_A$, and using that $\prod_j T ^{jb ^{i}k_n}g$ is $\mathcal D$ measurable, so that its integral against $\mathbf 1_A$ equals its integral against $g$,
+\begin{equation}
+\Expectation_{M\leq n<N} \int _X \prod _{s=0}^t T ^{sb ^{i}k_n}\mathbf 1_A \;dm
+= \Expectation_{M\leq n<N} \int _X \prod _{s=0}^t T ^{sb ^{i}k_n} g \;dm + o(1) ,
+\end{equation}
+as $N-M\to\infty$.  The liminf of the right side is positive because $\mathcal D$ is CSZ, in the form recorded after \eqref{e:CSZdef} for non-negative functions;
+note that $g \geq 0$ and $\int g \;dm = m(A)>0$.
+
+\begin{corollary} \label{t:wm}  Let  $(X,\mathcal A, m,T)$ be a weakly mixing system, let $0<s_1 < \cdots < s_t$ be integers,
+ and let  $f_1 , \ldots, f_t \in L^\infty (X)$.  Then
+ \begin{equation}
+  \lim_{N-M\to\infty}  \Expectation_{M\leq n<N}  \prod _{j=1}^t
+  T^{s_j k_n}f_j =\prod _{j=1}^t \int f_j \;dm,
+  \end{equation}
+  the limit holding in $L^2( X)$ norm.
+\end{corollary}
+
+\begin{proof}
+Apply Lemma \ref{l:wmExtension} with $\mathcal D$ the trivial $\sigma$-algebra and $\mathcal E = \mathcal A$.
+Then $\mathbb E(f \mid \mathcal D) = \int f \;dm$ is constant, the conditional inner product is the inner product of $L^2(X)$,
+and \eqref{e:WM} is the case $g=f$ of the definition \eqref{wm-functions} of weak mixing.
+\end{proof}
+
+So a weakly mixing system is CSZ, which is (W) for the trivial factor: taking $s_j = jb ^{i}$ and $f_1 = \cdots = f_t = \mathbf 1_A$,
+and pairing against $\mathbf 1_A$, the averages in \eqref{e:CSZdef} converge to $m(A) ^{t+1}>0$.
+
+\begin{proof}[Proof of Lemma \ref{l:wmExtension}]
+
+\noindent\textbf{Reduction.}
+Rescaling, we may assume $\lvert f_j\rvert \leq 1$ for all $j$.  By the telescoping identity
+\begin{multline}
+\prod _{j=1}^t T^{s_jk_n}f_j - \prod _{j=1}^t T^{s_jk_n}\mathbb{E} (f_j \mid \mathcal D) \\
+= \sum _{j_0=1}^t \prod _{j<j_0} T ^{s_jk_n} \mathbb E(f_j\mid \mathcal D) \cdot T ^{s_{j_0}k_n} \bigl( f_{j_0} - \mathbb E(f_{j_0}\mid \mathcal D)\bigr) \cdot \prod _{j>j_0} T ^{s_jk_n}f_j ,
+\end{multline}
+each term on the right is a product of the same form, with bounded functions, in which the $j_0$-th function has conditional expectation zero.
+After rescaling once more, it therefore suffices to prove that, if $\lvert f_j\rvert \leq 1$ for all $j$ and $\mathbb E (f_{j_0}\mid \mathcal D)=0$ for some $j_0$, then 
+\begin{equation} \label{e:star}
+\lim_{N-M\to\infty} \Bigl\lVert \Expectation_{M\leq n<N} \prod_{j=1}^t T ^{s_jk_n}f_j \Bigr\rVert _{L^2(X)} = 0 . 
+\end{equation}
+We prove the Lemma by induction on $t$, simultaneously for all invertible measure preserving transformations of $(X,\mathcal A,m)$ for which $\mathcal D$ and $\mathcal E$ are invariant and \eqref{e:WM} holds,
+and all increasing tuples of positive exponents.  At each $t$ we prove \eqref{e:star}, which gives the Lemma for that $t$ by the reduction just made.
+
+\medskip
+\noindent\textbf{The case $t=1$.}
+Here $f = f_1$ has $\mathbb E(f\mid \mathcal D)=0$, so it is conditionally weakly mixing by \eqref{e:WM}, and its spectral measure $\sigma _f$ has no atoms by Lemma \ref{l:atomless}(i).
+By \eqref{e:Uniform} and the uniform spectral Lemma \ref{l:uniformSpectral},
+$\lVert \Expectation_{M\leq n<N} T ^{s_1k_n}f\rVert _2 ^2 \leq \int \Phi _{N-M}(s_1 \alpha )\;d \sigma _f ( \alpha ) \to 0$.
+
+\medskip
+\noindent\textbf{The inductive step: choice of parameters.}
+Let $t \geq 2$, and assume the Lemma for all tuples of fewer than $t$ exponents.
+Fix $f_1 , \ldots, f_t$ with $\lvert f_j\rvert \leq 1$ and $\mathbb E(f_{j_0}\mid \mathcal D) = 0$, and fix $0< \epsilon <1$.
+Write $f \coloneqq f_{j_0}$ and $s \coloneqq s_{j_0}$, and for $m \in \mathbb Z$ set
+\begin{equation} \label{e:phipsi}
+\phi (m) \coloneqq \bigl\lVert \langle T ^{m}f, f\rangle _{\mathcal E\mid \mathcal D}\bigr\rVert _{L ^{1}(\mathcal D)},
+\qquad
+\psi (m) \coloneqq \bigl\lVert \langle T ^{m}f, f\rangle _{\mathcal E\mid \mathcal D}\bigr\rVert _{L ^{2}(\mathcal D)} ^2 .
+\end{equation}
+Both are non-negative, and $\phi (m) ^2 \leq \psi (m) \leq 1$.
+By Lemma \ref{l:atomless}(ii) and \eqref{e:spectral}, $\psi (m) = \int e(m \alpha )\;d \sigma ( \alpha )$ for a finite positive measure $\sigma = \sigma _G$ without atoms.
+By Lemma \ref{l:uniformSpectral}, we may fix $H \geq 1/ \epsilon$ with
+\begin{equation} \label{e:Hchoice}
+\int_{\mathbb T} \Phi _H (s \alpha ) \;d \sigma ( \alpha ) < \epsilon .
+\end{equation}
+Then fix $\ell$ with $\delta ^{\ell} > H/\epsilon$.
+Put $u_n \coloneqq \prod _{j=1}^t T ^{s_jk_n}f_j$, so that $\lVert u_n\rVert _2 \leq 1$.
+
+\medskip
+\noindent\textbf{Step 1: one shift at a time.}
+We claim that there is an $L_0$ such that, for every $1 \leq h \leq H$ and every interval $[M',N')$ of length at least $L_0$,
+\begin{equation} \label{e:perShift}
+\Bigl\lvert \Expectation_{M'\leq n<N'} \langle u_{n+h}, u_n\rangle \Bigr\rvert
+\leq \Expectation_{M'\leq n<N'} \phi \bigl( s(k_{n+h}-k_n)\bigr) + 3 \epsilon .
+\end{equation}
+
+Fix $h$.  For $0 \leq c < \delta ^{\ell}-h$, let $P_c$ and $\Delta _c$ be as in Lemma \ref{l:differences}, so that $k_{n+h}-k_n = \Delta _c$ for $n \in P_c$.
+For such $n$, writing $\Delta = \Delta _c$, we have $T ^{s_jk_{n+h}} = T ^{s_jk_n}T ^{s_j\Delta}$, and so
+\begin{equation} \label{e:2inner}
+\langle u_{n+h}, u_n\rangle
+= \int_X \prod _{j=1}^t T ^{s_jk_n} F_j \;dm
+= \int_X F_1 \cdot \prod _{j=2}^t T ^{(s_j-s_1)k_n} F_j \;dm ,
+\qquad F_j \coloneqq \overline{f_j} \cdot T ^{s_j\Delta _c}f_j ,
+\end{equation}
+the second equality by applying $T ^{-s_1k_n}$, which preserves $m$.  Note that $\lvert F_j\rvert \leq 1$.
+Write $n = \delta ^{\ell}a + c$.  By Lemma \ref{l:Diff}(ii), $k_n = b ^{\ell}k_a + k_c$, and therefore
+\begin{equation} \label{e:reindex}
+\prod _{j=2}^t T ^{(s_j-s_1)k_n} F_j
+= \prod _{j=2}^t \bigl( T ^{b ^{\ell}}\bigr) ^{(s_j-s_1)k_a} \bigl( T ^{(s_j-s_1)k_c} F_j \bigr) .
+\end{equation}
+The transformation $T ^{b ^{\ell}}$ satisfies \eqref{e:WM}, and the $t-1$ exponents $s_j - s_1$, $2 \leq j \leq t$, are positive and increasing.
+So the induction hypothesis applies to the right side of \eqref{e:reindex}.
+Since $\mathcal D$ is $T$-invariant, $\mathbb E( T ^{(s_j-s_1)k_c} F_j \mid \mathcal D) = T ^{(s_j-s_1)k_c}\mathbb E(F_j \mid \mathcal D)$; undoing \eqref{e:reindex},
+and noting that as $n$ runs over $P_c \cap [M',N')$ the index $a$ runs over an interval of length at least $(N'-M')/ \delta ^{\ell} - 1$, we obtain
+\begin{equation} \label{e:IH}
+\lim_{N'-M'\to\infty}
+\Bigl\lVert \Expectation_{n \in P_c\cap[M',N')} \Bigl[ \prod _{j=2}^t T ^{(s_j-s_1)k_n} F_j - \prod _{j=2}^t T ^{(s_j-s_1)k_n} \mathbb E(F_j\mid \mathcal D) \Bigr] \Bigr\rVert _{L^2(X)} = 0 .
+\end{equation}
+The shifts $T ^{(s_j-s_1)k_n}$ remain on the conditional expectations in \eqref{e:IH}: these are $\mathcal D$-measurable functions, not constants.
+There are finitely many pairs $(h,c)$, so we may fix $L_0 \geq \delta ^{\ell}/ \epsilon$ such that the norm in \eqref{e:IH} is less than $\epsilon$ for all of them,
+whenever $N'-M' \geq L_0$.
+
+Pair \eqref{e:IH} with $F_1$, which is bounded by $1$, and use that the second product in \eqref{e:IH} is $\mathcal D$-measurable,
+so that its integral against $F_1$ equals its integral against $\mathbb E(F_1\mid \mathcal D)$.  By \eqref{e:2inner},
+\begin{equation}
+\Bigl\lvert \Expectation_{n \in P_c\cap[M',N')} \langle u_{n+h}, u_n\rangle \Bigr\rvert
+\leq \epsilon + \Expectation_{n \in P_c\cap[M',N')} \Bigl\lvert \int_X \prod _{j=1}^t T ^{(s_j-s_1)k_n} \mathbb E(F_j \mid \mathcal D) \;dm \Bigr\rvert .
+\end{equation}
+All $t$ factors in the last integral are bounded by $1$ in modulus.  Bounding all but the $j_0$-th by $1$, and using that $T$ preserves $m$,
+the integral is at most $\lVert \mathbb E(F_{j_0}\mid \mathcal D)\rVert _{L ^{1}}$.
+As $\mathbb E(F_{j_0}\mid \mathcal D) = \mathbb E( T ^{s\Delta _c}f \cdot \overline f \mid \mathcal D) = \langle T ^{s\Delta _c}f, f\rangle _{\mathcal E\mid \mathcal D}$,
+this is $\phi (s\Delta _c) = \phi \bigl(s(k_{n+h}-k_n)\bigr)$ for every $n \in P_c$.  Hence
+\begin{equation} \label{e:perClass}
+\Bigl\lvert \Expectation_{n \in P_c\cap[M',N')} \langle u_{n+h}, u_n\rangle \Bigr\rvert
+\leq \epsilon + \Expectation_{n \in P_c\cap[M',N')} \phi \bigl(s(k_{n+h}-k_n)\bigr) .
+\end{equation}
+
+Now write the average over $[M',N')$ as the weighted sum of the averages over the sets $P_c \cap [M',N')$, with weights $\lvert P_c\cap[M',N')\rvert/(N'-M')$,
+plus the contribution of the remaining indices.  By Lemma \ref{l:differences}(ii), there are at most
+$h \delta ^{-\ell}(N'-M') + \delta ^{\ell} \leq \epsilon (N'-M') + \delta ^{\ell}$ remaining indices, and for them $\lvert \langle u_{n+h},u_n\rangle\rvert \leq 1$.
+The triangle inequality, \eqref{e:perClass}, and the non-negativity of $\phi$, which lets us extend its average to all of $[M',N')$, give
+\begin{equation}
+\Bigl\lvert \Expectation_{M'\leq n<N'} \langle u_{n+h}, u_n\rangle \Bigr\rvert
+\leq \epsilon + \Expectation_{M'\leq n<N'} \phi \bigl(s(k_{n+h}-k_n)\bigr) + \epsilon + \frac{\delta ^{\ell}}{N'-M'} ,
+\end{equation}
+which is \eqref{e:perShift}, as $N'-M' \geq L_0 \geq \delta ^{\ell}/\epsilon$.  This proves the claim.
+
+\medskip
+\noindent\textbf{Step 2: averaging over the shifts.}
+Let $N - M \geq L_0 + 2H$.  For each $1\leq h \leq H$ apply \eqref{e:perShift} to the interval $[M, N-h)$, whose length is at least $L_0$.  Averaging over $h$,
+\begin{equation} \label{e:shiftAverage}
+\Expectation_{1\leq h\leq H} \Bigl\lvert \Expectation_{M\leq n<N-h} \langle u_{n+h}, u_n\rangle \Bigr\rvert
+\leq \Expectation_{1\leq h\leq H} \Expectation_{M\leq n<N-h} \phi \bigl(s(k_{n+h}-k_n)\bigr) + 3 \epsilon .
+\end{equation}
+The left side is exactly the quantity in the van der Corput inequality \eqref{vdc}: the absolute value is inside the average over $h$.
+This is why each shift was treated separately in Step 1, and the shifts are averaged only now, after the correlation has been bounded by the non-negative function $\phi$.
+
+By the Cauchy--Schwarz inequality and $\phi ^2 \leq \psi$, the double average on the right of \eqref{e:shiftAverage} is at most
+$\bigl( \Expectation_{h} \Expectation_{M\leq n<N-h} \psi (s(k_{n+h}-k_n)) \bigr) ^{1/2}$.
+Since $\psi \geq 0$ and $N-M \geq 2H$, enlarging each window $[M,N-h)$ to $[M,N)$ costs at most a factor $(N-M)/(N-M-H) \leq 2$.
+Then, by the representation of $\psi$ in terms of $\sigma$, and since the left side below is real and non-negative, and so equal to its modulus, 
+\begin{align}
+\Expectation_{1\leq h\leq H} \Expectation_{M\leq n<N} \psi \bigl(s(k_{n+h}-k_n)\bigr)
+&= \Bigl\lvert \int_{\mathbb T} \Expectation_{M\leq n<N} \Bigl[ e(-s\alpha k_n) \Expectation_{1\leq h\leq H} e(s \alpha k_{n+h}) \Bigr] d \sigma ( \alpha ) \Bigr\rvert \\
+&\leq \int_{\mathbb T} \Expectation_{M\leq n<N} \Bigl\lvert \Expectation_{1\leq h\leq H} e(s \alpha k_{n+h}) \Bigr\rvert \; d \sigma ( \alpha ) \\
+&\leq \int_{\mathbb T} \Phi _H(s \alpha ) \;d \sigma ( \alpha ) < \epsilon .
+\end{align}
+The first inequality takes the modulus inside the integral and the average over $n$, which is the direction the triangle inequality allows; 
+the absolute value of the average over $h$ is kept intact.  For the second, note that for each fixed $n$ the average over $h$ is an average of $e(s\alpha k_u)$ 
+over the interval of indices $u \in [n+1, n+H]$, of length $H$, so that its modulus is at most $\Phi _H(s \alpha )$, uniformly in $n$.  The last step is \eqref{e:Hchoice}.
+Combining, the left side of \eqref{e:shiftAverage} is at most $\sqrt{2 \epsilon } + 3 \epsilon$.
+
+\medskip
+\noindent\textbf{Step 3: conclusion.}
+By the van der Corput inequality, Lemma \ref{vdC}, and $1/H \leq \epsilon$, for $N - M \geq L_0 + 2H$ we have
+\begin{equation}
+\Bigl\lVert \Expectation_{M\leq n<N} u_n \Bigr\rVert _2 ^2 \leq 4 \bigl( \sqrt{2 \epsilon } + 3 \epsilon \bigr) + 2 \epsilon \leq 20 \sqrt \epsilon .
+\end{equation}
+As $\epsilon$ was arbitrary, this proves \eqref{e:star} for $t$, and so completes the induction.
+\end{proof}

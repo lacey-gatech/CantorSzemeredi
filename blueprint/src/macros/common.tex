@@ -1,0 +1,43 @@
+% Macros shared by the web and print versions of the blueprint.
+% Keep this file free of anything plasTeX cannot parse.
+
+
+% Theorem-like environments that appear in the dependency graph.
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\NNz}{\mathbb{N}_0}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\CC}{\mathbb{C}}
+\newcommand{\TT}{\mathbb{T}}
+\newcommand{\Cantor}{\mathcal{C}}
+\newcommand{\Abb}{\mathcal{A}}
+\newcommand{\Dbb}{\mathcal{D}}
+\newcommand{\Ebb}{\mathcal{E}}
+\newcommand{\Gset}{\mathsf{G}}
+\newcommand{\dstar}{d^{\ast}}
+\newcommand{\one}{\mathbf{1}}
+\newcommand{\Exp}{\mathbb{E}}
+\newcommand{\eee}{\mathrm{e}}
+
+% Uniform average over an interval of indices.
+\newcommand{\avg}[1]{\mathop{\mathbb{E}}_{#1}}
+\newcommand{\unifavg}{\avg{M \leq n < N}}
+\newcommand{\uniflim}{\lim_{N-M \to \infty}}
+\newcommand{\unifliminf}{\liminf_{N-M \to \infty}}
+
+% Conditional inner product / norm of a Hilbert module.
+\newcommand{\cip}[2]{\langle #1, #2 \rangle_{\Ebb \mid \Dbb}}
+\newcommand{\cnorm}[1]{\lVert #1 \rVert_{\Ebb \mid \Dbb}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\abs}[1]{\lvert #1 \rvert}

@@ -1,0 +1,145 @@
+\documentclass[12pt]{amsart}
+\usepackage{amsmath,amsthm,amscd,amsfonts,amssymb,graphicx,color,mathabx,enumitem,mathtools,comment,amsrefs,tikz}
+\usepackage[normalem]{ulem}
+
+
+
+\setcounter{tocdepth}{3} %TOC indentation
+    \makeatletter
+    \def\l@subsection{\@tocline{2}{0pt}{2.9pc}{5pc}{}}
+    \def\l@subsubsection{\@tocline{2}{0pt}{5pc}{7.5pc}{}}
+    \makeatother
+\usepackage[margin=2.8cm]{geometry}
+\renewcommand{\baselinestretch}{1.15}
+\usepackage{mathabx}
+\usepackage[bookmarksnumbered, colorlinks, plainpages]{hyperref}
+    \hypersetup{colorlinks=true, linkcolor=blue, citecolor=magenta, filecolor=magenta, urlcolor=cyan}
+\allowdisplaybreaks
+    \mathtoolsset{showonlyrefs,showmanualtags} 
+%% Cleveref has to be loaded after hyperref. 
+
+
+\theoremstyle{plain} % definition 
+\newtheorem{lemma}[equation]{Lemma} 
+\newtheorem{proposition}[equation]{Proposition} 
+\newtheorem{theorem}[equation]{Theorem} 
+\newtheorem{corollary}[equation]{Corollary} 
+\newtheorem{conjecture}[equation]{Conjecture}
+%\newtheorem{question}[equation]{Question}
+\newtheorem{priorResults}{Theorem} 
+\renewcommand{\thepriorResults}{\Alph{priorResults}} 
+
+
+\theoremstyle{definition}
+\newtheorem{definition}[equation]{Definition} 
+% \newtheorem{Problem}[equation]{Problem} 
+% \newtheorem{Example}[equation]{Problem} 
+
+\theoremstyle{remark}
+\newtheorem{remark}[equation]{Remark}
+%\newtheorem{Note}[equation]{Note}
+%\newtheorem{Notation}[equation]{Notation}
+
+\newtheorem*{ack}{Acknowledgment}
+%\newtheorem{Case}[equation]{Case}
+%\newtheorem{Conclusion}[equation]{Conclusion}
+
+
+
+
+\numberwithin{equation}{section}
+\def\theequation{\thesection.\arabic{equation}}
+
+
+
+
+
+
+%%%% Expectation 
+\usepackage{scalerel} 
+\DeclareMathOperator*{\Expectation}{\scalerel*{\mathbb{E}}{\textstyle\sum}}
+   
+
+
+
+\usepackage{amsrefs} 
+\begin{document}
+\title[Cantor Szemer\'edi Theorem]{Szemer\'edi's Theorem Along Cantor Sets of Integers}
+
+\author[Burgin]{Alex Burgin} 
+    \address{School of Mathematics, Georgia Institute of Technology, Atlanta GA 30332, USA}
+    \email{alexander.burgin@gatech.edu}
+    \thanks{Research of AB supported in part by the Department of Education Graduate Assistance in Areas of National Need program at the Georgia Institute of Technology (Award \# P200A240169)}
+
+
+\author[Fragkos]{Anastasios Fragkos}
+\address{ School of Mathematics, Georgia Institute of Technology, Atlanta GA 30332, USA}
+    \email {anastasiosfragkos@gatech.edu}
+
+
+
+\author[Lacey]{Michael T. Lacey} 
+    \address{ School of Mathematics, Georgia Institute of Technology, Atlanta GA 30332, USA}
+    \email {lacey@math.gatech.edu}
+    \thanks{Research of MTL and AB supported in part by grant  from the US National Science Foundation, DMS-2247254.}
+
+ \author[Mena]{Dario Mena}
+    \address{Centro de Investigaci\'{o}n en Matem\'{a}tica Pura y Aplicada \\ Escuela de Matem\'{a}tica, Universidad de Costa Rica}
+    \email{dario.menaarias@ucr.ac.cr}
+    \thanks{Research of DM partially supported by grant C1012 from Universidad de Costa Rica}
+
+\author[Reguera]{Maria Carmen Reguera} \address{Universidad de M\'alaga}
+    \email{m.reguera@uma.es}
+    \thanks{Research of MCR supported by the Spanish Ministry of Science and Innovation through the projects RYC2020-030121-IAEI/10.13039/501100011033/ and PID2022-136619NB-I00 funded by MCIN/AEI/10.13039/501100011033/FEDER, UE.}
+\begin{abstract}
+    Let $\mathcal C= \{0=k_0<k_1<k_2 < \cdots\}$ be a Cantor set of integers, that is, the set of integers all of whose base $b$ digits lie in a fixed digit set $D$ of at least two digits, and suppose that $0\in D$.
+We show that for every invertible measure preserving system $(X, \mathcal A , m ,T)$, every $A \in \mathcal A$ with $m(A)>0$, and every integer $\ell \geq 1$,
+\begin{equation}
+\liminf_{N-M \to \infty } \Expectation_{M\leq n<N}  m(A\cap T^{-k_n} A \cap \cdots
+        \cap T^{-\ell k_n} A )>0.
+\end{equation}
+The averages above are uniform in the index $n$, and so the set of indices $n$ for which
+$m(A\cap T^{-k_n} A \cap \cdots \cap T^{-\ell k_n} A )>0$ is syndetic.
+By the Furstenberg correspondence principle, it follows that for every set of integers $A$ of positive upper Banach density
+there is a syndetic set $B$ of indices such that, for each $n \in B$, the set of $a$ with
+$a, a+k_n, \ldots, a+ \ell k_n \in A$ again has positive upper Banach density.
+
+A Cantor set contains an IP-set, so the existence of such progressions, and the positivity of the density above for a single index,
+already follow from the IP Szemer\'edi theorem of Furstenberg and Katznelson, and from the work of Kra and Shalom.
+The point of this paper is instead the frequency with which the step sizes $k_n$ may be found,
+measured in the natural enumeration of the Cantor set itself.
+\end{abstract}
+
+
+\maketitle 
+
+
+
+
+\tableofcontents 
+
+\input{Intro}
+\input{Prelim}
+
+\input{weakMixing}
+
+\input{vanDerWaerden}
+
+\input{compact}
+ 
+
+\bibliography{bibliography}
+
+
+
+% section quantitative_bound (end)
+
+
+ 
+
+\end{document}
+
+
+
+
+    

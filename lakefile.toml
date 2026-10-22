@@ -1,0 +1,24 @@
+name = "CantorSzemeredi"
+version = "0.1.0"
+keywords = ["math"]
+defaultTargets = ["CantorSzemeredi"]
+
+[leanOptions]
+pp.unicode.fun = true # pretty-prints `fun a ↦ b`
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+maxSynthPendingDepth = 3
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.35.0"
+
+[[lean_lib]]
+name = "CantorSzemeredi"
+
+# Used by `leanblueprint checkdecls` to verify that every declaration named in a
+# `\lean{...}` macro of the blueprint actually exists in this project.
+[[require]]
+name = "checkdecls"
+git = "https://github.com/PatrickMassot/checkdecls.git"

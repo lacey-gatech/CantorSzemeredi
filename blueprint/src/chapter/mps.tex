@@ -1,0 +1,249 @@
+\label{chap:mps}
+
+\emph{Standing assumption.}  Unless stated otherwise, $(X,\Abb,m,T)$ is an invertible measure
+preserving system in which $X$ is a compact metric space and $\Abb$ is its Borel
+$\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at the end.
+
+\section{Systems, factors, spectral measures}
+
+\begin{definition}[Measure preserving system]
+  \label{def:mps}
+  \lean{CantorSzemeredi.MPS}
+  A probability space $(X,\Abb,m)$ together with a measurable $T : X \to X$ with
+  $m(T^{-1}A) = m(A)$ for all $A \in \Abb$.  \emph{Invertible} means $T$ is a measurable
+  bijection with measurable inverse.  \emph{Ergodic} means every $T$-invariant set has measure
+  $0$ or $1$.
+\end{definition}
+
+\begin{remark}[Lean design note]
+  Mathlib has \texttt{MeasureTheory.MeasurePreserving} and
+  \texttt{MeasureTheory.Ergodic}; the Koopman operator is available as composition with $T$ on
+  $L^p$.  A light structure bundling $(X,\Abb,m,T)$ is worth introducing because the whole
+  development quantifies over systems and over powers $T^k$ of a single system.
+\end{remark}
+
+\begin{definition}[Spectral measure]
+  \label{def:spectral-measure}
+  \lean{CantorSzemeredi.spectralMeasure}
+  For a unitary $U$ on a Hilbert space and a vector $v$, $\sigma_v$ is the finite positive Borel
+  measure on $\TT = \RR/\ZZ$ with $\langle U^n v, v \rangle = \int_{\TT} e(n\alpha) \, d\sigma_v(\alpha)$
+  for all $n \in \ZZ$.  When no operator is named, $U$ is the Koopman operator $f \mapsto f \circ T$.
+\end{definition}
+
+\begin{remark}[Mathlib gap]
+  The existence and uniqueness of $\sigma_v$ --- equivalently, Herglotz/Bochner for positive
+  definite sequences on $\ZZ$ --- is the main piece of analysis infrastructure this project
+  needs.  It should be isolated in its own file so that the rest of the development uses only
+  Definition~\ref{def:spectral-measure} and Wiener's lemma below.
+\end{remark}
+
+\begin{lemma}[Wiener's lemma]
+  \label{lem:wiener}
+  \lean{CantorSzemeredi.wiener}
+  For a finite positive measure $\sigma$ on $\TT$,
+  $\sum_{\theta} \sigma(\{\theta\})^2 = \lim_N \avg{1 \leq n \leq N} \abs{\widehat\sigma(n)}^2$.
+  In particular $\sigma$ is atomless iff $\avg{1 \leq n \leq N} \abs{\widehat\sigma(n)}^2 \to 0$.
+\end{lemma}
+
+\begin{definition}[Weak mixing]
+  \label{def:weak-mixing}
+  \lean{CantorSzemeredi.MPS.WeaklyMixing}
+  \uses{def:mps}
+  $(X,\Abb,m,T)$ is \emph{weakly mixing} if
+  $\lim_N \avg{1 \leq n \leq N} \abs{m(A \cap T^{-n}B) - m(A)m(B)} = 0$ for all $A,B \in \Abb$.
+  Equivalently, every mean-zero $f \in L^2(X)$ has atomless spectral measure.
+\end{definition}
+
+\begin{definition}[Compact system]
+  \label{def:compact-system}
+  \lean{CantorSzemeredi.MPS.CompactSystem}
+  \uses{def:mps}
+  $f \in L^2(X)$ is \emph{compact} if $\overline{\{T^n f : n \in \ZZ\}}$ is compact in $L^2(X)$;
+  the system is \emph{compact} if every $f \in L^2(X)$ is compact.
+\end{definition}
+
+\begin{definition}[Factor, extension]
+  \label{def:factor}
+  \lean{CantorSzemeredi.MPS.Factor}
+  \uses{def:mps}
+  A \emph{factor} of $(X,\Abb,m,T)$ is a $T$-invariant sub-$\sigma$-algebra $\Dbb \subset \Abb$,
+  factors agreeing up to null sets being identified.  If $\Dbb \subset \Ebb \subset \Abb$ are
+  factors, $\Ebb$ is an \emph{extension} of $\Dbb$.
+\end{definition}
+
+\section{Conditional structures}
+
+\begin{definition}[Conditional inner product, Hilbert module]
+  \label{def:hilbert-module}
+  \lean{CantorSzemeredi.condInner, CantorSzemeredi.HilbertModule}
+  \uses{def:factor}
+  For $f,g \in L^2(\Ebb)$ put $\cip{f}{g} \coloneqq \Exp_m(f \bar g \mid \Dbb) \in L^2(\Dbb)$,
+  with associated conditional norm $\cnorm{f}$.  The \emph{Hilbert module}
+  $L^2(\Ebb \mid \Dbb)$ consists of the $f \in L^2(\Ebb)$ with $\cnorm{f} \in L^\infty(\Dbb)$.
+\end{definition}
+
+\begin{lemma}[Conditional Cauchy--Schwarz and triangle inequalities]
+  \label{lem:cond-cs}
+  \lean{CantorSzemeredi.condInner_abs_le, CantorSzemeredi.cnorm_add_le}
+  \uses{def:hilbert-module}
+  $\abs{\cip{f}{g}} \leq \cnorm{f}\,\cnorm{g}$ and $\cnorm{f+g} \leq \cnorm{f} + \cnorm{g}$,
+  almost everywhere.
+\end{lemma}
+
+\begin{lemma}[Conditional expectation commutes with $T$]
+  \label{lem:condexp-commutes}
+  \lean{CantorSzemeredi.condExp_comp_eq}
+  \uses{def:factor}
+  If $\Dbb$ is $T$-invariant then $\Exp(a \circ T \mid \Dbb) = \Exp(a \mid \Dbb) \circ T$.
+\end{lemma}
+
+\begin{definition}[Conditionally weakly mixing function; weakly mixing extension]
+  \label{def:cwm}
+  \lean{CantorSzemeredi.CondWeaklyMixing, CantorSzemeredi.WeaklyMixingExtension}
+  \uses{def:hilbert-module}
+  $f \in L^2(\Ebb)$ is \emph{conditionally weakly mixing} if
+  $\lim_N \avg{1 \leq n \leq N} \abs{\cip{T^n f}{f}} = 0$ in $L^2(\Dbb)$.
+  The extension $\Ebb \mid \Dbb$ is \emph{weakly mixing} if every $f \in L^2(\Ebb \mid \Dbb)$
+  with $\Exp(f \mid \Dbb) = 0$ is conditionally weakly mixing.
+\end{definition}
+
+\begin{definition}[Conditionally compact function; compact extension]
+  \label{def:compact-extension}
+  \lean{CantorSzemeredi.CondCompact, CantorSzemeredi.CompactExtension}
+  \uses{def:hilbert-module}
+  $f \in L^2(\Ebb \mid \Dbb)$ is \emph{conditionally compact} if for every $\epsilon > 0$ there
+  are finitely many $g_1,\dots,g_r \in L^2(\Ebb \mid \Dbb)$ with
+  \[
+    \sup_{n \in \ZZ} \ \min_{1 \leq q \leq r} \ \bigl\lVert \cnorm{T^n f - g_q} \bigr\rVert_{L^\infty(\Dbb)} < \epsilon .
+  \]
+  The extension $\Ebb \mid \Dbb$ is \emph{compact} if the conditionally compact functions are
+  dense in $L^2(\Ebb)$.
+\end{definition}
+
+\begin{remark}
+  These definitions are those of Moreira's notes, except that conditional weak mixing is asked
+  only for $g = f$ and with ordinary Ces\`aro means.  This is a \emph{weaker} requirement on
+  $f$, hence a \emph{weaker} hypothesis on the extension in
+  Definition~\ref{def:cwm} than Moreira's --- which is the direction that makes
+  Lemma~\ref{lem:dichotomy} apply as stated.  This asymmetry must be reproduced faithfully in
+  Lean or the dichotomy will not typecheck against the extension principles.
+\end{remark}
+
+\section{The relatively independent self-joining}
+
+Since $X$ is a compact metric space, $m$ disintegrates over $\Dbb$ as $m = \int m_x \, dm(x)$,
+so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.\ $x$.
+
+\begin{definition}[Relatively independent self-joining]
+  \label{def:joining}
+  \lean{CantorSzemeredi.relIndepSelfJoining}
+  \uses{def:factor}
+  $\lambda \coloneqq \int m_x \otimes m_x \, dm(x)$, a probability measure on $X \times X$.
+\end{definition}
+
+\begin{lemma}[Properties of $\lambda$]
+  \label{lem:joining}
+  \lean{CantorSzemeredi.integral_joining, CantorSzemeredi.joining_invariant}
+  \uses{def:joining, lem:condexp-commutes}
+  For $a, a' \in L^\infty(X)$,
+  \begin{equation}
+    \label{eq:joining}
+    \int_{X \times X} a \otimes a' \, d\lambda = \int_X \Exp(a \mid \Dbb)\, \Exp(a' \mid \Dbb) \, dm ,
+  \end{equation}
+  and $\lambda$ is invariant under $R \coloneqq T \times T$.
+\end{lemma}
+
+\begin{proof}
+  \uses{def:joining, lem:condexp-commutes}
+  \eqref{eq:joining} is immediate from the disintegration.  For invariance, by
+  Lemma~\ref{lem:condexp-commutes} and \eqref{eq:joining},
+  $\lambda(R^{-1}(B \times B')) = \int (\Exp(\one_B \mid \Dbb)\Exp(\one_{B'} \mid \Dbb)) \circ T \, dm
+   = \lambda(B \times B')$; rectangles generate and are closed under intersection.
+\end{proof}
+
+\begin{lemma}[Conditional weak mixing gives atomless spectral measures]
+  \label{lem:atomless}
+  \lean{CantorSzemeredi.spectralMeasure_noAtoms_of_condWeaklyMixing}
+  \uses{def:cwm, lem:joining, lem:wiener, def:spectral-measure}
+  Let $f \in L^\infty(\Ebb)$ be conditionally weakly mixing and set $G \coloneqq f \otimes \bar f$.
+  Then
+  \begin{enumerate}
+    \item[(i)] $\sigma_f$, for the Koopman operator of $T$ on $L^2(X)$, has no atoms;
+    \item[(ii)] $\sigma_G$, for the Koopman operator of $R$ on $L^2(\lambda)$, has no atoms, and
+      \begin{equation}
+        \label{eq:psi-identity}
+        \langle R^n G, G \rangle_{L^2(\lambda)} = \bigl\lVert \cip{T^n f}{f} \bigr\rVert_{L^2(\Dbb)}^2 ,
+        \qquad n \in \ZZ .
+      \end{equation}
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  \uses{def:cwm, lem:joining, lem:wiener}
+  \eqref{eq:psi-identity} is \eqref{eq:joining} with $a = T^n f \cdot \bar f$ and $a' = \bar a$.
+  Normalize $\norm{f}_\infty \leq 1$ and put $a_n \coloneqq \lVert \cip{T^n f}{f} \rVert_{L^1(\Dbb)}$.
+  Since the $\abs{\cip{T^n f}{f}}$ are non-negative and bounded by $1$,
+  $\avg{1 \leq n \leq N} a_n \leq \lVert \avg{1 \leq n \leq N} \abs{\cip{T^n f}{f}} \rVert_{L^2(\Dbb)} \to 0$.
+  Now $\abs{\widehat{\sigma_f}(n)} \leq a_n$ and $0 \leq \widehat{\sigma_G}(n) \leq a_n$ by
+  \eqref{eq:psi-identity}.  As $a_n \leq 1$,
+  $\avg{1 \leq n \leq N} \abs{\widehat\sigma(n)}^2 \leq \avg{1 \leq n \leq N} a_n \to 0$ for
+  $\sigma \in \{\sigma_f, \sigma_G\}$, and Wiener's lemma (Lemma~\ref{lem:wiener}) applies.
+\end{proof}
+
+\section{Passing to powers}
+
+\begin{lemma}[Powers]
+  \label{lem:powers}
+  \lean{CantorSzemeredi.compactExtension_pow, CantorSzemeredi.condWeaklyMixing_pow}
+  \uses{def:compact-extension, def:cwm}
+  Let $k \geq 1$.
+  \begin{enumerate}
+    \item If $\Ebb$ is a compact extension of $\Dbb$ for $T$, then it is one for $T^k$.
+    \item If $f, g \in L^2(\Ebb \mid \Dbb)$ satisfy
+      $\lim_N \lVert \avg{N} \abs{\cip{T^n f}{g}} \rVert_{L^2(\Dbb)} = 0$, then the same holds
+      along $k\NN$.  In particular, if hypothesis~\eqref{eq:WM} holds for $T$ it holds for $T^k$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  \uses{def:compact-extension, def:cwm}
+  (1) $\{T^{kn} f\} \subset \{T^n f\}$, so conditional compactness is inherited and the
+  conditionally compact functions remain dense.
+
+  (2) Set $\phi_n \coloneqq \abs{\cip{T^n f}{g}}$ and $a_n \coloneqq \norm{\phi_n}_{L^2(\Dbb)}$.
+  Conditional Cauchy--Schwarz gives $0 \leq \phi_n \leq C$.  From the hypothesis,
+  $\avg{N} \norm{\phi_n}_{L^1(\Dbb)} \leq \lVert \avg{N} \phi_n \rVert_{L^2(\Dbb)} \to 0$, whence
+  $\avg{N} a_n^2 \leq C \avg{N}\norm{\phi_n}_{L^1(\Dbb)} \to 0$ and so $\avg{N} a_n \to 0$ by
+  Cauchy--Schwarz.  A bounded non-negative sequence has $\avg{N} a_n \to 0$ iff $a_n \to 0$ along
+  a set of density one; the complement has density zero, so
+  $\abs{S^c \cap [1,kN]} = o(N)$, giving $a_{kn} \to 0$ along a set of density one and
+  $\avg{N} a_{kn} \to 0$.  Finally $\lVert \avg{N} \phi_{kn} \rVert_{L^2(\Dbb)} \leq \avg{N} a_{kn}$.
+\end{proof}
+
+\section{The van der Corput inequality}
+
+\begin{lemma}[van der Corput]
+  \label{lem:vdc}
+  \lean{CantorSzemeredi.van_der_corput}
+  Let $u_M,\dots,u_{N-1}$ be vectors of norm at most $1$ in a Hilbert space and $1 \leq H < N-M$.
+  Then
+  \begin{equation}
+    \label{eq:vdc}
+    \Bigl\lVert \unifavg u_n \Bigr\rVert^2
+      \leq 4 \avg{1 \leq h \leq H} \Bigl\lvert \avg{M \leq n < N-h} \langle u_{n+h}, u_n \rangle \Bigr\rvert
+        + \frac{2}{H} .
+  \end{equation}
+\end{lemma}
+
+\begin{proof}
+  Write $L = N-M$ and set $u_n = 0$ off $[M,N)$.  Each $u_n$, $n \in [M,N)$, occurs exactly $H$
+  times among the $u_{m+h}$ with $1 \leq h \leq H$ and $m \in I \coloneqq [M-H, N-1)$, an
+  interval of fewer than $L+H$ integers.  Cauchy--Schwarz in $m$ gives
+  $\lVert \sum_n u_n \rVert^2 \leq \frac{L+H}{H^2}\sum_{h,h'=1}^{H}\sum_{m \in I}\langle u_{m+h}, u_{m+h'}\rangle$.
+  The $H$ diagonal terms contribute at most $L$ each.  For $r = h-h' \neq 0$ the inner sum is
+  $S(r) = \sum_n \langle u_{n+r}, u_n\rangle$ with $S(-r) = \overline{S(r)}$, and exactly
+  $H - \abs{r}$ pairs give $h - h' = r$; moreover $\abs{S(r)} \leq L\abs{c_r}$ with
+  $c_r = \avg{M \leq n < N-r}\langle u_{n+r}, u_n\rangle$.  Combining,
+  $\lVert \unifavg u_n \rVert^2 \leq \frac1H + \frac1L + \frac{2(L+H)}{L}\avg{1 \leq r \leq H}\abs{c_r}$,
+  and $H < L$ gives \eqref{eq:vdc}.
+\end{proof}

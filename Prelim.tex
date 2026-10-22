@@ -1,0 +1,649 @@
+\section{Preliminaries} \label{s:prelim} 
+
+\subsection{Notation} 
+We use standard Vinogradov notation, thus $A\ll B$ means that $\lvert A\rvert \leq C \lvert B\rvert$, 
+for an absolute constant $C$. By $A=B+O(\delta)$ we mean that $A-B \ll \delta$.  
+
+For integers $N$, we set $[N] = \{1,2, \ldots, N\}$. 
+For a finite set $F$ and $f \colon F\to \mathbb C$, we write 
+\begin{equation}
+    \Expectation_F f = \frac{1}{\lvert F\rvert} 
+    \sum_{n\in F} f(n). 
+\end{equation}
+And we will frequently write $\Expectation_{[N]}=\Expectation_N$.  
+Averages over an interval of indices are written $\Expectation_{M\leq n<N}$, 
+and a limit $\lim_{N-M\to\infty}$ is a limit over all such intervals, as their length tends to infinity.  
+Such averages, and the limits of them, are referred to as \emph{uniform}.  
+We will use repeatedly the following elementary observation, in the form given in Corollary \ref{c:syndetic}: 
+if a non-negative sequence $(a_n)$ satisfies $\liminf_{N-M\to\infty} \Expectation_{M\leq n<N} a_n>0$, 
+then $\{n \colon a_n >0\}$ is syndetic.  
+
+\subsection{Measure Preserving Systems} \label{sub:mps}
+
+We recall standard notions around measure preserving systems.  
+In particular, $(X,\mathcal A,m,T)$ 
+is a \emph{measure preserving system} if $(X,\mathcal A,m)$ is a probability space, and $T \colon X\to X$ preserves $m$, in that $m(T^{-1} A)=m(A)$ for all measurable $A\in \mathcal A$.  
+By $\Expectation_X f $ we mean $\int_X f \;dm$. 
+
+\emph{Standing assumption.}  From here to the end of \S\ref{sec:compact}, unless stated otherwise, $(X,\mathcal A,m,T)$ is an invertible measure preserving system 
+in which $X$ is a compact metric space and $\mathcal A$ is its Borel $\sigma$-algebra; in particular $m$ is a Radon measure.  
+A system is \emph{ergodic} if its $T$-invariant sets have measure $0$ or $1$; this is assumed only where stated.  
+Theorem \ref{t:CSZ} concerns arbitrary invertible systems, and Proposition \ref{p:reduction} in \S\ref{sub:reduction} shows that it suffices to treat 
+ergodic systems satisfying the standing assumption.  
+
+
+
+
+
+In different settings, the underlying space $(X,\mathcal A, m )$ remains the same, while we change the measure preserving operator from $T$, to some power $T^k$. 
+In this case, we  just indicate the change in the operator.  
+In other cases, we have  $T$ invariant sigma algebras, $\mathcal D \subset \mathcal E \subset \mathcal A$. 
+In that case, we may refer to the system by its sigma algebra. 
+
+The system is called \emph{weak mixing} if for all $A, B\in \mathcal A$, one has 
+\begin{equation} \label{e:weaklyMixingDef}
+    \lim_N \Expectation_N \lvert 
+    m(A\cap T^{-n}B) - m(A)m(B) \rvert =0. 
+\end{equation}
+This condition for sets extends to functions. For $f\in L^2(X)$ with mean zero,  
+\begin{equation} \label{wm-functions}
+    \lim_N \Expectation_N  
+    \lvert \langle f, T^n g \rangle \rvert =0, \qquad g \in L^2(X). 
+\end{equation}
+Equivalently, the spectral measure $\sigma _f$ of a mean zero $f \in L^2(X)$ has no atoms.  
+Here, and below, for a unitary operator $U$ on a Hilbert space and a vector $v$, the \emph{spectral measure} $\sigma _v$ 
+is the finite positive Borel measure on $\mathbb T = \mathbb R/\mathbb Z$ with 
+\begin{equation} \label{e:spectral}
+\langle U ^{n}v, v\rangle = \int_{\mathbb T} e(n \alpha ) \;d \sigma _v ( \alpha ), \qquad n \in \mathbb Z . 
+\end{equation}
+When no operator is named, $U$ is the Koopman operator $f \mapsto f\circ T$ of the system at hand.  
+  
+
+
+
+
+
+
+\bigskip 
+
+A function $f\in L^2(X)$ is called \emph{compact} if the set $\overline{ \{T^n f \colon n\in \mathbb{Z}\} }$ is a compact subset of $L^2 (X)$.  The system is \emph{compact} if every $f\in L^2(X)$  is compact.  In this case $T$ has pure point spectrum: $L^2(X)$ is spanned by eigenfunctions of $T$.  
+The eigenvalues need not be roots of unity; an irrational rotation of the circle is a compact system.  
+
+
+\smallskip 
+Let $\mathcal D \subset \mathcal A$ be a $T$ invariant 
+sigma algebra. The system 
+$(X,\mathcal D, m , T)$ is said to be a \emph{factor} of 
+the original system $(X,\mathcal A,m ,T)$.  
+(Here, there is a slight abuse of notation, in that we use the same notation for the set function $m$ restricted to the collection $\mathcal D$.) 
+Factors are then naturally identified with their sigma algebras. 
+And, given $\mathcal D\subset \mathcal E \subset \mathcal A$, 
+we refer to $ \mathcal E$ as an extension of $\mathcal D$.  
+
+With $\mathcal D\subset \mathcal E \subset \mathcal A$, we define a conditional inner product 
+\begin{equation}
+    \langle f,g \rangle _{\mathcal E\mid \mathcal D } 
+    = \mathbb{E}_m  (f\overline g \mid \mathcal D) 
+    \in L^2(\mathcal D) , \qquad 
+    f,g\in L^2(\mathcal E). 
+\end{equation}
+This conditional inner product defines conditional  $L^2$ norms by 
+$ \lVert f \rVert _{ \mathcal E \mid \mathcal  D }$. 
+A conditional Cauchy--Schwarz and triangle inequality hold for this norm. 
+
+\begin{definition}
+    The Hilbert module $L^2(\mathcal E\mid \mathcal D)$ 
+    are all those $f\in L^2(\mathcal E)$ for which the conditional norm  $\lVert f \rVert _{ \mathcal E \mid \mathcal  D } \in L^\infty (\mathcal D)$. 
+\end{definition}
+
+
+\begin{definition}
+    A function $f\in L^2 (\mathcal E) $ is said to be \emph{conditionally weakly mixing} if  
+    \begin{equation}
+        \lim_N \Expectation_{N} 
+        \lvert \langle T^nf,f\rangle _{\mathcal E\mid \mathcal D} 
+        \rvert =0, \quad \textup{in $L^2(\mathcal D)$} . 
+    \end{equation}
+The extension $\mathcal E$ of $\mathcal D$ is said to be \emph{weakly mixing} if every $f\in L^2 (\mathcal E \mid \mathcal D) $ with $\mathbb E(f\mid \mathcal D)=0$  is conditionally weakly mixing. 
+\end{definition}
+
+We will use the definition of a weakly mixing extension only through the following consequence, 
+which is phrased in terms of the relatively independent self-joining.  
+As $X$ is a compact metric space, $m$ has a disintegration $m = \int m_x \;dm(x)$ over $\mathcal D$ \cite{MoreiraNotes}*{Theorem 7.2.1}, 
+so that $\mathbb E(a\mid \mathcal D)(x) = \int a \;dm_x$ for $a \in L ^{\infty}(X)$ and almost every $x$.  
+The \emph{relatively independent self-joining} of $m$ over $\mathcal D$ is the probability measure 
+$\lambda \coloneqq \int m_x \otimes m_x \;dm(x)$ on $X \times X$; it appears, for instance, in the proof of \cite{MoreiraNotes}*{Proposition 8.6.1}.  
+It has the two properties we need.  First, for $a, a' \in L ^{\infty}(X)$, 
+\begin{equation} \label{e:joining}
+\int_{X \times X} a \otimes a' \;d \lambda = \int_X \mathbb E(a\mid \mathcal D)\, \mathbb E(a'\mid \mathcal D)\;dm . 
+\end{equation}
+Second, $\lambda$ is invariant under $R \coloneqq T \times T$.  Indeed, as $\mathcal D$ is $T$-invariant, $\mathbb E(a\circ T\mid \mathcal D) = \mathbb E(a\mid \mathcal D)\circ T$ 
+\cite{MoreiraNotes}*{Lemma 8.1.4}; so by \eqref{e:joining}, and as $T$ preserves $m$, 
+$\lambda(R ^{-1}(B\times B')) = \int (\mathbb E(\mathbf 1_B\mid \mathcal D)\, \mathbb E(\mathbf 1_{B'}\mid \mathcal D))\circ T\;dm = \lambda(B\times B')$ 
+for Borel sets $B, B'$.  Rectangles generate the Borel sets of $X \times X$ and are closed under intersection, so $\lambda \circ R ^{-1} = \lambda$.  
+
+\begin{lemma} \label{l:atomless}
+Let $f \in L ^{\infty}(\mathcal E)$ be conditionally weakly mixing, and set $G \coloneqq f \otimes \overline f$.  Then 
+\begin{enumerate}
+\item[(i)] the spectral measure $\sigma _f$ of $f$, for the Koopman operator of $T$ on $L^2(X)$, has no atoms; 
+\item[(ii)] the spectral measure $\sigma _G$ of $G$, for the Koopman operator of $R$ on $L^2(\lambda)$, has no atoms, and 
+\begin{equation} \label{e:psiIdentity}
+\langle R ^{n}G, G\rangle _{L^2(\lambda)} = \bigl\lVert \langle T ^{n}f, f\rangle _{\mathcal E\mid \mathcal D}\bigr\rVert _{L^2(\mathcal D)} ^2 , 
+\qquad n \in \mathbb Z . 
+\end{equation}
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+The identity \eqref{e:psiIdentity} is \eqref{e:joining} with $a = T ^{n}f\cdot \overline f$ and $a' = \overline{T ^{n}f}\cdot f = \overline a$, 
+since $R ^{n}G\cdot \overline G = a \otimes a'$; the right side of \eqref{e:joining} is then $\int \lvert \mathbb E(T ^{n}f\cdot\overline f\mid \mathcal D)\rvert ^2 \;dm$.  
+
+We use Wiener's lemma: for a finite positive measure $\sigma$ on $\mathbb T$, with $\widehat\sigma (n) = \int e(n \alpha )\;d \sigma (\alpha )$, 
+\begin{equation}
+\sum _{\theta} \sigma ( \{\theta\}) ^2 = \lim_N \Expectation_{1\leq n\leq N} \lvert \widehat\sigma (n)\rvert ^2 . 
+\end{equation}
+
+Both conclusions are unaffected by scaling $f$, so we may assume $\lVert f\rVert _{\infty} \leq 1$.  
+Let $a_n \coloneqq \lVert \langle T ^{n}f,f\rangle _{\mathcal E\mid \mathcal D}\rVert _{L ^{1}(\mathcal D)}$.  
+The functions $\lvert \langle T ^{n}f,f\rangle _{\mathcal E\mid \mathcal D}\rvert$ are non-negative and bounded by $1$, so 
+\begin{equation}
+\Expectation_{1\leq n\leq N} a_n = \Bigl\lVert \Expectation_{1\leq n\leq N} \bigl\lvert \langle T ^{n}f,f\rangle _{\mathcal E\mid \mathcal D}\bigr\rvert \Bigr\rVert _{L ^{1}(\mathcal D)} 
+\leq \Bigl\lVert \Expectation_{1\leq n\leq N} \bigl\lvert \langle T ^{n}f,f\rangle _{\mathcal E\mid \mathcal D}\bigr\rvert \Bigr\rVert _{L ^{2}(\mathcal D)} \to 0 , 
+\end{equation}
+the limit being the definition of conditional weak mixing.  
+Now $\widehat{\sigma _f}(n) = \langle T ^{n}f,f\rangle = \int \langle T ^{n}f,f\rangle _{\mathcal E\mid \mathcal D}\;dm$, so $\lvert \widehat{\sigma_f}(n)\rvert \leq a_n$; 
+and $0 \leq \widehat{\sigma _G}(n) \leq a_n$ by \eqref{e:psiIdentity}, since the square of a function bounded by $1$ is at most its modulus.  
+As $a_n \leq 1$, it follows that 
+$\Expectation_{1\leq n\leq N} \lvert \widehat\sigma (n)\rvert ^2 \leq \Expectation_{1\leq n\leq N} a_n \to 0$ for $\sigma \in \{\sigma _f, \sigma _G\}$, 
+and Wiener's lemma shows that neither measure has an atom.  
+\end{proof}
+
+
+
+
+
+
+\begin{definition}
+    A function $f\in L^2 (\mathcal E \mid \mathcal D) $ is said to be \emph{conditionally compact} if for every $\epsilon>0$ there 
+    are a finite number of functions $g_1 ,\ldots,g_r \in L^2(\mathcal E\mid \mathcal D)$ so that 
+    \begin{equation}
+        \sup_{n\in \mathbb Z} 
+        \min_{1\leq q\leq r} 
+        \bigl\lVert 
+        \lVert T^n f - g_q \rVert_{\mathcal E\mid  \mathcal D} 
+        \bigr\rVert_{L^\infty (\mathcal { D})} < \epsilon. 
+    \end{equation}
+
+    
+    The extension $\mathcal E$ of $\mathcal D$ is said to be \emph{compact} if conditionally compact functions  are dense in  $L^2 (\mathcal E) $.  
+\end{definition}
+
+
+
+
+
+
+
+
+\subsection{Cantor Sets} 
+
+We defined the Cantor sets of interest in \eqref{e:Cantor}. Here, we collect the properties of them needed to prove the main theorem.  
+Throughout, $\mathcal C = \mathcal C_{b,D} = \{0=k_0<k_1 < \cdots\}$, with $0 \in D$, and we abbreviate 
+\begin{equation} \label{e:delta}
+\delta \coloneqq \lvert D\rvert \geq 2 . 
+\end{equation}
+
+The following identities describe the enumeration of $\mathcal C$; they are from \cite{firstpaper}*{Prop.~2.2}, 
+and as everything below rests on them we include the short proof.  
+
+\begin{lemma} \label{l:Diff}
+    Let $\mathcal C=(k_n)_{n\geq 0}$ be an integer Cantor set in base $b$, with digit set $D=\{0=d_0<\cdots <d_{\delta -1}\}\subset \{0,\ldots ,b-1\}$. Then: 
+    \begin{enumerate}
+        \item[(i)] For any $n\in \mathbb{N}_0$, written in base $\delta $ as $n=\sum_{c=0}^tn_c\delta ^c$ with $n_c\in \{0,\ldots ,\delta -1\}$, we have $k_n=\sum_{c=0}^td_{n_c}b^c$.  
+        \item[(ii)] For any $i\geq 0$, $n\geq 0$, and $0\leq j<\delta ^i$, we have $k_{\delta ^in+j}=b^ik_n+k_j$. 
+    \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+For (i), define $\varphi \colon \mathbb N_0 \to \mathbb N_0$ by $\varphi(n) \coloneqq \sum_c d_{n_c} b ^{c}$, where the $n_c$ are the base $\delta$ digits of $n$.  
+Since $d_0 = 0$, appending leading zero digits to $n$ does not change $\varphi(n)$, and the base $b$ digits of $\varphi (n)$ are exactly the $d_{n_c}$, all of which lie in $\{0 , \ldots, b-1\}$.  
+So $\varphi(n) \in \mathcal C$; conversely, every element of $\mathcal C$ is $\varphi(n)$ for the $n$ whose base $\delta$ digits index its base $b$ digits in $D$, 
+padding with the digit $0 = d_0$ where needed.  Thus $\varphi$ maps $\mathbb N_0$ onto $\mathcal C$.  It is strictly increasing, and so injective: if $n<n'$, let $c$ be the highest position at which their base $\delta$ digits differ, 
+so that $n_c < n'_c$.  Then $\varphi(n)$ and $\varphi(n')$ have the same base $b$ digits above position $c$, and $d_{n_c} < d_{n'_c}$ at position $c$, so $\varphi(n)<\varphi(n')$.  
+A strictly increasing map from $\mathbb N_0$ onto $\mathcal C$ is the increasing enumeration, so $k_n = \varphi(n)$.  
+
+For (ii), write $j = \sum_{c<i} j_c \delta ^{c}$.  As $j< \delta ^{i}$, the base $\delta$ digits of $\delta ^{i}n + j$ are $j_0 , \ldots, j_{i-1}$ in the positions below $i$, 
+followed by the digits of $n$, shifted up by $i$.  So by (i), $k_{\delta ^{i}n+j} = \sum_{c<i} d_{j_c}b ^{c} + \sum_c d_{n_c}b ^{c+i} = k_j + b ^{i}k_n$.  
+\end{proof}
+
+
+Note that part (ii) says that the blocks of indices 
+$[\delta ^i n , \delta ^{i} (n+1))$, which partition $\mathbb N_0$ into consecutive intervals of length $\delta ^{i}$, 
+correspond to the blocks $b ^{i} k_n + \bigl( \mathcal C \cap [0,b ^{i}) \bigr)$ of the Cantor set.  
+This is the property that permits us to prove syndeticity, in place of mere positive density.  
+It also controls the differences $k _{n+h}-k_n$, which are the subject of the van der Corput argument of \S\ref{sec:wm}.  
+
+\begin{lemma} \label{l:differences}
+Fix integers $h \geq 1$ and $\ell \geq 1$ with $\delta ^{\ell} > h$.  
+For $0 \leq c < \delta ^{\ell}-h$ set $P_c \coloneqq \{ n \geq 0 \colon n \equiv c \mod \delta ^{\ell}\}$, 
+and $\mathbb P \coloneqq \bigcup _{0\leq c < \delta ^{\ell}-h} P_c$. Then 
+\begin{enumerate}
+\item[(i)] For every $n \in P_c$, the difference $k _{n+h}-k_n$ is equal to the constant $\Delta _c \coloneqq k _{c+h}-k_c$.  
+\item[(ii)] $\bigl\lvert \mathbb P \cap [M,N) \bigr\rvert \geq (1- h \delta ^{- \ell})(N-M) - \delta ^{\ell}$, for every interval $[M,N)$.  
+\end{enumerate}
+In particular, on a set of indices of uniform density at least $1-h \delta ^{-\ell}$, the difference $k_{n+h}-k_n$ takes at most $\delta ^{\ell}$ values, 
+and each of the sets on which it is constant is a finite union of arithmetic progressions of step $\delta ^{\ell}$.  
+\end{lemma}
+
+\begin{proof}
+For (i), write $n = \delta ^{\ell}a +c$ with $0 \leq c < \delta ^{\ell}-h$.  Then also $n+h = \delta ^{\ell}a + (c+h)$ with $0\leq c+h< \delta ^{\ell}$, 
+so two applications of Lemma \ref{l:Diff}(ii) give $k_n = b ^{\ell}k_a + k_c$ and $k _{n+h} = b ^{\ell}k_a + k _{c+h}$.  Subtract.  
+For (ii), $\mathbb P$ is the union of $\delta ^{\ell}-h$ residue classes modulo $\delta ^{\ell}$.  
+\end{proof}
+
+
+ 
+
+The distribution of Cantor sets in residue classes has been investigated in several papers, including \cites{ERDOS199899, SAAVEDRA-ARAYA_2026}.  
+In \cite{firstpaper} it is shown that, for each $q \in \mathbb N$, the proportion of indices $n < N$ with $k_n \equiv a \mod q$ converges as $N \to \infty$, 
+and that the limit is positive for $a = 0$.  The limiting distribution is in general not uniform on $\mathbb Z_q$, 
+and the proportions do \emph{not} converge uniformly, in the sense of $\lim_{N-M\to\infty}$.  
+Nevertheless, the set of indices $n$ with $q \mid k_n$ is not merely of positive density, but is syndetic.  
+This is used only in Theorem \ref{t:compactSystem}, which is not needed for the main result; 
+we give the short proof, as it is a good illustration of the block structure of Lemma \ref{l:Diff}(ii).  
+
+\begin{lemma} \label{l:syndeticResidues}
+Let $\mathcal C = \mathcal C_{b,D} = \{0=k_0<k_1 < \cdots\}$ be a Cantor set with $0 \in D$.  
+For every integer $q \geq 1$, the set 
+\begin{equation}
+S_q \coloneqq \{ n \in \mathbb N_0 \colon k_n \equiv 0 \mod q \} 
+\end{equation}
+is syndetic.  
+\end{lemma}
+
+\begin{proof}
+For $i \geq 1$ let $R_i \subset \mathbb Z_q$ be the set of residues $k_j \bmod q$ for $0 \leq j < \delta ^{i}$; 
+by Lemma \ref{l:Diff}(i), 
+\begin{equation}
+R_i = \Bigl\{ \sum_{c=0}^{i-1} d_c b ^{c} \bmod q \colon d_0 , \ldots, d_{i-1} \in D \Bigr\} . 
+\end{equation}
+Since $0 \in D$, the sets $R_i$ increase with $i$, hence  they stabilize: there is an $i_0$ with $R_i = R \coloneqq \bigcup_{i} R_i$ for all $i \geq i_0$.  
+
+Let $c_0 \geq 0$ and $\tau \geq 1$ be such that $b ^{c+\tau} \equiv b ^{c} \bmod q$ for all $c \geq c_0$, and set 
+$Y= \{ d b ^{c} \bmod q \colon d \in D ,\ c \geq c_0\}$, a finite subset of $\mathbb Z_q$.  
+Each element of $Y$ is of the form $db ^{c} \bmod q$ for infinitely many exponents $c$.  
+Therefore any finite sum of elements of $Y$, repetitions allowed, can be realized as 
+$\sum_{c} d_c b ^{c} \bmod q$ with the exponents $c$ \emph{distinct}, and so lies in $R$.  
+The collection of all such sums is a non-empty finite sub-semigroup of the group $\mathbb Z_q$, and hence is the subgroup $H \subset \mathbb Z_q$ generated by $Y$.  
+Thus $H \subset R$.  As $H$ is finite, there is an $i_1$ so that every element of $H$ is such a sum with all exponents less than $i_1$, whence $H \subset R_i$ for $i \geq i_1$.  
+
+Now fix $i \geq \max (c_0 , i_0 , i_1)$ and let $n \in \mathbb N_0$ be arbitrary.  
+Writing $k_n = \sum_{c} d_c b ^{c}$ with $d_c \in D$, we have $b ^{i} k_n = \sum_{c} d_c b ^{c+i}$, and all the exponents $c+i$ are at least $c_0$.  
+Hence $b ^{i} k_n \bmod q \in H$, and therefore also $- b ^{i} k_n \bmod q \in H \subset R_i$.  
+Select $0 \leq j < \delta ^{i}$ with $k_j \equiv - b ^{i} k_n \bmod q$.  By Lemma \ref{l:Diff}(ii), 
+\begin{equation}
+k _{\delta ^{i} n+j} = b ^{i} k_n + k_j \equiv 0 \mod q . 
+\end{equation}
+That is, $S_q$ meets the block of indices $[\delta ^{i} n , \delta ^{i}(n+1))$, for every $n \geq 0$.  
+As these blocks partition $\mathbb N_0$ into consecutive intervals of length $\delta ^{i}$, the set $S_q$ is syndetic, with gaps at most $2 \delta ^{i}$.  
+\end{proof}
+
+
+The input from our first paper is the following uniform exponential sum estimate.  
+
+\begin{lemma} \label{l:irrational}
+Let $\mathcal C = \mathcal C_{b,D} = \{0=k_0<k_1 < \cdots\}$ be a Cantor set with $0\in D$, and let 
+$E_0 \subset \mathbb T$ be the set of $\beta$ for which $\gcd(D)\, \beta$ is a $b$-adic rational modulo $1$; it is a countable set of rationals.  
+Then for every $\beta \notin E_0$, and in particular for every irrational $\beta$, 
+\begin{equation} \label{e:irrationalUniform}
+\lim_{L\to\infty} \sup_{M \geq 0} \Bigl\lvert \Expectation_{M\leq n<M+L} e ( \beta k_n) \Bigr\rvert =0 . 
+\end{equation}
+\end{lemma}
+
+This is the case of the uniform estimate in \cite{firstpaper}*{\S 4} in which the frequency attached there to the sum of digits is $0$; 
+in the notation of that paper, $( \beta ,0)$ is exceptional exactly when $\gcd(D)\beta$ is a $b$-adic rational.  
+The supremum over the starting index $M$ is the essential point, and the reason for the word `uniform' throughout this paper.  
+As all of \S\ref{sec:wm} rests on it, we include the proof, which in this case is short.  
+
+\begin{proof}
+Write $s \coloneqq \gcd(D)$, and recall $\delta = \lvert D\rvert$.  
+
+\emph{Reduction to $s=1$.}  The digit set $D' \coloneqq \{d/s \colon d \in D\}$ again satisfies $0 \in D' \subset \{0 , \ldots, b-1\}$ and $2 \leq \lvert D'\rvert < b$, and $\gcd(D')=1$.  
+The elements of $\mathcal C$ are $k_n = s k'_n$, where $k'_0 < k'_1 < \cdots$ are the elements of $\mathcal C_{b,D'}$, so that $e(\beta k_n) = e(s\beta\, k'_n)$; 
+and $s\beta$ is a $b$-adic rational modulo $1$ exactly when $\beta \in E_0$.  
+So it suffices to treat the case $s=1$, with $s\beta$ in place of $\beta$.  We assume from now on that $s=1$, so that $E_0$ is the set of $b$-adic rationals modulo $1$.  
+
+\emph{The digit average.}  Let $\rho (\theta) \coloneqq \Expectation_{d \in D} e(d\theta)$.  Then $\lvert \rho (\theta)\rvert \leq 1$, with equality only if $\theta \in \mathbb Z$.  
+Indeed, equality forces the numbers $e(d\theta)$, $d \in D$, to coincide, hence to equal $1$, as $0 \in D$; 
+so $d\theta \in \mathbb Z$ for every $d \in D$, and then $\theta \in \mathbb Z$, as $\gcd(D)=1$.  
+
+\emph{Products over blocks.}  By Lemma \ref{l:Diff}(i), as $j$ runs over $0 \leq j < \delta ^{\ell}$, the base $b$ digits of $k_j$ in the positions $0 , \ldots, \ell-1$ 
+run independently over $D$, and $k_j$ has no other non-zero digits.  Hence 
+\begin{equation} \label{e:Pell}
+P_\ell (\beta) \coloneqq \Expectation_{0\leq j<\delta ^{\ell}} e(\beta k_j) = \prod_{c=0}^{\ell-1} \rho (b ^{c}\beta) . 
+\end{equation}
+
+\emph{Window split.}  Fix $i \geq 1$ and an interval $[M,N)$, and let $M_i \coloneqq \lceil M/\delta ^{i}\rceil$ and $N_i \coloneqq \lfloor N/\delta ^{i}\rfloor$.  
+At most $2\delta ^{i}$ indices of $[M,N)$ lie outside $[\delta ^{i}M_i, \delta ^{i}N_i)$; when $N_i \leq M_i$ this interval is empty, and $N-M < 2\delta ^{i}$.  
+The remaining indices are partitioned into the blocks $\{\delta ^{i}m + j \colon 0 \leq j < \delta ^{i}\}$, $M_i \leq m < N_i$.  
+By Lemma \ref{l:Diff}(ii), $e(\beta k_{\delta ^{i}m+j}) = e(\beta b ^{i}k_m)\, e(\beta k_j)$, so the sum over a block is $\delta ^{i}P_i(\beta)\, e(\beta b ^{i}k_m)$, of modulus at most $\delta ^{i}\lvert P_i(\beta)\rvert$.  
+There are $N_i - M_i \leq (N-M)/\delta ^{i}$ blocks, and therefore 
+\begin{equation} \label{e:windowSplitE}
+\Bigl\lvert \Expectation_{M\leq n<N} e(\beta k_n) \Bigr\rvert \leq \lvert P_i(\beta)\rvert + \frac{2\delta ^{i}}{N-M} , \qquad M \geq 0 . 
+\end{equation}
+The bound does not depend on $M$; this is where the uniformity comes from.  
+
+\emph{The limit of $P_\ell$.}  Write $\lVert \theta\rVert$ for the distance from $\theta$ to the nearest integer.  
+Suppose first that $\lVert b ^{c}\beta\rVert \geq \eta$ for infinitely many $c$, for some $\eta>0$.  
+As $\rho$ is continuous and $1$-periodic, and $\lvert \rho\rvert <1$ off the integers, there is a $\kappa>0$ with $\lvert \rho (\theta)\rvert \leq 1-\kappa$ whenever $\lVert \theta\rVert \geq \eta$.  
+So infinitely many factors in \eqref{e:Pell} have modulus at most $1-\kappa$, all have modulus at most $1$, and $P_\ell(\beta) \to 0$.  
+
+Otherwise $\lVert b ^{c}\beta\rVert \to 0$, and we show that $\beta \in E_0$.  Choose $c_0$ with $\lVert b ^{c}\beta\rVert < 1/(2b)$ for all $c \geq c_0$.  
+If $0 < \lVert b ^{c}\beta\rVert < 1/(2b)$, write $b ^{c}\beta = z + \theta$ with $z \in \mathbb Z$ and $\lvert \theta\rvert = \lVert b ^{c}\beta\rVert$; 
+then $b ^{c+1}\beta = bz + b\theta$ with $0<\lvert b\theta\rvert < 1/2$, so that $\lVert b ^{c+1}\beta\rVert = b \lVert b ^{c}\beta\rVert$.  
+Hence if $\lVert b ^{c_0}\beta\rVert \neq 0$, the quantities $\lVert b ^{c_0+r}\beta\rVert = b ^{r}\lVert b ^{c_0}\beta\rVert$ would eventually exceed $1/(2b)$, a contradiction.  
+So $b ^{c_0}\beta \in \mathbb Z$, that is, $\beta$ is a $b$-adic rational.  
+
+\emph{Conclusion.}  Let $\beta \notin E_0$ and $\epsilon > 0$.  By the previous step, $P_i(\beta) \to 0$, so we may fix $i$ with $\lvert P_i(\beta)\rvert < \epsilon$.  
+By \eqref{e:windowSplitE}, $\sup_{M\geq 0}\lvert \Expectation_{M\leq n<M+L} e(\beta k_n)\rvert \leq \epsilon + 2\delta ^{i}/L$, which is less than $2\epsilon$ once $L > 2\delta ^{i}/\epsilon$.  
+As $\epsilon$ was arbitrary, this proves \eqref{e:irrationalUniform}.  
+\end{proof}
+
+
+
+The form in which Lemma \ref{l:irrational} enters the proof is the following.  For $\beta \in \mathbb R$ and $L \geq 1$ set 
+\begin{equation} \label{e:Phi}
+\Phi _L (\beta) \coloneqq \sup _{M\geq 0} \Bigl\lvert \Expectation_{M\leq n<M+L} e ( \beta k_n) \Bigr\rvert . 
+\end{equation}
+
+\begin{lemma}[Uniform spectral lemma] \label{l:uniformSpectral}
+Let $\sigma$ be a finite positive Borel measure on $\mathbb T$ without atoms, and let $s \geq 1$ be an integer.  Then 
+\begin{equation}
+\lim_{L\to\infty} \int_{\mathbb T} \Phi _L (s \alpha ) \;d \sigma ( \alpha ) = 0 . 
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Each $\Phi_L$ is a supremum of countably many continuous functions, hence Borel, and $0 \leq \Phi _L \leq 1$.  
+By Lemma \ref{l:irrational}, $\Phi_L(s \alpha ) \to 0$ unless $s \alpha \in E_0$ modulo $1$.  
+Each point of $E_0$ has $s$ preimages under $\alpha \mapsto s\alpha$, so these $\alpha$ form a countable set, which is $\sigma$-null as $\sigma$ has no atoms.  
+Dominated convergence completes the proof.  
+\end{proof}
+
+For instance, if $f \in L^2(X)$ has an atomless spectral measure, then, by \eqref{e:spectral}, 
+\begin{equation} \label{e:Uniform}
+\Bigl\lVert \Expectation _{M\leq n<N} T ^{s k_n}f \Bigr\rVert _2 ^2 
+= \int_{\mathbb T} \Bigl\lvert \Expectation _{M\leq n<N} e(s\alpha k_n) \Bigr\rvert ^2 \;d \sigma _f (\alpha) 
+\leq \int_{\mathbb T} \Phi _{N-M}(s \alpha )\;d \sigma _f ( \alpha ) , 
+\end{equation}
+which tends to zero as $N-M\to\infty$, uniformly in $M$.  This is the uniform ergodic theorem along $\mathcal C$, for such $f$.  
+
+\subsection{Structure of the proof} 
+
+The method of proof follows the lines of ergodic proofs of Szemer\'edi's Theorem. To summarize this approach, we say that a measure preserving system $(X,\mathcal A,m,T)$ is \emph{Cantor-Szemer\'edi},  or \emph{CSZ}, 
+if this holds: 
+For all measurable $A\subset X$, with $m(A) >0$, all integers $t \geq 1$, all integers $i \geq 0$, and all Cantor sets $\mathcal C = \mathcal C_{b,D}$, with base $b$, 
+digit set $D$, and $0\in D$, there holds 
+\begin{equation}  \label{e:CSZdef}
+    \liminf_{N-M\to\infty} \Expectation_{M\leq n<N} 
+    \int_X  \prod _{s=0} ^t T^{s b ^{i} k_n}\mathbf 1_A \;dm >0. 
+\end{equation}
+Here, $\mathcal C = \{0=k_0<k_1<\cdots\}$.  
+The averages above are uniform in the index $n$; by Corollary \ref{c:syndetic}, 
+this implies that the set of indices $n$ which contribute is syndetic, which is the point of insisting on the uniformity.  
+
+It is equivalent to ask for \eqref{e:CSZdef} with $\mathbf 1_A$ replaced by an arbitrary non-negative $f \in L ^{\infty}(X)$ 
+which is not identically zero.  One direction is trivial.  For the other, choose $c>0$ with $m(A)>0$ for $A \coloneqq \{f>c\}$; 
+then $f \geq c \mathbf 1_A$, and all the factors are non-negative, so the average for $f$ is at least $c ^{t+1}$ times the average for $\mathbf 1_A$.  
+In particular, the case $i=0$ of \eqref{e:CSZdef} is exactly the conclusion \eqref{e:CSZ} of Theorem \ref{t:CSZ}.  
+
+Two comments on the dilation parameter $i$ are in order.  First, the case $i=0$ is the statement of Theorem \ref{t:CSZ}, 
+and the other cases are statements of the same kind: since $b ^{i} k_n = k _{\delta ^{i} n}$ by Lemma \ref{l:Diff}(ii), 
+the condition for a given $i$ is \eqref{e:CSZdef} with $i=0$, with the index restricted to the progression $\delta ^{i} \mathbb N_0$.  
+Put another way, for a \emph{fixed} Cantor set $\mathcal C$ of base $b$, the condition for the dilation $i$ is the condition for $i=0$, 
+for the system $(X,\mathcal A,m,T ^{b ^{i}})$ and the same $\mathcal C$.  
+We stress that this is a statement about one Cantor set at a time.  It does not say that a CSZ system $(X,\mathcal A,m,T)$ gives rise to 
+CSZ systems $(X,\mathcal A, m, T ^{b ^{i}})$: the CSZ property quantifies over all Cantor sets, and for a second Cantor set the available 
+dilations are powers of \emph{its} base, not of $b$.  
+Second, carrying the parameter $i$ is not a luxury: the proof for compact extensions in \S\ref{sec:compact} 
+uses the hypothesis on the factor with a dilation determined by that proof, and returns the conclusion 
+for the extension with the dilation it was given.  It is the self-similarity $b ^{i}\mathcal C \subset \mathcal C$ of the Cantor set which makes this  work.  
+
+We prove 
+
+\begin{theorem} \label{t:ECSZ}
+    Every ergodic system satisfying the standing assumption of \S\ref{sub:mps} is CSZ.  
+\end{theorem}
+
+This proves Theorem \ref{t:CSZ}.  By Proposition \ref{p:reduction}, Theorem \ref{t:ECSZ} implies that every invertible measure preserving system is CSZ; 
+the case $i=0$, with the passage from sets to non-negative functions recorded after \eqref{e:CSZdef}, is Theorem \ref{t:CSZ}.  
+Theorem \ref{t:CSZ-Integers} then follows by the Furstenberg correspondence principle, 
+as explained in the introduction.  
+
+The proof of Theorem \ref{t:ECSZ} follows the maximal-factor strategy of Furstenberg, Katznelson and Ornstein \cite{MR670131}, 
+in the form presented by Moreira \cite{MoreiraNotes}*{\S 8.1}.  
+A \emph{factor} of $(X,\mathcal A,m,T)$ is a $T$-invariant sub-$\sigma$-algebra $\mathcal D \subset \mathcal A$; it is CSZ if $(X,\mathcal D,m,T)$ is; 
+and factors which agree up to null sets are identified.  
+The proof rests on three statements: the CSZ property passes to weakly mixing and to compact extensions (Lemma \ref{l:Extensions}); 
+the CSZ factors are closed under suprema of chains (Lemma \ref{l:chain}); and every proper factor has a non-trivial extension of one of these two kinds 
+(Lemma \ref{l:dichotomy}).  We first record what is used about powers of $T$.  
+
+\begin{lemma} \label{l:powers}
+Let $k \geq 1$ be an integer.  
+\begin{enumerate}
+\item If $\mathcal E$ is a compact extension of $\mathcal D$ for $T$, then it is one for $T ^{k}$. 
+\item Let $f,g \in L^2(\mathcal E\mid \mathcal D)$ be such that 
+\begin{equation} \label{e:wmHypothesis}
+\lim_{N} \bigl\lVert \Expectation_N \lvert \langle T ^{n}f,g \rangle _{\mathcal E \mid \mathcal D} \rvert \bigr\rVert _{L^2(\mathcal D)} =0 . 
+\end{equation}
+Then the same holds along the progression $k \mathbb N$, that is 
+\begin{equation} \label{e:wmProgression}
+\lim_{N} \bigl\lVert \Expectation_N \lvert \langle T ^{kn}f,g \rangle _{\mathcal E \mid \mathcal D} \rvert \bigr\rVert _{L^2(\mathcal D)} =0 . 
+\end{equation}
+In particular, if every $f \in L ^{\infty}(\mathcal E)$ with $\mathbb E(f\mid \mathcal D)=0$ is conditionally weakly mixing for $T$, 
+then the same holds for $T ^{k}$. 
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+For (1), the orbit $\{T ^{kn}f \colon n \in \mathbb Z\}$ is a subset of $\{T^nf \colon n \in \mathbb Z\}$, so conditional compactness is inherited, 
+and the conditionally compact functions therefore remain dense in $L^2(\mathcal E)$. 
+
+For (2), set $\phi_n \coloneqq \lvert \langle T^nf,g\rangle _{\mathcal E\mid \mathcal D}\rvert$ and $a_n \coloneqq \lVert \phi _n\rVert _{L^2(\mathcal D)}$.  
+By the conditional Cauchy--Schwarz inequality, 
+$0 \leq \phi _n \leq \lVert T ^{n} f\rVert _{\mathcal E\mid \mathcal D} \lVert g\rVert _{\mathcal E\mid \mathcal D} \leq C$ for a constant $C$, 
+since $f, g$ lie in the Hilbert module.  
+As the $\phi_n$ are non-negative, \eqref{e:wmHypothesis} gives 
+\begin{equation}
+\Expectation_N \lVert \phi _n \rVert_{L^1(\mathcal D)} = \bigl\lVert \Expectation_N \phi _n \bigr\rVert _{L^1(\mathcal D)} 
+\leq \bigl\lVert \Expectation_N \phi _n \bigr\rVert _{L^2(\mathcal D)} \to 0 , 
+\end{equation}
+and then $\Expectation_N a_n ^2 \leq C \,\Expectation_N \lVert \phi_n\rVert _{L^1(\mathcal D)} \to 0$, 
+so that $\Expectation_N a_n \to 0$ by Cauchy--Schwarz.  
+A bounded non-negative sequence has $\Expectation_N a_n \to 0$ if and only if $a_n \to 0$ along a set $S$ of density one.  
+The complement of $S$ has density zero, so $\lvert S ^{c} \cap [1, kN]\rvert = o(N)$ for fixed $k$; 
+that is, $a _{kn} \to 0$ along a set of $n$ of density one, so that $\Expectation_N a _{kn} \to 0$.  
+Since $\lVert \Expectation_N \phi_{kn}\rVert _{L^2(\mathcal D)} \leq \Expectation_N a _{kn}$, this proves \eqref{e:wmProgression}.  
+For the last statement, take $g=f$ with $\mathbb E (f\mid \mathcal D)=0$: then \eqref{e:wmHypothesis} is the definition of 
+$f$ being conditionally weakly mixing, and \eqref{e:wmProgression} is that same statement for $T^k$. 
+\end{proof}
+
+\begin{lemma}[Extension principles] \label{l:Extensions}
+Let $\mathcal D \subset \mathcal E$ be factors of $(X,\mathcal A,m,T)$, and suppose that $\mathcal D$ is CSZ.  
+\begin{enumerate}
+\item[(W)] If $\mathcal E$ is a weakly mixing extension of $\mathcal D$, then $\mathcal E$ is CSZ. 
+\item[(K)] If $\mathcal E$ is a compact extension of $\mathcal D$, then $\mathcal E$ is CSZ. 
+\end{enumerate}
+\end{lemma}
+
+Part (W) is proved in \S\ref{sec:wm}, as a consequence of Lemma \ref{l:wmExtension}; part (K) is Theorem \ref{t:compactExtension}.  
+The trivial factor, consisting of the null and the conull sets, is CSZ: if $A$ is in it and $m(A)>0$, then $A$ is conull, 
+and every integral in \eqref{e:CSZdef} equals $1$.  
+A weakly mixing system is a weakly mixing extension of the trivial factor, and a compact system is a compact extension of it, 
+so Lemma \ref{l:Extensions} shows in particular that weakly mixing systems and compact systems are CSZ; see Corollary \ref{t:wm}.  
+Theorem \ref{t:compactSystem}, which treats a restricted class of compact systems by a direct argument, 
+is not used in the proof of the main theorem.  
+
+\begin{lemma}[Chains] \label{l:chain}
+Let $\{\mathcal D_\alpha\}_{\alpha \in I}$ be a non-empty family of CSZ factors of $(X,\mathcal A,m,T)$ which is totally ordered by inclusion, 
+and let $\mathcal D$ be the $\sigma$-algebra generated by their union.  Then $\mathcal D$ is a CSZ factor.  
+\end{lemma}
+
+\begin{proof}
+The $\sigma$-algebra $\mathcal D$ is $T$-invariant, as each $\mathcal D_\alpha$ is.  
+
+\emph{Approximation.}  For every $E \in \mathcal D$ and $\eta>0$ there is an $\alpha$ with 
+$\lVert \mathbf 1_E - \mathbb E(\mathbf 1_E \mid \mathcal D_\alpha)\rVert_2 < \eta$; see \cite{MoreiraNotes}*{Lemma 8.1.5}.  
+For completeness: the union $\bigcup_\alpha \mathcal D_\alpha$ is an algebra of sets, since any two of its members lie in a common $\mathcal D_\alpha$; 
+and $\bigcup _\alpha L^2(\mathcal D_\alpha)$ is a linear subspace of $L^2(X)$, with closure $\mathcal H$, say.  
+The sets $B \in \mathcal D$ with $\mathbf 1_B \in \mathcal H$ contain that algebra, and they form a monotone class, since monotone limits of indicators converge in $L^2$.  
+By the monotone class theorem, they are all of $\mathcal D$.  So for some $\alpha$ there is a $g' \in L^2(\mathcal D_\alpha)$ with $\lVert \mathbf 1_E - g'\rVert_2 < \eta$, 
+and $\mathbb E(\mathbf 1_E \mid \mathcal D_\alpha)$, the orthogonal projection of $\mathbf 1_E$ onto $L^2(\mathcal D_\alpha)$, is at least as close.  
+
+\emph{A set in a single factor.}  Fix a Cantor set $\mathcal C$, integers $t \geq 1$ and $i \geq 0$, and $E \in \mathcal D$ with $m(E)>0$.  
+Put $\kappa \coloneqq 1/(2(t+1))$.  Choose $\alpha$ such that $g \coloneqq \mathbb E(\mathbf 1_E \mid \mathcal D_\alpha)$ satisfies 
+$\lVert \mathbf 1_E - g\rVert_2 ^2 < \kappa ^2 m(E)$, and let $H \coloneqq \{ g > 1-\kappa\} \in \mathcal D_\alpha$.  
+Then $m(H)>0$: otherwise $1-g \geq \kappa$ almost everywhere on $E$, and so $\lVert \mathbf 1_E - g\rVert_2 ^2 \geq \kappa ^2 m(E)$.  
+
+\emph{Comparison, for every step.}  Let $d$ be an integer, and $x \in H_d \coloneqq H \cap T ^{-d}H \cap \cdots \cap T ^{-td}H$.  
+As $\mathcal D_\alpha$ is $T$-invariant, $\mathbb E(T ^{sd}\mathbf 1_E \mid \mathcal D_\alpha)(x) = g(T ^{sd}x) > 1-\kappa$ for $0 \leq s \leq t$.  
+Since indicators take only the values $0$ and $1$, we have $\prod_{s=0}^t T ^{sd}\mathbf 1_E \geq 1 - \sum_{s=0}^t (1 - T ^{sd}\mathbf 1_E)$ pointwise, and so, on $H_d$, 
+\begin{equation}
+\mathbb E\Bigl( \prod_{s=0}^t T ^{sd}\mathbf 1_E \;\Big\vert\; \mathcal D_\alpha\Bigr) > 1 - (t+1) \kappa = \frac 12 . 
+\end{equation}
+As $H_d \in \mathcal D_\alpha$ and the product is non-negative, it follows that 
+\begin{equation} \label{e:chainComparison}
+m \bigl( E \cap T ^{-d}E \cap \cdots \cap T ^{-td}E \bigr) 
+\geq \int_{H_d} \mathbb E\Bigl( \prod_{s=0}^t T ^{sd}\mathbf 1_E \;\Big\vert\; \mathcal D_\alpha\Bigr) dm 
+\geq \frac 12 m(H_d) , \qquad d \in \mathbb Z . 
+\end{equation}
+
+\emph{Conclusion.}  Take $d = b ^{i}k_n$ in \eqref{e:chainComparison}, and average over $M \leq n < N$.  Since \eqref{e:chainComparison} holds for every $d$, 
+\begin{equation}
+\liminf_{N-M\to\infty} \Expectation_{M\leq n<N} m \Bigl( \bigcap_{s=0}^t T ^{-sb ^{i}k_n}E \Bigr) 
+\geq \frac 12 \liminf_{N-M\to\infty} \Expectation_{M\leq n<N} m \Bigl( \bigcap_{s=0}^t T ^{-sb ^{i}k_n}H \Bigr) > 0 , 
+\end{equation}
+the last inequality because $H \in \mathcal D_\alpha$, $m(H)>0$, and $\mathcal D_\alpha$ is CSZ.  As $\mathcal C$, $t$, $i$ and $E$ were arbitrary, $\mathcal D$ is CSZ.  
+\end{proof}
+
+The comparison \eqref{e:chainComparison} is the one point at which the CSZ property enters, and it holds for every step $d$ separately.  
+This is why the classical argument applies verbatim to the CSZ property, with its uniform averages over intervals of indices, 
+its quantification over all Cantor sets, and its dilations: each of these is a statement about which steps $d$ are averaged.  
+
+\begin{lemma}[Dichotomy] \label{l:dichotomy}
+Let $(X,\mathcal A,m,T)$ be an ergodic system satisfying the standing assumption, and $\mathcal D \neq \mathcal A$ a factor.  
+Then either $\mathcal A$ is a weakly mixing extension of $\mathcal D$, or there is a factor $\mathcal E$ with $\mathcal D \subsetneq \mathcal E \subset \mathcal A$ 
+which is a compact extension of $\mathcal D$.  
+\end{lemma}
+
+This is due to Furstenberg \cite{MR0498471}; see \cite{MoreiraNotes}*{Proposition 8.6.1} for a proof in the present language.  
+Our definitions differ slightly from those of \cite{MoreiraNotes}, and in the direction that makes the dichotomy apply as stated.  
+There, $f$ is conditionally weakly mixing if $\lvert \langle T^nf,g\rangle_{\mathcal E\mid \mathcal D}\rvert \to 0$ in uniform Ces\`aro mean, in $L^2(\mathcal D)$, 
+for \emph{every} $g$ in the Hilbert module \cite{MoreiraNotes}*{Definition 8.2.5}.  Our condition is the case $g=f$, with ordinary Ces\`aro means, and so is implied by it.  
+Hence a weakly mixing extension in the sense of \cite{MoreiraNotes} is one in ours.  
+Our definition of conditional compactness, with orbits indexed by $n \in \mathbb Z$ and approximants in the Hilbert module, is that of \cite{MoreiraNotes}*{Definition 8.2.8}.  
+The proof in \cite{MoreiraNotes} is for ergodic systems on compact metric spaces, which is the setting of Theorem \ref{t:ECSZ}, and uses the disintegration of $m$ over $\mathcal D$.  
+
+\begin{proof}[Proof of Theorem \ref{t:ECSZ}]
+Let $\mathbf K$ be the set of CSZ factors of $(X,\mathcal A,m,T)$, partially ordered by inclusion.  
+It is non-empty, as it contains the trivial factor; and every non-empty chain in $\mathbf K$ has an upper bound in $\mathbf K$, namely the $\sigma$-algebra generated by its union, by Lemma \ref{l:chain}.  
+By Zorn's lemma, $\mathbf K$ has a maximal element $\mathcal D$.  
+
+Suppose that $\mathcal D \neq \mathcal A$, and apply Lemma \ref{l:dichotomy}.  
+If $\mathcal A$ is a weakly mixing extension of $\mathcal D$, then $\mathcal A$ is CSZ by Lemma \ref{l:Extensions}(W).  
+Otherwise there is a compact extension $\mathcal E$ of $\mathcal D$ with $\mathcal D \subsetneq \mathcal E$, and $\mathcal E$ is CSZ by Lemma \ref{l:Extensions}(K).  
+Either way, $\mathbf K$ contains a factor strictly larger than $\mathcal D$, contradicting maximality.  
+Hence $\mathcal D = \mathcal A$, which is to say that the system is CSZ.  
+\end{proof}
+
+
+Finally, we record the van der Corput inequality, which is the starting point of the argument in \S\ref{sec:wm}. 
+
+\begin{lemma}[van der Corput Inequality]  \label{vdC}
+Let $u_M, \ldots, u_{N-1}$ be vectors in a Hilbert space, of norm at most $1$, and let $1\leq H < N-M$.  Then 
+\begin{equation}
+    \label{vdc} 
+\Bigl\lVert \Expectation_{M\leq n <N} u_n \Bigr\rVert ^2 
+\leq 
+4\, \Expectation_{1\leq h\leq H} 
+\Bigl\lvert 
+\Expectation_{M\leq n <N-h} \langle u_{n+h}, u_n\rangle  
+\Bigr\rvert
++ \frac 2H . 
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Write $L = N-M$, and set $u_n = 0$ for $n \notin [M,N)$.  Each $u_n$ with $n \in [M,N)$ occurs exactly $H$ times among the vectors $u_{m+h}$, 
+$1 \leq h \leq H$, $m \in I \coloneqq [M-H, N-1)$, an interval of fewer than $L+H$ integers.  By Cauchy--Schwarz in $m$, 
+\begin{equation}
+\Bigl\lVert \sum_{n} u_n \Bigr\rVert ^2 
+= \Bigl\lVert \sum _{m \in I} \frac 1H \sum _{h=1}^H u_{m+h} \Bigr\rVert ^2 
+\leq \frac{L+H}{H^2} \sum _{h,h'=1}^H \sum _{m \in I} \langle u_{m+h}, u_{m+h'} \rangle . 
+\end{equation}
+The $H$ diagonal terms contribute at most $L$ each.  For $r = h-h' \neq 0$, the inner sum is 
+$S(r) \coloneqq \sum _{n} \langle u_{n+r}, u_n\rangle$, with $S(-r) = \overline{S(r)}$, and exactly $H - \lvert r\rvert$ pairs $(h,h')$ have $h-h'=r$.  
+Moreover $\lvert S(r)\rvert = (L-r) \lvert c_r\rvert \leq L \lvert c_r\rvert$ for $1 \leq r <H$, where $c_r \coloneqq \Expectation_{M\leq n<N-r}\langle u_{n+r},u_n\rangle$.  Hence 
+\begin{equation}
+\Bigl\lVert \Expectation_{M\leq n<N} u_n \Bigr\rVert ^2 
+\leq \frac{L+H}{HL} + \frac{2(L+H)}{H^2 L} \sum _{r=1}^{H-1} (H-r) \lvert c_r\rvert 
+\leq \frac 1H + \frac 1L + \frac{2(L+H)}{L}\, \Expectation_{1\leq r\leq H} \lvert c_r\rvert . 
+\end{equation}
+As $H < L$, this is \eqref{vdc}. 
+\end{proof}
+
+
+\subsection{Reduction to ergodic systems on compact metric spaces} \label{sub:reduction}
+
+The CSZ property asks for a positive liminf over all intervals of indices, which is more than the usual multiple recurrence statement, 
+so we give the reduction to ergodic systems in full.  
+
+\begin{proposition} \label{p:reduction}
+Suppose that every ergodic system satisfying the standing assumption of \S\ref{sub:mps} is CSZ.  Then every invertible measure preserving system is CSZ.  
+\end{proposition}
+
+\begin{proof}
+Fix an invertible measure preserving system $(X,\mathcal A,m,T)$, a Cantor set $\mathcal C$ of base $b$, integers $t \geq 1$ and $i \geq 0$, and $A \in \mathcal A$ with $m(A)>0$.  
+
+\emph{A compact metric model.}  Let $\Omega \coloneqq \{0,1\} ^{\mathbb Z}$, a compact metric space in the product topology, with the shift $(\tau\omega)(n) \coloneqq \omega(n+1)$, a homeomorphism.  
+Define $\Phi \colon X \to \Omega$ by $\Phi(x)(n) \coloneqq \mathbf 1_A(T ^{n}x)$.  Each coordinate of $\Phi$ is measurable, so $\Phi$ is measurable, and $\Phi\circ T = \tau \circ \Phi$.  
+Hence $\mu \coloneqq \Phi_\ast m$ is a $\tau$-invariant Borel probability measure on $\Omega$.  Let $\widetilde A \coloneqq \{\omega \colon \omega(0) = 1\}$.  
+Then $\Phi ^{-1}(\tau ^{-d}\widetilde A) = T ^{-d}A$ for every $d \in \mathbb Z$, and therefore 
+\begin{equation} \label{e:model}
+m \Bigl( \bigcap_{s=0}^t T ^{-d_s}A \Bigr) = \mu \Bigl( \bigcap_{s=0}^t \tau ^{-d_s}\widetilde A \Bigr) , \qquad d_0 , \ldots, d_t \in \mathbb Z . 
+\end{equation}
+In particular $\mu(\widetilde A) = m(A)>0$.  By \eqref{e:model}, the averages in \eqref{e:CSZdef} for $A$ in $(X,\mathcal A,m,T)$ coincide with those for $\widetilde A$ in $(\Omega,\mathcal B,\mu,\tau)$, 
+with $\mathcal B$ the Borel $\sigma$-algebra of $\Omega$.  So it suffices to prove that the latter have a positive liminf.  
+
+\emph{Ergodic decomposition.}  By \cite{MoreiraNotes}*{Theorem 7.3.1}, for $\mu$-almost every $y \in \Omega$ there is an ergodic $\tau$-invariant Borel probability measure $\mu_y$ on $\Omega$ 
+such that, for every Borel set $B$, the map $y \mapsto \mu_y(B)$ is measurable and $\mu(B) = \int \mu_y(B)\;d\mu(y)$.  
+For a $\tau$-invariant Borel probability measure $\nu$, write 
+$c_n(\nu) \coloneqq \nu \bigl( \bigcap_{s=0}^t \tau ^{-sb ^{i}k_n}\widetilde A \bigr)$, so that $c_n(\mu) = \int c_n(\mu_y)\;d\mu(y)$ for every $n$.  
+As $0 < \mu(\widetilde A) = \int \mu_y(\widetilde A)\;d\mu(y)$, the set $Y_+ \coloneqq \{y \colon \mu_y(\widetilde A)>0\}$ has positive measure.  
+For $y \in Y_+$, the system $(\Omega,\mathcal B,\mu_y,\tau)$ is ergodic, invertible, and on a compact metric space, so it is CSZ by hypothesis, and 
+\begin{equation}
+c(y) \coloneqq \liminf_{N-M\to\infty} \Expectation_{M\leq n<N} c_n(\mu_y) > 0 , \qquad y \in Y_+ . 
+\end{equation}
+
+\emph{Passing the liminf through the integral.}  Let $c \coloneqq \liminf_{N-M\to\infty} \Expectation_{M\leq n<N} c_n(\mu)$, 
+and choose intervals $[M_k,N_k)$, with $N_k - M_k \to \infty$, along which $\Expectation_{M_k\leq n<N_k} c_n(\mu) \to c$.  
+The function $\ell(y) \coloneqq \liminf_k \Expectation_{M_k\leq n<N_k} c_n(\mu_y)$ is measurable, and $\ell(y) \geq c(y)$, 
+because a liminf along one sequence of intervals whose lengths tend to infinity is at least the liminf over all such intervals.  
+By Fatou's lemma, the integrands being non-negative, 
+\begin{equation}
+c = \lim_k \int \Expectation_{M_k\leq n<N_k} c_n(\mu_y)\;d\mu(y) \geq \int \ell(y)\;d\mu(y) \geq \int_{Y_+} \ell(y)\;d\mu(y) > 0 , 
+\end{equation}
+the last inequality because $\ell(y) \geq c(y) > 0$ for $y \in Y_+$, a set of positive measure.  As $\mathcal C$, $t$, $i$ and $A$ were arbitrary, $(X,\mathcal A,m,T)$ is CSZ.  
+\end{proof}
+
+The step through Fatou's lemma is the only point at which the uniformity of the CSZ property makes a difference here.  
+A uniform liminf is not a liminf along a single sequence, so Fatou's lemma cannot be applied to it directly; 
+it is applied instead along one sequence of intervals that realizes the liminf for $\mu$.  
+Compare \cite{MoreiraNotes}*{\S 7.5}, where the corresponding reduction is carried out for uniform limits.  
+
+We record where the hypotheses of the standing assumption, and ergodicity, are used.  
+The compact metric structure is used for three things: the ergodic decomposition in Proposition \ref{p:reduction}; 
+the disintegration of $m$ over a factor, behind the joining $\lambda$ of Lemma \ref{l:atomless} and so behind \S\ref{sec:wm}; 
+and the dichotomy, Lemma \ref{l:dichotomy}, whose proof in \cite{MoreiraNotes} uses the same disintegration.  
+The approximation step in the proof of Lemma \ref{l:chain} does not use it.  
+Ergodicity is used only in the dichotomy.  Lemmas \ref{l:Extensions} and \ref{l:chain}, and Theorems \ref{t:compactSystem} and \ref{t:compactExtension}, hold without it.  

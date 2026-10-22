@@ -1,0 +1,193 @@
+\section{Introduction} 
+
+Write $\mathbb N = \{1,2,\ldots\}$ and $\mathbb N_0 = \{0, 1,2,\ldots\}$. 
+A subset $A$ of the integers is said to have \emph{positive upper Banach density} if 
+\begin{equation}  \label{e:banach}
+    d ^{\ast}(A) \coloneqq \limsup_{N-M\to\infty}  \frac{\lvert A\cap [M,N) \rvert} {N-M} >0. 
+\end{equation} 
+A set $B \subset \mathbb N_0$ is \emph{syndetic} if it has bounded gaps, that is, if there is an $L$ so that 
+$B \cap [n, n+L] \neq \emptyset $ for every $n$.  A syndetic set has positive lower density, at least $(L+1) ^{-1}$; the converse is false.  
+
+Recall that an \emph{IP-set} is built out of an infinite sequence of  
+ integers $r_1  ,  r_2 ,\ldots $,  which need not be distinct: 
+the IP-set is the collection of all the finite sums $ \sum_{n\in F} r_n $, 
+where $F\subset \mathbb N$ is finite and non-empty.  
+The theorem below is the IP Szemer\'edi theorem of Furstenberg and Katznelson 
+\cite{FK85}*{Theorem A}, specialized to the powers of a single transformation.  
+
+\begin{priorResults}  \label{t:FK}
+    Let $(X, \mathcal A, m, T)$ be an invertible measure preserving system, let $A \in \mathcal A$ have $m(A)>0$, and let $\ell \geq 1$ be an integer. 
+    Then, for every IP-set $\mathcal I$, there is an $r \in \mathcal I$ so that 
+    \begin{equation}
+        m\bigl(A \cap T ^{-r} A \cap \cdots \cap T ^{-\ell r} A \bigr) >0. 
+    \end{equation}
+\end{priorResults}
+
+By the Furstenberg correspondence principle, Theorem \ref{t:FK} is already a \emph{density} statement about the integers.  
+Namely, if $A \subset \mathbb Z$ has positive upper Banach density, and $\mathcal I$ is an IP-set, 
+then there is an $r \in \mathcal I$ for which the set of $a$ with 
+$a, a+r , \ldots, a+ \ell r \in A$ again has positive upper Banach density.  
+Indeed, it follows that the set of \emph{good differences}
+\begin{equation} \label{e:good}
+\mathsf{G} = \mathsf{G}(A , \ell ) \coloneqq 
+\bigl\{ r \in \mathbb N \colon d ^{\ast} \bigl( A \cap (A-r) \cap \cdots \cap (A - \ell r) \bigr) >0 \bigr\} 
+\end{equation}
+meets every IP-set, that is, $\mathsf G$ is an IP$^{\ast}$ set.  
+Such a set is syndetic: the complement of a set which is not syndetic contains arbitrarily long intervals, and a set which contains arbitrarily long intervals contains an IP-set.  
+
+\smallskip 
+
+The sets of integers of interest to us are these.  
+Let $\mathcal{C}_{b,D}$ denote a \emph{classical integer Cantor set}, defined by a base $b\geq 3$ 
+and a collection of digits 
+$ D \subset \{0,1 , \ldots, b-1\}$ with $ 2\leq \lvert D \rvert < b$.  
+That is, 
+\begin{equation} \label{e:Cantor}
+\mathcal{C}_{b, D}  \coloneqq 
+\Bigl\{ 
+ \sum_{j=0}^k d_j b ^{j} 
+ \colon  k\in \mathbb{N}_0 ,\ d_j \in  D
+\Bigr\}. 
+\end{equation}
+The most classical version is the middle thirds Cantor set $\mathcal{C}_{3,\{ 0, 2 \}}$, that is base $b=3$ 
+and allowed digits $D= \{0,2\}$.  
+Throughout the paper we assume that $0 \in D$, and we write 
+$\mathcal C = \mathcal C_{b,D} = \{ 0=k_0 < k_1 < k_2 < \cdots\}$ for the increasing enumeration of the Cantor set.  
+
+A Cantor set with $0 \in D$ contains an IP-set.  Indeed, fixing a non-zero $d \in D$, 
+the finite sums of the integers $d b ^{j}$, $j \geq 0$, all have their base $b$ digits in $\{0,d\} \subset D$.  
+Therefore, Theorem \ref{t:FK} applies to the IP-set inside $\mathcal C$, and so already provides 
+elements of $\mathcal C$ which are good differences.  
+The same remark applies to the recent work of Kra and Shalom \cite{kra2025ergodicaverageslargeintersection}, 
+who show that for IP-sets with rational spectra---a class which includes the IP-set just described---the  
+IP averages above have the same characteristic factors as the full linear averages, and who obtain 
+the optimal lower bounds for progressions of length three and four.  
+It should be emphasized that the implication runs from IP-sets to Cantor sets, and not the other way:  
+the Cantor set is the \emph{larger} set, so that locating a good difference inside the IP-set that it contains is the stronger statement.  
+
+\smallskip 
+
+What these results do not address is the \emph{frequency} with which the good differences occur inside the Cantor set.  
+A Cantor set comes with its own natural enumeration $\{k_n \colon n \geq 0\}$, and the question we take up is how often 
+$k_n$ is a good difference, as measured in the index $n$.  
+
+It should be said at once that the two properties of $\mathsf G$ recorded above do not answer this question.  
+Syndeticity of $\mathsf G$ carries no information about $\mathsf G \cap \mathcal C$, since $\mathcal C$ has density zero: 
+a syndetic set of integers can be disjoint from a Cantor set, as one sees by taking $s = \gcd (D)>1$, so that $\mathcal C \subset s \mathbb Z$, 
+and taking the syndetic set of integers not divisible by $s$.  
+Nor does the IP$^{\ast}$ property settle it.  That property places an element of $\mathsf G$ inside every \emph{infinite} IP-set.  
+What is wanted here is, for some fixed $i$, an element of $\mathsf G$ in each of the blocks 
+$b ^{i}k_u + \bigl( \mathcal C \cap [0,b ^{i}) \bigr)$, $u \geq 0$, into which Lemma \ref{l:Diff}(ii) decomposes $\mathcal C$.  
+These blocks are finite, and they are translated.  
+
+\smallskip 
+
+Our main theorem is the following.  It is stated in terms of averages over intervals of indices 
+$M \leq n < N$, with $N - M \to \infty$; the uniformity in $M$ is exactly what delivers the frequency statement.  
+
+\begin{theorem}  \label{t:CSZ}
+    Let $\mathcal C = \mathcal C_{b,D}=\{0=k_0<k_1 < \cdots\}$ be a Cantor set with  $0\in D$.  
+    Then, for all integers $\ell \geq 1 $, all  invertible  measure preserving systems $(X,\mathcal A, m, T)$, 
+    and  all non-negative  $f \in L ^{\infty}(X)$ which are not identically zero, we have 
+    \begin{equation} \label{e:CSZ}
+        \liminf_{N-M\to\infty} \Expectation_{M \leq n < N} 
+        \int_X \prod_{j=0}^{\ell}  T ^{j k_n} f  \;dm >0. 
+    \end{equation}
+    \end{theorem}
+
+\begin{corollary} \label{c:syndetic}
+    With the notation and assumptions of Theorem \ref{t:CSZ}, the set of indices 
+    \begin{equation}
+    \Bigl\{ n \in \mathbb N_0 \colon \int_X \prod_{j=0}^{\ell}  T ^{j k_n} f  \;dm >0 \Bigr\} 
+    \end{equation}
+    is syndetic.  
+\end{corollary}
+
+\begin{proof}
+    Write $c>0$ for the left hand side of \eqref{e:CSZ}, and suppose that the set of indices above is not syndetic.  
+    Then there are intervals $[M_i, N_i)$ with $N_i - M_i \to \infty$ which contain no such index.  
+    The average in \eqref{e:CSZ} over $[M_i,N_i)$ is then zero for every $i$, contradicting \eqref{e:CSZ}.  
+\end{proof}
+
+Passing to the integers, we obtain the frequency statement that is the point of this paper.  
+
+\begin{theorem}  \label{t:CSZ-Integers}
+    Let $\mathcal C =\{0=k_0<k_1 < \cdots\}$ be a Cantor set with $0\in D$, and let $\ell \geq 1$ be an integer.  
+    For every $A \subset \mathbb Z$ of positive upper Banach density, the set of indices 
+    \begin{equation} \label{e:B}
+        B \coloneqq \{ n \in \mathbb N \colon k_n \in \mathsf G (A, \ell ) \} 
+        = \bigl\{ n \in \mathbb N \colon d ^{\ast} \bigl( A \cap (A-k_n) \cap \cdots \cap (A - \ell k_n) \bigr) >0 \bigr\} 
+    \end{equation}
+    is syndetic.  In particular, for every $n \in B$, the set $A$ contains a non-degenerate $(\ell +1)$-term arithmetic progression with step size $k_n$.  
+    \end{theorem}
+
+\begin{proof}
+By the Furstenberg correspondence principle \cite{MR0498471}*{Thm 1.1}, there is an invertible measure preserving system 
+$(X,\mathcal A, m ,T)$ and a set $\tilde A \in \mathcal A$ with $m (\tilde A) = d ^{\ast}(A)>0$, such that for every finite collection of integers $r_1 , \ldots, r_j$, 
+\begin{equation} \label{e:correspondence}
+d ^{\ast} \bigl( A \cap (A - r_1) \cap \cdots \cap (A-r_j) \bigr) 
+\geq 
+m \bigl( \tilde A \cap T ^{-r_1} \tilde A \cap \cdots \cap T ^{-r_j} \tilde A \bigr) . 
+\end{equation}
+We apply \eqref{e:correspondence}  for each fixed index $n$, with $(r_1 , \ldots, r_ \ell ) = (k_n , 2k_n , \ldots, \ell k_n)$.  
+It follows that $B$ contains the set of indices $n \geq 1$ for which 
+$m ( \tilde A \cap T ^{-k_n} \tilde A \cap \cdots \cap T ^{- \ell k_n} \tilde A )>0$, and the latter is syndetic by 
+Theorem \ref{t:CSZ} and Corollary \ref{c:syndetic}, applied to $f = \mathbf 1_{\tilde A}$.  
+(Discarding the index $n=0$, for which $k_0=0$ and the statement is trivial, does not affect syndeticity.)  
+\end{proof}
+
+\begin{remark}  \label{r:order}
+    The correspondence principle is applied above for one index $n$ at a time, and this is essential.  
+    The averages over the index $n$ are taken \emph{after} the passage from the integers to the measure preserving system, 
+    and it is only the syndeticity of the set of good indices which survives that passage.  
+    An average over $x$ and $n$ taken simultaneously, as in 
+    $\liminf_{N} \Expectation_{x \in [N]} \Expectation_{n \in [N]} \prod_{j=0}^{\ell}\mathbf 1_{A} (x - jk_n)$, 
+    is not a formal consequence of Theorem \ref{t:CSZ}: 
+    the limit in $x$ is taken first in the correspondence principle, and in general 
+    $\lim_{n} \lim _{m} a_{m,n} = a$ does not imply $\lim_n a_{n,n}=a$.  
+\end{remark}
+
+\begin{remark} \label{r:novelty}
+    It is useful to separate the several questions that arise here.  
+    That a set of positive density contains $(\ell+1)$-term progressions is Szemer\'edi's theorem.  
+    That the step size may be required to lie in a prescribed IP-set, and that a positive density of such progressions is then obtained, 
+    is the theorem of Furstenberg and Katznelson, Theorem \ref{t:FK}; by the remarks above it covers Cantor sets as well.  
+    The optimal lower bounds for the density of progressions, with step size restricted to a rational IP-set, are due to Kra and Shalom, 
+    for progressions of length three and four.  
+    The question addressed here is instead one of frequency: among the step sizes $k_n$ that a Cantor set makes available, 
+    how many are good differences?  Theorem \ref{t:CSZ-Integers} answers that a syndetic set of them are.  
+    Frequency questions of this kind seem to have received relatively little attention.  
+\end{remark}
+
+
+Our proof of Theorem \ref{t:CSZ} follows the maximal-factor strategy of the ergodic proof of Szemer\'{e}di's Theorem \cites{MR0498471,MR670131}, 
+carried out so that all averages are uniform in the index, as in \eqref{e:CSZ}.  
+Section \ref{s:prelim} sets this up.  The CSZ property \eqref{e:CSZdef} of a measure preserving system carries a dilation parameter, which the compact case requires, 
+and Theorem \ref{t:CSZ} follows from three statements: the property passes to weakly mixing and to compact extensions of a CSZ factor (Lemma \ref{l:Extensions}); 
+it is preserved by suprema of chains of factors (Lemma \ref{l:chain}); and every proper factor has an extension of one of these two kinds (Lemma \ref{l:dichotomy}).  
+These give the result for ergodic systems on compact metric spaces, and Proposition \ref{p:reduction} reduces the general case to that one.  
+The arithmetic of the Cantor set enters through two facts: the block structure of its enumeration (Lemma \ref{l:Diff}), 
+and a uniform estimate for exponential sums $\sum e(\beta k_n)$ over intervals of indices (Lemma \ref{l:irrational}).  
+
+The Cantor set imposes a real constraint at two steps.  For weakly mixing extensions, in \S\ref{sec:wm}, the van der Corput argument leads to correlations 
+along the differences $k_{n+h}-k_n$; these take few values, so the correlation for an individual shift $h$ is not small.  
+We bound each shift by a non-negative quantity, and only then average over the shifts, using the spectral measure of $f\otimes \overline f$ on the 
+relatively independent self-joining.  For compact extensions, in \S\ref{sec:compact}, the argument of Furstenberg that passes through van der Waerden's theorem 
+produces return times which are dilates, and a Cantor set is not closed under dilation.  We follow instead the argument of Furstenberg, Katznelson and Ornstein \cite{MR670131}, 
+whose return times are translates, which a Cantor set does absorb.  A Cantor set version of van der Waerden's theorem is proved in \S\ref{sec:vdW}, independently of the rest.  
+
+Further questions that this result presents to us include: 
+\begin{itemize}
+    \item The question of quantitative bounds for these sorts of configurations is certainly challenging, and could be of some interest. 
+  In the special case of $\ell=1$,  examples of power savings bounds are contained in \cite{firstpaper}. 
+  
+    \item  Again, for $\ell=1$, there is a polynomial version of this result \cite{firstpaper}. The result above should surely hold for polynomial configurations as well. 
+    
+    \item  The higher dimensional analog could have different formulations as well.  
+    
+\end{itemize}
+
+\begin{ack}
+    We thank Or Shalom for a careful reading of an earlier version of this paper, and for the comments which led to the
+    present formulation of Theorems \ref{t:CSZ} and \ref{t:CSZ-Integers}.  
+\end{ack}

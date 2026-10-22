@@ -1,0 +1,92 @@
+\label{chap:csz}
+
+\begin{definition}[CSZ system]
+  \label{def:csz}
+  \lean{CantorSzemeredi.MPS.CSZ}
+  \uses{def:mps, def:cantor, def:uniform-liminf}
+  A measure preserving system $(X,\Abb,m,T)$ is \emph{Cantor--Szemer\'edi}, or \emph{CSZ}, if
+  for all measurable $A \subset X$ with $m(A) > 0$, all integers $t \geq 1$, all integers
+  $i \geq 0$, and all Cantor sets $\Cantor = \Cantor_{b,D}$ with $0 \in D$,
+  \begin{equation}
+    \label{eq:csz}
+    \unifliminf \ \unifavg \int_X \prod_{s=0}^{t} T^{s b^i k_n} \one_A \, dm > 0 .
+  \end{equation}
+  A factor $\Dbb \subset \Abb$ is CSZ if $(X,\Dbb,m,T)$ is.
+\end{definition}
+
+\begin{lemma}[Sets versus non-negative functions]
+  \label{lem:csz-functions}
+  \lean{CantorSzemeredi.MPS.CSZ_iff_forall_nonneg}
+  \uses{def:csz}
+  \eqref{eq:csz} holds for all such $A$ if and only if it holds with $\one_A$ replaced by an
+  arbitrary non-negative $f \in L^\infty(X)$ which is not identically zero.
+\end{lemma}
+
+\begin{proof}
+  \uses{def:csz}
+  One direction is trivial.  For the other, choose $c > 0$ with $m(A) > 0$ for
+  $A \coloneqq \{f > c\}$.  Then $f \geq c\one_A$ and all factors are non-negative, so the
+  average for $f$ is at least $c^{t+1}$ times the average for $\one_A$.
+\end{proof}
+
+\begin{remark}[On the dilation parameter $i$]
+  \label{rem:dilation}
+  \uses{cor:self-similar}
+  Two points, both needed in Lean.
+  \begin{enumerate}
+    \item Since $b^i k_n = k_{\delta^i n}$ (Corollary~\ref{cor:self-similar}), the condition for
+      a given $i$ is the case $i = 0$ with the index restricted to the progression
+      $\delta^i \NNz$; equivalently, it is the case $i=0$ for the system
+      $(X,\Abb,m,T^{b^i})$ and the \emph{same} Cantor set $\Cantor$.
+    \item That equivalence is \emph{not} the statement that a CSZ system $(X,\Abb,m,T)$ gives
+      rise to a CSZ system $(X,\Abb,m,T^{b^i})$.  The CSZ property quantifies over all Cantor
+      sets, and for a second Cantor set the available dilations are powers of \emph{its} base,
+      not of $b$.  In Lean the single instance, for one Cantor set at a time, is what must be
+      used; stating the stronger (false) version will break the compact-extension proof.
+  \end{enumerate}
+  Carrying $i$ is not optional: the compact extension argument uses the hypothesis on the factor
+  at a dilation determined inside that proof, and returns the conclusion for the extension at the
+  dilation it was handed.  It is the self-similarity $b^i \Cantor \subset \Cantor$ that makes
+  this work.
+\end{remark}
+
+\begin{lemma}[The trivial factor is CSZ]
+  \label{lem:trivial-csz}
+  \lean{CantorSzemeredi.MPS.CSZ_trivial}
+  \uses{def:csz}
+  The factor consisting of the null and conull sets is CSZ.
+\end{lemma}
+
+\begin{proof}
+  \uses{def:csz}
+  If $A$ lies in it and $m(A) > 0$ then $A$ is conull, so every integral in \eqref{eq:csz}
+  equals $1$.
+\end{proof}
+
+\begin{lemma}[Extension principles]
+  \label{lem:extensions}
+  \uses{def:csz, def:cwm, def:compact-extension, lem:wm-extension, thm:compact-extension}
+  Let $\Dbb \subset \Ebb$ be factors of $(X,\Abb,m,T)$ with $\Dbb$ CSZ.
+  \begin{enumerate}
+    \item[(W)] If $\Ebb$ is a weakly mixing extension of $\Dbb$, then $\Ebb$ is CSZ.
+    \item[(K)] If $\Ebb$ is a compact extension of $\Dbb$, then $\Ebb$ is CSZ.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  \uses{lem:wm-extension, thm:compact-extension}
+  (W) is Lemma~\ref{lem:wm-extension}; (K) is Theorem~\ref{thm:compact-extension}.
+\end{proof}
+
+\begin{corollary}
+  \label{cor:wm-compact-are-csz}
+  \lean{CantorSzemeredi.MPS.CSZ_of_weaklyMixing, CantorSzemeredi.MPS.CSZ_of_compactSystem}
+  \uses{lem:extensions, lem:trivial-csz}
+  Weakly mixing systems and compact systems are CSZ.
+\end{corollary}
+
+\begin{proof}
+  \uses{lem:extensions, lem:trivial-csz}
+  A weakly mixing system is a weakly mixing extension of the trivial factor, and a compact
+  system is a compact extension of it; apply Lemmas~\ref{lem:trivial-csz} and \ref{lem:extensions}.
+\end{proof}

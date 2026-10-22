@@ -1,0 +1,140 @@
+\documentclass[12pt]{amsart}
+\usepackage{amsmath,amsthm,amscd,amsfonts,amssymb,graphicx,color,mathabx,enumitem,mathtools,comment,amsrefs,tikz}
+\usepackage[normalem]{ulem}
+
+
+
+\setcounter{tocdepth}{3} %TOC indentation
+    \makeatletter
+    \def\l@subsection{\@tocline{2}{0pt}{2.9pc}{5pc}{}}
+    \def\l@subsubsection{\@tocline{2}{0pt}{5pc}{7.5pc}{}}
+    \makeatother
+\usepackage[margin=2.8cm]{geometry}
+\renewcommand{\baselinestretch}{1.15}
+\usepackage{mathabx}
+\usepackage[bookmarksnumbered, colorlinks, plainpages]{hyperref}
+    \hypersetup{colorlinks=true, linkcolor=blue, citecolor=magenta, filecolor=magenta, urlcolor=cyan}
+\allowdisplaybreaks
+    \mathtoolsset{showonlyrefs,showmanualtags} 
+%% Cleveref has to be loaded after hyperref. 
+
+
+\theoremstyle{plain} % definition 
+\newtheorem{lemma}[equation]{Lemma} 
+\newtheorem{proposition}[equation]{Proposition} 
+\newtheorem{theorem}[equation]{Theorem} 
+\newtheorem{corollary}[equation]{Corollary} 
+\newtheorem{conjecture}[equation]{Conjecture}
+%\newtheorem{question}[equation]{Question}
+\newtheorem{priorResults}{Theorem} 
+\renewcommand{\thepriorResults}{\Alph{priorResults}} 
+
+
+\theoremstyle{definition}
+\newtheorem{definition}[equation]{Definition} 
+% \newtheorem{Problem}[equation]{Problem} 
+% \newtheorem{Example}[equation]{Problem} 
+
+\theoremstyle{remark}
+\newtheorem{remark}[equation]{Remark}
+%\newtheorem{Note}[equation]{Note}
+%\newtheorem{Notation}[equation]{Notation}
+
+\newtheorem*{ack}{Acknowledgment}
+%\newtheorem{Case}[equation]{Case}
+%\newtheorem{Conclusion}[equation]{Conclusion}
+
+
+
+
+\numberwithin{equation}{section}
+\def\theequation{\thesection.\arabic{equation}}
+
+
+
+
+
+
+%%%% Expectation 
+\usepackage{scalerel} 
+\DeclareMathOperator*{\Expectation}{\scalerel*{\mathbb{E}}{\textstyle\sum}}
+   
+
+
+
+\usepackage{amsrefs} 
+\begin{document}
+\title[Cantor Szemer\'edi Theorem]{Szemer\'edi's Theorem Along Cantor Sets of Integers}
+
+\author[Burgin]{Alex Burgin} 
+    \address{School of Mathematics, Georgia Institute of Technology, Atlanta GA 30332, USA}
+    \email{alexander.burgin@gatech.edu}
+    \thanks{Research of AB supported in part by the Department of Education Graduate Assistance in Areas of National Need program at the Georgia Institute of Technology (Award \# P200A240169)}
+
+
+\author[Fragkos]{Anastasios Fragkos}
+\address{ School of Mathematics, Georgia Institute of Technology, Atlanta GA 30332, USA}
+    \email {anastasiosfragkos@gatech.edu}
+
+
+
+\author[Lacey]{Michael T. Lacey} 
+    \address{ School of Mathematics, Georgia Institute of Technology, Atlanta GA 30332, USA}
+    \email {lacey@math.gatech.edu}
+    \thanks{Research of MTL and AB supported in part by grant  from the US National Science Foundation, DMS-2247254.}
+
+ \author[Mena]{Dario Mena}
+    \address{Centro de Investigaci\'{o}n en Matem\'{a}tica Pura y Aplicada \\ Escuela de Matem\'{a}tica, Universidad de Costa Rica}
+    \email{dario.menaarias@ucr.ac.cr}
+    \thanks{Research of DM partially supported by grant C1012 from Universidad de Costa Rica}
+
+\author[Reguera]{Maria Carmen Reguera} \address{Universidad de M\'alaga}
+    \email{m.reguera@uma.es}
+    \thanks{Research of MCR supported by the Spanish Ministry of Science and Innovation through the projects RYC2020-030121-IAEI/10.13039/501100011033/ and PID2022-136619NB-I00 funded by MCIN/AEI/10.13039/501100011033/FEDER, UE.}
+\begin{abstract}
+    Let $\mathcal C= \{k_1<k_2 < \cdots\}$ be Cantor set of integers, that is a set of integers with restricted digits modulo a base $b$, and suppose $0$ is one of the restricted digits.  
+We show that  
+\begin{equation}
+\liminf_N \Expectation_{n\in [N]}  m(A\cap T^{-k_n} A \cap \cdots 
+        \cap T^{-\ell k_n} A )>0. 
+\end{equation}
+This is an extension of the IP Ergodic Theorem of Furstenberg and Katznelson, 
+and a partial extension of recent work of Kra and Shalom. 
+In particular, this implies that for any subset of integers $A$ of positive upper Banach density, 
+there is a set $B$ of integers $n$ of positive lower Banach density 
+such that $A$ contains an $\ell+1$ term progression, with step size $k_n$, where $n\in B$.    
+\end{abstract}
+
+
+\maketitle 
+
+
+
+
+\tableofcontents 
+
+\input{Intro}
+\input{Prelim}
+
+\input{weakMixing}
+
+\input{vanDerWaerden}
+
+\input{compact}
+ 
+
+\bibliography{bibliography}
+
+
+
+% section quantitative_bound (end)
+
+
+ 
+
+\end{document}
+
+
+
+
+    

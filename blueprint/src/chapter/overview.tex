@@ -1,0 +1,139 @@
+This blueprint describes a formalization in Lean~4 (with Mathlib) of the paper
+\emph{Szemer\'edi's Theorem Along Cantor Sets of Integers}, whose \LaTeX{} source is
+\texttt{main.tex} in the root of this repository.
+
+\section{What is to be proved}
+
+Fix a base $b \geq 3$ and a digit set $D \subset \{0,1,\dots,b-1\}$ with $2 \leq \abs{D} < b$
+and $0 \in D$.  The associated \emph{integer Cantor set} is
+\[
+  \Cantor = \Cantor_{b,D} \coloneqq \Bigl\{ \sum_{j=0}^{k} d_j b^j : k \in \NNz,\ d_j \in D \Bigr\},
+\]
+enumerated increasingly as $\Cantor = \{0 = k_0 < k_1 < k_2 < \cdots\}$.  We write
+$\delta \coloneqq \abs{D} \geq 2$.
+
+The two targets of the formalization are the following.  Throughout, averages
+$\avg{M \leq n < N}$ are over intervals of \emph{indices}, and $\uniflim$ denotes the limit as
+the length $N - M$ of the interval tends to infinity, uniformly in the left endpoint $M$.
+This uniformity is the whole point of the paper and must be preserved everywhere in the
+formalization; it is what converts a positive average into a \emph{syndetic} set of good indices.
+
+\begin{theorem}[Main theorem, ergodic form]
+  \label{thm:main-ergodic}
+  \lean{CantorSzemeredi.main_ergodic}
+  \uses{def:cantor, def:csz, thm:ecsz, prop:reduction}
+  Let $\Cantor = \Cantor_{b,D} = \{0 = k_0 < k_1 < \cdots\}$ be a Cantor set with $0 \in D$.
+  Then for every integer $\ell \geq 1$, every invertible measure preserving system
+  $(X,\Abb,m,T)$, and every non-negative $f \in L^\infty(X)$ which is not identically zero,
+  \[
+    \unifliminf \ \unifavg \int_X \prod_{j=0}^{\ell} T^{j k_n} f \, dm > 0 .
+  \]
+\end{theorem}
+
+\begin{corollary}[Syndeticity of the good indices]
+  \label{cor:syndetic}
+  \lean{CantorSzemeredi.syndetic_of_pos_uniform_liminf}
+  \uses{thm:main-ergodic, def:syndetic}
+  Under the hypotheses of Theorem~\ref{thm:main-ergodic}, the set
+  $\bigl\{ n \in \NNz : \int_X \prod_{j=0}^{\ell} T^{j k_n} f \, dm > 0 \bigr\}$ is syndetic.
+\end{corollary}
+
+\begin{proof}
+  \uses{lem:pos-liminf-syndetic}
+  This is Lemma~\ref{lem:pos-liminf-syndetic} applied to the sequence
+  $a_n = \int_X \prod_{j} T^{j k_n} f \, dm$.
+\end{proof}
+
+\begin{theorem}[Main theorem, combinatorial form]
+  \label{thm:main-integers}
+  \lean{CantorSzemeredi.main_integers}
+  \uses{thm:main-ergodic, cor:syndetic, thm:furstenberg-correspondence, def:banach-density}
+  Let $\Cantor = \{0 = k_0 < k_1 < \cdots\}$ be a Cantor set with $0 \in D$, and $\ell \geq 1$.
+  For every $A \subset \ZZ$ of positive upper Banach density, the set of indices
+  \[
+    B \coloneqq \bigl\{ n \in \NN : \dstar\bigl( A \cap (A - k_n) \cap \cdots \cap (A - \ell k_n) \bigr) > 0 \bigr\}
+  \]
+  is syndetic.  In particular, for each $n \in B$ the set $A$ contains a non-degenerate
+  $(\ell+1)$-term arithmetic progression with common difference $k_n$.
+\end{theorem}
+
+\begin{proof}
+  \uses{thm:main-ergodic, cor:syndetic, thm:furstenberg-correspondence}
+  Apply the Furstenberg correspondence principle
+  (Theorem~\ref{thm:furstenberg-correspondence}) to obtain an invertible system
+  $(X,\Abb,m,T)$ and $\tilde A$ with $m(\tilde A) = \dstar(A) > 0$ and
+  $\dstar(A \cap (A-r_1) \cap \cdots \cap (A-r_j)) \geq m(\tilde A \cap T^{-r_1}\tilde A \cap \cdots \cap T^{-r_j}\tilde A)$.
+  Use it \emph{for one index $n$ at a time}, with $(r_1,\dots,r_\ell) = (k_n, 2k_n, \dots, \ell k_n)$.
+  Then $B$ contains the set of $n \geq 1$ with
+  $m(\tilde A \cap T^{-k_n}\tilde A \cap \cdots \cap T^{-\ell k_n}\tilde A) > 0$, which is
+  syndetic by Theorem~\ref{thm:main-ergodic} and Corollary~\ref{cor:syndetic} applied to
+  $f = \one_{\tilde A}$.  Dropping $n = 0$ does not affect syndeticity.
+\end{proof}
+
+\begin{remark}
+  The order of the two limits matters and must be respected in Lean: the correspondence
+  principle takes a limit in $x$ first, so Theorem~\ref{thm:main-integers} is \emph{not} a
+  statement about a joint average in $x$ and $n$.
+\end{remark}
+
+\section{Shape of the proof}
+
+The proof is the maximal-factor (Furstenberg--Katznelson--Ornstein) strategy, carried out so
+that every average is uniform in the index.  The chain of reductions is:
+
+\begin{enumerate}
+  \item Define the \emph{CSZ property} of a measure preserving system
+    (Definition~\ref{def:csz}).  It carries a dilation parameter $i \geq 0$ and quantifies over
+    all Cantor sets; the case $i = 0$ is Theorem~\ref{thm:main-ergodic}.
+  \item The trivial factor is CSZ (Lemma~\ref{lem:trivial-csz}).
+  \item CSZ factors are closed under suprema of chains (Lemma~\ref{lem:chain}).
+  \item CSZ passes to weakly mixing extensions (Lemma~\ref{lem:wm-extension}, via
+    Lemma~\ref{lem:wm-main}) and to compact extensions (Theorem~\ref{thm:compact-extension}).
+  \item Every proper factor of an ergodic system on a compact metric space admits an extension
+    of one of those two kinds (Lemma~\ref{lem:dichotomy}).
+  \item Zorn's lemma then gives Theorem~\ref{thm:ecsz}: every ergodic system satisfying the
+    standing assumption is CSZ.
+  \item Proposition~\ref{prop:reduction} reduces the general invertible system to that case,
+    via a symbolic model and the ergodic decomposition.
+\end{enumerate}
+
+The arithmetic of the Cantor set enters at exactly two places: the block structure of its
+enumeration (Lemma~\ref{lem:diff}), used for the self-similarity $b^i \Cantor \subset \Cantor$
+and for the absorption of translations (\ref{eq:absorb}); and the uniform exponential sum
+estimate (Lemma~\ref{lem:irrational}), which drives the weakly mixing case.
+
+\section{Formalization strategy and staging}
+
+The formalization is staged so that each stage is independently useful and compiles on its own.
+
+\begin{description}
+  \item[Stage 0 --- infrastructure.]  Uniform averages and uniform $\liminf$ over intervals of
+    indices; syndetic sets; the elementary Lemma~\ref{lem:pos-liminf-syndetic}.  This is pure
+    Mathlib-level work and has no dependence on the rest.
+  \item[Stage 1 --- Cantor arithmetic.]  Chapter~\ref{chap:cantor} in full.  Entirely
+    elementary and finitary; a good first target.  Lemma~\ref{lem:diff} is the keystone.
+  \item[Stage 2 --- exponential sums.]  Lemma~\ref{lem:irrational} and
+    Lemma~\ref{lem:uniform-spectral}.  Needs the spectral theorem for unitary operators, which
+    Mathlib has in the form of the spectral measure of a unitary; if that is missing in usable
+    form it must be built, and that is the largest single piece of Mathlib infrastructure this
+    project needs.
+  \item[Stage 3 --- ergodic theory infrastructure.]  Factors as $T$-invariant sub-$\sigma$-algebras,
+    conditional expectation (Mathlib has \texttt{MeasureTheory.condExp}), the Hilbert module
+    $L^2(\Ebb \mid \Dbb)$, conditional Cauchy--Schwarz, disintegration of measures over a factor
+    and the relatively independent self-joining.  Mathlib has disintegration
+    (\texttt{ProbabilityTheory.Kernel.disintegrate}); the self-joining must be built.
+  \item[Stage 4 --- the two extension principles.]  Chapters~\ref{chap:wm} and \ref{chap:compact}.
+    These are the mathematical core.
+  \item[Stage 5 --- assembly.]  Chapter~\ref{chap:structure}: chains, Zorn, the dichotomy, the
+    reduction, and the correspondence principle.  The dichotomy (Lemma~\ref{lem:dichotomy}) is a
+    known hard import; it is quoted from the literature in the paper, and in Lean it is a
+    substantial project in its own right.  It is marked \texttt{\textbackslash notready} below
+    and should be isolated behind a clean interface so the rest can be completed against it.
+\end{description}
+
+\begin{remark}[Two deliberate omissions]
+  Chapter~\ref{chap:vdw} (van der Waerden along a Cantor set) and
+  Theorem~\ref{thm:compact-roots-of-unity} are \emph{not} used in the proof of the main theorem.
+  They are included in the blueprint because they are in the paper, and they are good
+  warm-up targets, but they may be skipped without affecting Theorem~\ref{thm:main-integers}.
+\end{remark}

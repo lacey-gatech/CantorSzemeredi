@@ -1,0 +1,200 @@
+\label{chap:wm}
+
+Throughout, $\Cantor = \Cantor_{b,D} = \{0=k_0<k_1<\cdots\}$ with $0 \in D$ and $\delta = \abs{D}$.
+Let $\Dbb \subset \Ebb$ be $T$-invariant sub-$\sigma$-algebras of $\Abb$.  The hypothesis used is
+\begin{equation}
+  \label{eq:WM}
+  \text{every } f \in L^\infty(\Ebb) \text{ with } \Exp(f \mid \Dbb) = 0 \text{ is conditionally weakly mixing for } T .
+\end{equation}
+A weakly mixing extension satisfies \eqref{eq:WM} by definition, and by
+Lemma~\ref{lem:powers}(2) \eqref{eq:WM} for $T$ implies \eqref{eq:WM} for every power $T^k$.
+
+\begin{remark}[Why increasing tuples]
+  The results are stated for an arbitrary increasing tuple $0 < s_1 < \cdots < s_t$ of positive
+  integer exponents, not for $1,2,\dots,t$.  The induction requires it: reduction to mean-zero
+  factors passes to a \emph{subset} of the exponents, and the van der Corput step replaces the
+  $s_j$ by the differences $s_j - s_1$.  The generality also absorbs the dilation parameter $i$
+  of \eqref{eq:csz}, which is the case $s_j = j b^i$.  In Lean, the statement should quantify
+  over a \texttt{StrictMono} tuple from the start.
+\end{remark}
+
+\begin{lemma}[Weakly mixing extensions: main estimate]
+  \label{lem:wm-main}
+  \lean{CantorSzemeredi.wm_extension_tendsto}
+  \uses{def:cwm, lem:atomless, lem:uniform-spectral, lem:vdc, lem:differences, lem:powers}
+  Let $\Dbb \subset \Ebb$ satisfy \eqref{eq:WM}, let $0 < s_1 < \cdots < s_t$ be integers, and
+  let $f_1,\dots,f_t \in L^\infty(\Ebb)$.  Then
+  \begin{equation}
+    \label{eq:wm-conclusion}
+    \uniflim \Bigl\lVert \unifavg \Bigl[ \prod_{j=1}^{t} T^{s_j k_n} f_j
+      - \prod_{j=1}^{t} T^{s_j k_n} \Exp(f_j \mid \Dbb) \Bigr] \Bigr\rVert_{L^2(X)} = 0 .
+  \end{equation}
+\end{lemma}
+
+\begin{proof}
+  \uses{def:cwm, lem:atomless, lem:uniform-spectral, lem:vdc, lem:differences, lem:powers, lem:diff}
+  \textbf{Reduction.}  Rescale so $\abs{f_j} \leq 1$.  Telescoping,
+  \[
+    \prod_{j} T^{s_j k_n} f_j - \prod_{j} T^{s_j k_n} \Exp(f_j \mid \Dbb)
+    = \sum_{j_0=1}^{t} \prod_{j<j_0} T^{s_j k_n}\Exp(f_j \mid \Dbb) \cdot
+      T^{s_{j_0}k_n}\bigl(f_{j_0} - \Exp(f_{j_0}\mid \Dbb)\bigr) \cdot \prod_{j>j_0} T^{s_j k_n} f_j ,
+  \]
+  each summand a product of the same shape with the $j_0$-th factor of conditional expectation
+  zero.  So it suffices to prove: if $\abs{f_j} \leq 1$ for all $j$ and $\Exp(f_{j_0}\mid\Dbb)=0$
+  for some $j_0$, then
+  \begin{equation}
+    \label{eq:wm-star}
+    \uniflim \Bigl\lVert \unifavg \prod_{j=1}^{t} T^{s_j k_n} f_j \Bigr\rVert_{L^2(X)} = 0 .
+  \end{equation}
+  We induct on $t$, \emph{simultaneously over all invertible $T$ for which $\Dbb, \Ebb$ are
+  invariant and \eqref{eq:WM} holds, and over all increasing tuples of positive exponents}.
+  (This simultaneous quantification is essential: the inductive step applies the hypothesis to
+  the transformation $T^{b^\ell}$.  In Lean the induction must therefore be set up over $t$ with
+  $T$ and the tuple universally quantified inside.)
+
+  \smallskip
+  \textbf{Case $t=1$.}  $f = f_1$ has $\Exp(f\mid\Dbb)=0$, so it is conditionally weakly mixing
+  by \eqref{eq:WM} and $\sigma_f$ is atomless by Lemma~\ref{lem:atomless}(i).  By
+  Corollary~\ref{cor:uniform-ergodic}, $\lVert \unifavg T^{s_1 k_n} f \rVert_2 \to 0$.
+
+  \smallskip
+  \textbf{Inductive step: parameters.}  Let $t \geq 2$.  Fix $f_1,\dots,f_t$ as above and
+  $0 < \epsilon < 1$.  Write $f \coloneqq f_{j_0}$, $s \coloneqq s_{j_0}$, and for $m \in \ZZ$
+  \begin{equation}
+    \label{eq:phipsi}
+    \phi(m) \coloneqq \bigl\lVert \cip{T^m f}{f} \bigr\rVert_{L^1(\Dbb)} , \qquad
+    \psi(m) \coloneqq \bigl\lVert \cip{T^m f}{f} \bigr\rVert_{L^2(\Dbb)}^2 ,
+  \end{equation}
+  so $\phi(m)^2 \leq \psi(m) \leq 1$.  By Lemma~\ref{lem:atomless}(ii),
+  $\psi(m) = \int e(m\alpha)\,d\sigma(\alpha)$ for a finite positive atomless $\sigma = \sigma_G$.
+  By Lemma~\ref{lem:uniform-spectral} fix $H \geq 1/\epsilon$ with
+  \begin{equation}
+    \label{eq:Hchoice}
+    \int_{\TT} \Phi_H(s\alpha)\, d\sigma(\alpha) < \epsilon ,
+  \end{equation}
+  then fix $\ell$ with $\delta^\ell > H/\epsilon$.  Put $u_n \coloneqq \prod_{j=1}^{t} T^{s_j k_n} f_j$,
+  so $\norm{u_n}_2 \leq 1$.
+
+  \smallskip
+  \textbf{Step 1: one shift at a time.}  There is $L_0$ such that for every $1 \leq h \leq H$ and
+  every interval $[M',N')$ of length at least $L_0$,
+  \begin{equation}
+    \label{eq:per-shift}
+    \Bigl\lvert \avg{M' \leq n < N'} \langle u_{n+h}, u_n \rangle \Bigr\rvert
+      \leq \avg{M' \leq n < N'} \phi\bigl( s(k_{n+h}-k_n) \bigr) + 3\epsilon .
+  \end{equation}
+  Fix $h$.  With $P_c, \Delta_c$ as in Lemma~\ref{lem:differences}, for $n \in P_c$ and
+  $\Delta = \Delta_c$ we have $T^{s_j k_{n+h}} = T^{s_j k_n} T^{s_j \Delta}$, so with
+  $F_j \coloneqq \overline{f_j}\cdot T^{s_j \Delta_c} f_j$ (bounded by $1$),
+  \begin{equation}
+    \label{eq:two-inner}
+    \langle u_{n+h}, u_n \rangle = \int_X \prod_{j=1}^{t} T^{s_j k_n} F_j \, dm
+      = \int_X F_1 \cdot \prod_{j=2}^{t} T^{(s_j - s_1)k_n} F_j \, dm ,
+  \end{equation}
+  applying $T^{-s_1 k_n}$.  Writing $n = \delta^\ell a + c$, Lemma~\ref{lem:diff}(ii) gives
+  $k_n = b^\ell k_a + k_c$ and hence
+  \begin{equation}
+    \label{eq:reindex}
+    \prod_{j=2}^{t} T^{(s_j-s_1)k_n} F_j
+      = \prod_{j=2}^{t} \bigl(T^{b^\ell}\bigr)^{(s_j-s_1)k_a}\bigl( T^{(s_j-s_1)k_c} F_j \bigr) .
+  \end{equation}
+  The transformation $T^{b^\ell}$ satisfies \eqref{eq:WM} (Lemma~\ref{lem:powers}(2)), and the
+  $t-1$ exponents $s_j - s_1$ are positive and increasing, so the induction hypothesis applies to
+  the right side of \eqref{eq:reindex}.  Since $\Dbb$ is $T$-invariant,
+  $\Exp(T^{(s_j-s_1)k_c}F_j \mid \Dbb) = T^{(s_j-s_1)k_c}\Exp(F_j\mid\Dbb)$; undoing
+  \eqref{eq:reindex}, and noting that as $n$ runs over $P_c \cap [M',N')$ the index $a$ runs over
+  an interval of length at least $(N'-M')/\delta^\ell - 1$,
+  \begin{equation}
+    \label{eq:IH}
+    \lim_{N'-M'\to\infty} \Bigl\lVert \avg{n \in P_c \cap [M',N')} \Bigl[
+      \prod_{j=2}^{t} T^{(s_j-s_1)k_n}F_j - \prod_{j=2}^{t} T^{(s_j-s_1)k_n}\Exp(F_j\mid\Dbb)
+      \Bigr] \Bigr\rVert_{L^2(X)} = 0 .
+  \end{equation}
+  Note the shifts remain on the conditional expectations: these are $\Dbb$-measurable functions,
+  not constants.  There are finitely many pairs $(h,c)$, so fix $L_0 \geq \delta^\ell/\epsilon$
+  making the norm in \eqref{eq:IH} less than $\epsilon$ for all of them once $N'-M' \geq L_0$.
+
+  Pair \eqref{eq:IH} with $F_1$; the second product is $\Dbb$-measurable so its integral against
+  $F_1$ equals its integral against $\Exp(F_1 \mid \Dbb)$.  Bounding all factors but the $j_0$-th
+  by $1$ and using that $T$ preserves $m$, the remaining integral is at most
+  $\norm{\Exp(F_{j_0}\mid\Dbb)}_{L^1} = \phi(s\Delta_c) = \phi(s(k_{n+h}-k_n))$, since
+  $\Exp(F_{j_0}\mid\Dbb) = \cip{T^{s\Delta_c}f}{f}$.  Hence
+  \begin{equation}
+    \label{eq:per-class}
+    \Bigl\lvert \avg{n \in P_c \cap [M',N')} \langle u_{n+h},u_n\rangle \Bigr\rvert
+      \leq \epsilon + \avg{n \in P_c \cap [M',N')} \phi\bigl(s(k_{n+h}-k_n)\bigr) .
+  \end{equation}
+  Write the average over $[M',N')$ as a weighted sum of the averages over the $P_c \cap [M',N')$
+  plus the leftover indices.  By Lemma~\ref{lem:differences}(ii) there are at most
+  $h\delta^{-\ell}(N'-M') + \delta^\ell \leq \epsilon(N'-M') + \delta^\ell$ leftovers, each
+  contributing at most $1$.  With $\phi \geq 0$, which allows extending its average to all of
+  $[M',N')$, this gives \eqref{eq:per-shift} since $N'-M' \geq L_0 \geq \delta^\ell/\epsilon$.
+
+  \smallskip
+  \textbf{Step 2: averaging over the shifts.}  Let $N-M \geq L_0 + 2H$.  Applying
+  \eqref{eq:per-shift} on $[M, N-h)$ for each $1 \leq h \leq H$ and averaging over $h$,
+  \begin{equation}
+    \label{eq:shift-average}
+    \avg{1 \leq h \leq H} \Bigl\lvert \avg{M \leq n < N-h} \langle u_{n+h},u_n\rangle \Bigr\rvert
+      \leq \avg{1 \leq h \leq H} \avg{M \leq n < N-h} \phi\bigl(s(k_{n+h}-k_n)\bigr) + 3\epsilon .
+  \end{equation}
+  The left side is exactly the quantity appearing in van der Corput, \eqref{eq:vdc}: the absolute
+  value is \emph{inside} the average over $h$.  This is why each shift was handled separately in
+  Step 1, the shifts being averaged only after the correlation is bounded by the non-negative
+  $\phi$.
+
+  By Cauchy--Schwarz and $\phi^2 \leq \psi$, the right-hand double average is at most
+  $\bigl( \avg{h}\avg{M\leq n<N-h} \psi(s(k_{n+h}-k_n)) \bigr)^{1/2}$.  As $\psi \geq 0$ and
+  $N-M \geq 2H$, enlarging $[M,N-h)$ to $[M,N)$ costs at most a factor $2$.  Then
+  \begin{align*}
+    \avg{1 \leq h \leq H} \avg{M \leq n < N} \psi\bigl(s(k_{n+h}-k_n)\bigr)
+      &= \Bigl\lvert \int_{\TT} \avg{M\leq n<N}\Bigl[ e(-s\alpha k_n) \avg{1\leq h\leq H} e(s\alpha k_{n+h}) \Bigr] d\sigma(\alpha) \Bigr\rvert \\
+      &\leq \int_{\TT} \avg{M\leq n<N} \Bigl\lvert \avg{1\leq h\leq H} e(s\alpha k_{n+h}) \Bigr\rvert d\sigma(\alpha)
+       \leq \int_{\TT} \Phi_H(s\alpha)\, d\sigma(\alpha) < \epsilon ,
+  \end{align*}
+  the first line because the left side is real and non-negative; for the second inequality, for
+  fixed $n$ the average over $h$ is an average of $e(s\alpha k_u)$ over the interval of indices
+  $u \in [n+1,n+H]$, of length $H$, so its modulus is at most $\Phi_H(s\alpha)$ \emph{uniformly in
+  $n$}; the last step is \eqref{eq:Hchoice}.  So the left side of \eqref{eq:shift-average} is at
+  most $\sqrt{2\epsilon} + 3\epsilon$, and van der Corput \eqref{eq:vdc} with this $H \geq 1/\epsilon$
+  gives $\lVert \unifavg u_n \rVert^2 \leq 4(\sqrt{2\epsilon}+3\epsilon) + 2\epsilon$ once
+  $N-M \geq L_0 + 2H$.  As $\epsilon$ was arbitrary, \eqref{eq:wm-star} follows.
+\end{proof}
+
+\begin{lemma}[Part (W) of the extension principles]
+  \label{lem:wm-extension}
+  \lean{CantorSzemeredi.MPS.CSZ_of_weaklyMixingExtension}
+  \uses{lem:wm-main, def:csz, lem:csz-functions}
+  If $\Dbb$ is CSZ and $\Ebb$ is a weakly mixing extension of $\Dbb$, then $\Ebb$ is CSZ.
+\end{lemma}
+
+\begin{proof}
+  \uses{lem:wm-main, def:csz, lem:csz-functions}
+  Hypothesis \eqref{eq:WM} holds, since a weakly mixing extension satisfies it for every $f$ in
+  the Hilbert module, which contains $L^\infty(\Ebb)$.  Take $s_j = j b^i$, each
+  $f_j = \one_A$ with $A \in \Ebb$, $m(A) > 0$, and set $g \coloneqq \Exp(\one_A \mid \Dbb)$.
+  Pairing \eqref{eq:wm-conclusion} with $\one_A$, and using that $\prod_j T^{jb^i k_n} g$ is
+  $\Dbb$-measurable so its integral against $\one_A$ equals its integral against $g$,
+  \[
+    \unifavg \int_X \prod_{s=0}^{t} T^{s b^i k_n}\one_A \, dm
+      = \unifavg \int_X \prod_{s=0}^{t} T^{s b^i k_n} g \, dm + o(1) .
+  \]
+  The liminf of the right side is positive because $\Dbb$ is CSZ, in the form of
+  Lemma~\ref{lem:csz-functions}: $g \geq 0$ and $\int g \, dm = m(A) > 0$.
+\end{proof}
+
+\begin{corollary}[Weakly mixing systems]
+  \label{cor:wm-system}
+  \lean{CantorSzemeredi.weaklyMixing_tendsto_prod}
+  \uses{lem:wm-main, def:weak-mixing}
+  Let $(X,\Abb,m,T)$ be weakly mixing, $0 < s_1 < \cdots < s_t$ integers, and
+  $f_1,\dots,f_t \in L^\infty(X)$.  Then
+  $\uniflim \unifavg \prod_{j=1}^{t} T^{s_j k_n} f_j = \prod_{j=1}^{t} \int f_j \, dm$ in $L^2(X)$.
+\end{corollary}
+
+\begin{proof}
+  \uses{lem:wm-main}
+  Lemma~\ref{lem:wm-main} with $\Dbb$ trivial and $\Ebb = \Abb$: then
+  $\Exp(f\mid\Dbb) = \int f \, dm$ is constant, the conditional inner product is the inner
+  product of $L^2(X)$, and \eqref{eq:WM} is the case $g=f$ of the definition of weak mixing.
+\end{proof}

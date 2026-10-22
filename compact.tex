@@ -1,0 +1,282 @@
+\section{Compact Systems and Extensions} \label{sec:compact}
+
+This section proves part (K) of Lemma \ref{l:Extensions}, in Theorem \ref{t:compactExtension}: a compact extension of a CSZ factor is CSZ.  
+Taking the factor to be trivial, it shows that every compact system is CSZ.  
+In \S\ref{sub:rootsOfUnity} we add Theorem \ref{t:compactSystem}, which is \emph{not} used in the proof of the main theorem.  
+It treats the compact systems whose eigenvalues are all roots of unity, by a direct argument, and for them it gives more: 
+a lower bound of $\int f ^{t+1}\;dm - \epsilon$, attained on a syndetic set of indices.  
+Throughout, let $\mathcal C = \mathcal C_{b,D} = \{0=k_0<k_1<\cdots\}$ be a classical Cantor set, with $0\in D$, and $\delta = \lvert D\rvert$.  
+
+
+\subsection{Compact extensions} 
+
+ 
+\begin{theorem} \label{t:compactExtension}
+Let $\mathcal D$ be a factor of $(X, \mathcal A, m, T)$ which is CSZ, and let $\mathcal E$ be a compact extension of $\mathcal D$.  
+Then $\mathcal E$ is CSZ.  That is, for all integers $t \geq 1$, all $i \geq 0$, and all 
+non-zero $0\leq f\leq 1$ in $L ^{\infty}(\mathcal E)$, we have 
+\begin{equation} \label{e:compactExtensionConclusion}
+\liminf_{N-M\to\infty}  \Expectation_{M\leq n<N} 
+\int \prod _{s=0}^{t} T ^{s b ^{i} k_n} f\;dm >0. 
+\end{equation}
+\end{theorem}
+
+The proof follows Furstenberg, Katznelson and Ornstein \cite{MR670131}, in the form presented by Moreira \cite{MoreiraNotes}*{\S 8.5}.  
+We single out two features of that argument which make it the right one for our purposes.  
+First, it works directly with the uniform averages that we require, whereas the van der Waerden argument of 
+Furstenberg \cite{MR0498471} is naturally phrased with ordinary Ces\`aro averages.  
+Second, and decisively, the return time that it produces is a \emph{translate} $n+a$ of the averaging parameter $n$, 
+by an element $a$ of a fixed finite set, whereas the van der Waerden argument produces a \emph{dilate} $sn$, with $s$ 
+ranging over a finite set.  The integers are closed under dilation, so for Szemer\'edi's theorem either argument serves.  
+A Cantor set is not closed under dilation, but it is, in the following sense, closed under the translations we need: 
+if $a \in \mathcal C\cap [0,b ^{i})$ and $n \in b ^{i}\mathcal C$, then by Lemma \ref{l:Diff}(ii), 
+\begin{equation} \label{e:absorb}
+n = b ^{i}k_u \quad\Longrightarrow\quad n+a = b ^{i}k_u + a = k _{\delta ^{i} u + \iota (a)} \in \mathcal C , 
+\end{equation}
+where $\iota (a) < \delta ^{i}$ denotes the index of $a$ in $\mathcal C$.  
+That is, the translate stays in the Cantor set, and its index stays inside the block $[\delta ^{i}u , \delta ^{i}(u+1))$.  
+This is why the argument below restricts the finite set of translations to the Cantor set, and the averaging parameter to a dilate of it.  
+
+\begin{remark}
+In particular, the proof below does not use the Cantor van der Waerden Theorem of \S\ref{sec:vdW}, 
+which is retained as a result of independent interest.  
+\end{remark}
+
+We need this known Lemma. 
+
+\begin{lemma} \label{l:localize} Let $\mathcal E\mid \mathcal D$ be a compact extension. 
+Then for all $f\in L^2(\mathcal E\mid \mathcal D)$ and $0< \epsilon <1$, there is a set $A \in \mathcal D$ such that $m(A)>1- \epsilon $ and $f \mathbf{1}_{A}$ is conditionally compact. 
+\end{lemma}
+
+See \cite{MoreiraNotes}*{Lemma 8.4.3} for a proof.
+
+\begin{proof}[Proof of Theorem \ref{t:compactExtension}]
+We give the argument for the dilation $i=0$.  The case of a general $i$ is the same argument with $T$ replaced by $T ^{b ^{i}}$, 
+and is set out in Remark \ref{r:dilation} at the end of the section.  
+The hypothesis that $\mathcal D$ is CSZ enters exactly once, at \eqref{e:c0} below, and there for the same Cantor set $\mathcal C$ 
+and a dilation fixed in the course of the proof.  
+
+Fix an integer $t \geq 1$ and a non-zero $0 \leq f \leq 1$ in $L^2(\mathcal E \mid \mathcal D)$.   
+We may and do assume that $f$ is conditionally compact.  Indeed, as $f \geq 0$ is not identically zero, we may choose $0<\eta <1$ so small 
+that $m(A_\ast) > 1- \eta$ implies $\int_{A_\ast} f \;dm > 0$; let $A_\ast$ be as in Lemma \ref{l:localize} for this $\eta$, and replace $f$ by $f \mathbf 1_{A_\ast}$.  
+This is legitimate because $0 \leq f \mathbf 1_{A_\ast} \leq f$ and all the factors in \eqref{e:compactExtensionConclusion} are non-negative, 
+so a positive liminf for $f \mathbf 1_{A_\ast}$ gives one for $f$.  
+Set 
+\begin{equation}
+g \coloneqq \mathbb E (f \mid \mathcal D), \qquad \delta _0 \coloneqq \int_X f \;dm >0 . 
+\end{equation}
+Now fix, once and for all, an $\epsilon >0$ small enough that 
+\begin{equation} \label{e:epschoice}
+c_1 \coloneqq ( \delta _0/2) ^{t+1} - t \epsilon >0 . 
+\end{equation}
+Thus $\epsilon$ depends only on $t$ and $\delta _0$; everything constructed below depends on $\epsilon$.  
+
+\smallskip 
+\noindent \textbf{Good pairs.}  
+By conditional compactness there are $r \in \mathbb N$ and $f_1 , \ldots, f_r$ so that for almost every $x$ and every $n \in \mathbb N_0$, 
+\begin{equation} \label{e:net}
+\min_{1 \leq \ell \leq r} \lVert T^{n}f - f_\ell \rVert _{\mathcal E \mid \mathcal D}(x) < \epsilon /2 . 
+\end{equation}
+Call a pair $\{a, a'\}$ of distinct elements of $\mathcal C$ \emph{good at $x$} if 
+\begin{equation}
+\lVert T^{sa}f - T ^{sa'}f \rVert _{\mathcal E \mid \mathcal D}(x) < \epsilon , \qquad 0 \leq s \leq t , 
+\end{equation}
+and call a finite $F \subset \mathcal C$ \emph{unfortunate at $x$} if no pair in $F$ is good at $x$.  
+
+\begin{lemma} \label{l:unfortunate}
+Set $M \coloneqq r ^{t+1}+1$.  If $F \subset \mathcal C$ has $\lvert F\rvert \geq M$, then for almost every $x$, 
+$F$ is not unfortunate at $x$.  
+\end{lemma}
+
+\begin{proof}
+Let $Y$ be the set of full measure on which \eqref{e:net} holds for all $n$, and fix $x \in Y$.  
+To each $a \in F$ associate the tuple $( \ell _0 , \ldots, \ell _t) \in [r] ^{t+1}$, where $\ell _s$ is least with 
+$\lVert T^{sa}f - f _{\ell _s} \rVert _{\mathcal E\mid \mathcal D}(x)< \epsilon /2$.  
+There are $r ^{t+1}$ such tuples, so if $\lvert F \rvert \geq M$ two elements $a \neq a'$ of $F$ share a tuple.  
+The conditional triangle inequality then gives $\lVert T^{sa}f - T^{sa'}f\rVert _{\mathcal E\mid \mathcal D}(x)< \epsilon$ for $0 \leq s \leq t$. 
+\end{proof}
+
+\smallskip 
+\noindent \textbf{A maximal unfortunate set.}  
+For finite $F \subset \mathcal C$ put 
+\begin{equation}
+S(F) \coloneqq \{ x \colon F \textup{ is unfortunate at } x \} 
+= \bigcap_{a \neq a' \in F} \ \bigcup_{0\leq s \leq t} 
+\bigl\{ x \colon \lVert T^{sa}f-T^{sa'}f \rVert _{\mathcal E\mid \mathcal D}(x) \geq \epsilon \bigr\} .
+\end{equation}
+Conditional norms are $\mathcal D$ measurable, so $S(F) \in \mathcal D$.  Put 
+\begin{equation}
+Q(F) \coloneqq \bigl\{ x \in S(F) \colon x \notin S(G) \textup{ for every finite } G \subset \mathcal C \textup{ with } \lvert G\rvert > \lvert F\rvert \bigr\} . 
+\end{equation}
+As $\mathcal C$ is countable, it has only countably many finite subsets; so $Q(F)$ is a countable intersection of sets in $\mathcal D$, and is in $\mathcal D$.  
+Singletons are unfortunate at every $x$, and by Lemma \ref{l:unfortunate} the sets $S(G)$ with $\lvert G\rvert \geq M$ are null.  
+Hence almost every $x$ lies in $Q(F)$ for some finite $F \subset \mathcal C$ with $0< \lvert F\rvert < M$, namely for $F$ an unfortunate set at $x$ of maximal cardinality.  
+
+Let $A \coloneqq \{ g > \delta _0/2\} \in \mathcal D$, and note that $\delta _0 = \int_A g + \int _{X \setminus A} g \leq m(A) + \delta _0/2$, 
+so that $m(A) > \delta _0/2$.  
+There are countably many finite subsets of $\mathcal C$, so we may fix one, $F$, with $m (Q(F) \cap A)>0$.  
+For $x \in Q(F)$ no pair of $F$ is good at $x$, so for each pair $a \neq a'$ there is an $s$ with 
+$\lVert T^{sa}f-T^{sa'}f\rVert _{\mathcal E\mid \mathcal D}(x) \geq \epsilon$; necessarily $s \in [t]$, since the case $s=0$ reads $0 \geq \epsilon$.  Let $F ^{(2)} \coloneqq \{ (a,a') \in F \times F \colon a \neq a'\}$, the ordered pairs of distinct elements.  
+For each of the finitely many maps $q \colon F ^{(2)} \to [t]$, let $E_q$ be the set of $x \in Q(F) \cap A$ with 
+\begin{equation} \label{e:qmap}
+\lVert T^{q(a,a')a}f-T^{q(a,a')a'}f\rVert _{\mathcal E\mid \mathcal D}(x) \geq \epsilon , 
+\qquad (a,a') \in F ^{(2)} . 
+\end{equation}
+Each $E_q$ is in $\mathcal D$, since conditional norms are $\mathcal D$-measurable, and by the previous sentence the sets $E_q$ cover $Q(F) \cap A$.  
+So we may fix a map $q$ with $m(E_q)>0$, and we set $E \coloneqq E_q$.
+
+\smallskip 
+\noindent \textbf{Fixing the scale.}  
+The set $F$ is a fixed finite subset of $\mathcal C$, so we may fix $i \geq 1$ with 
+\begin{equation} \label{e:scale}
+F \subset \mathcal C \cap [0, b ^{i}) . 
+\end{equation}
+This is the scale at which the argument will produce its return times, through \eqref{e:absorb}.  
+
+\begin{lemma} \label{l:returnTime}
+Let $u \geq 1$ and set $n = b ^{i}k_u$.  Let $x \in E \cap T ^{-n}E \cap \cdots \cap T ^{-tn}E$.  
+Then there is an $a = a(u,x) \in F$ with 
+\begin{equation} \label{e:good0}
+\lVert T ^{s(n+a)}f - f \rVert _{\mathcal E\mid \mathcal D}(x) < \epsilon , \qquad 0 \leq s \leq t . 
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Let $a \neq a'$ in $F$ and set $s_0 = q(a,a') \in [t]$.  Since $T ^{s_0 n}x \in E$, \eqref{e:qmap} applies at the point $T ^{s_0n}x$.  
+The conditional norm is equivariant, in that $\lVert T ^{v} h \rVert _{\mathcal E\mid \mathcal D}(x) = \lVert h \rVert _{\mathcal E\mid \mathcal D}(T ^{v}x)$, so that 
+\begin{equation}
+\lVert T ^{s_0(n+a)}f - T ^{s_0 (n+a')}f \rVert _{\mathcal E\mid \mathcal D}(x) 
+= \lVert T ^{s_0a}f - T ^{s_0a'}f \rVert _{\mathcal E\mid \mathcal D}(T ^{s_0n}x) \geq \epsilon . 
+\end{equation}
+Thus no pair of distinct elements of $F + n$ is good at $x$.  
+
+Now set $G \coloneqq (F+n) \cup \{0\}$.  By \eqref{e:scale} and \eqref{e:absorb}, $F + n \subset \mathcal C$, and $0 \in \mathcal C$, so $G \subset \mathcal C$.  
+Moreover $n = b ^{i}k_u \geq b ^{i} > \max F$ as $u \geq 1$, so $0 \notin F+n$ and $\lvert G\rvert = \lvert F\rvert +1$.  
+Since $x \in E \subset Q(F)$, the set $G$ is not unfortunate at $x$, so it contains a good pair.  By the previous paragraph that pair must involve $0$; 
+say it is $\{n+a, 0\}$ with $a \in F$.  This is \eqref{e:good0}. 
+\end{proof}
+
+\smallskip 
+\noindent \textbf{Conclusion.}  
+Apply the CSZ property of $\mathcal D$ to the set $E$, with dilation $i$, to get  
+\begin{equation} \label{e:c0}
+c_0 \coloneqq \liminf_{N-M\to\infty}  \Expectation_{M\leq u<N} m (I_u)>0 , 
+\qquad I_u \coloneqq E \cap T ^{-b ^{i}k_u}E \cap \cdots \cap T ^{-tb ^{i}k_u}E . 
+\end{equation}
+Let $B \coloneqq \{u \geq 1\colon m (I_u) > c_0/2\}$.  Splitting the average over $B$ and its complement, and using $m(I_u) \leq 1$, 
+\begin{equation}
+c_0 \leq \liminf_{N-M\to\infty} \frac{\lvert B \cap [M,N) \rvert}{N-M} + \frac {c_0}2 , 
+\end{equation}
+so that $B$ has lower uniform density at least $c_0/2$.  
+
+Fix $u \in B$, write $n = b ^{i} k_u$, and let $x \in I_u$.  Lemma \ref{l:returnTime} provides $a = a(u,x) \in F$ satisfying \eqref{e:good0}.  
+Write $d = n+a$.  Telescoping, $\prod _{s=0}^{t} T ^{sd}f - f ^{t+1}$ is a sum of $t$ terms, each of the form 
+$P \cdot (T ^{sd}f - f) \cdot P'$ with $1\leq s \leq t$ and $P, P'$ products of the remaining factors, so bounded by $1$.  
+Applying the conditional Cauchy--Schwarz inequality to each term, and then the conditional Jensen inequality, gives 
+\begin{equation}
+\mathbb E \Bigl[ \prod _{s=0}^{t} T ^{s(n+a)}f \;\Big\vert\; \mathcal D \Bigr](x) 
+\geq \mathbb E \bigl( f ^{t+1} \mid \mathcal D\bigr)(x) - t \epsilon 
+\geq g ^{t+1}(x) - t\epsilon 
+\geq (\delta _0/2) ^{t+1} - t \epsilon = c_1 >0, 
+\end{equation}
+the last two steps because $I_u \subset E \subset A$, and by the choice \eqref{e:epschoice} of $\epsilon$.  
+Fix an ordering of $F$, and let $a(u,x)$ be the least $a \in F$ for which \eqref{e:good0} holds at $x$.  
+For each $a \in F$, the set of $x$ at which \eqref{e:good0} holds is in $\mathcal D$, as the conditional norms are $\mathcal D$-measurable; 
+so $x \mapsto a(u,x)$ is $\mathcal D$-measurable on $I_u$, and it takes at most $\lvert F\rvert$ values.  
+Hence there is an $a_u \in F$ for which $J_u \coloneqq \{ x \in I_u \colon a(u,x) = a_u\}$, a set in $\mathcal D$, has $m(J_u) \geq m(I_u)/\lvert F\rvert$.  
+Since $f \geq 0$, 
+\begin{equation} \label{e:lowerbound}
+\int_X \prod _{s=0}^{t} T ^{s(n+a_u)}f \;dm 
+\geq \int _{J_u} \mathbb E \Bigl[ \prod _{s=0}^{t} T ^{s(n+a_u)}f \;\Big\vert\; \mathcal D \Bigr] dm 
+\geq \frac{m(I_u)\, c_1}{\lvert F\rvert} \geq \frac{c_0c_1}{2 \lvert F\rvert} \eqqcolon c_2 >0 . 
+\end{equation}
+
+Finally we convert \eqref{e:lowerbound} into a statement about the enumeration of $\mathcal C$.  
+Since $0 \in D$, the first $\delta ^{i}$ elements of $\mathcal C$ are exactly $\mathcal C \cap [0,b ^{i})$, by Lemma \ref{l:Diff}(i).  
+So $a_u = k _{\iota (a_u)}$ for a unique index $\iota (a_u) < \delta ^{i}$, and Lemma \ref{l:Diff}(ii) gives, as in \eqref{e:absorb}, 
+\begin{equation}
+n + a_u = b ^{i}k_u + k _{\iota (a_u)} = k _{v(u)} , \qquad v(u) \coloneqq \delta ^{i}u + \iota (a_u) . 
+\end{equation}
+Thus $v(u)$ lies in the block $[\delta ^{i}u , \delta ^{i}(u+1))$, and 
+$\int_X \prod _{s=0}^{t} T ^{s k_{v(u)}}f \;dm \geq c_2$ for every $u \in B$, by \eqref{e:lowerbound}.  
+Let $V \coloneqq \{ v(u) \colon u \in B\}$.  The blocks $[\delta ^{i}u, \delta ^{i}(u+1))$ are consecutive intervals of length $\delta ^{i}$ partitioning $\mathbb N_0$, 
+so $u \mapsto v(u)$ is injective and $V$ meets the block of each $u \in B$ in exactly one point.  
+If $\lceil P/\delta ^{i}\rceil \leq u < \lfloor Q/ \delta ^{i} \rfloor$ then the whole block of $u$ lies in $[P,Q)$, so 
+\begin{equation} \label{e:count}
+\bigl\lvert V \cap [P,Q) \bigr\rvert 
+\geq \bigl\lvert B \cap [ \lceil P/\delta ^{i}\rceil , \lfloor Q/ \delta ^{i} \rfloor ) \bigr\rvert . 
+\end{equation}
+The interval on the right has length at least $(Q-P)/ \delta ^{i} -2$, which tends to infinity with $Q-P$.  
+Dividing \eqref{e:count} by $Q-P$ and using that $B$ has lower uniform density at least $c_0/2$, 
+\begin{equation}
+\liminf_{Q-P\to\infty} \frac{\lvert V \cap [P,Q)\rvert}{Q-P} \geq \frac{1}{\delta ^{i}}\cdot \frac {c_0}2 . 
+\end{equation}
+The integrand $\int_X \prod _{s=0}^{t} T ^{s k_{v}}f \;dm$ is non-negative for every index $v$, and is at least $c_2$ for $v \in V$.  Therefore 
+\begin{equation}
+\liminf_{Q-P\to\infty} \Expectation_{P \leq v <Q} \int_X \prod _{s=0}^{t} T ^{s k_{v}}f \;dm 
+\geq \frac{c_0c_2}{2 \delta ^{i}} >0 . 
+\end{equation}
+This is \eqref{e:compactExtensionConclusion} with $i=0$, and so completes the proof. 
+\end{proof}
+
+\begin{remark} \label{r:dilation}
+To obtain \eqref{e:compactExtensionConclusion} for a general dilation $i_0 \geq 0$, run the proof above with $T$ replaced by 
+$\widetilde T \coloneqq T ^{b ^{i_0}}$ throughout.  This is legitimate: $\mathcal E$ is a compact extension of $\mathcal D$ for $\widetilde T$, 
+by Lemma \ref{l:powers}(1).  The conclusion reached is \eqref{e:compactExtensionConclusion} for $\widetilde T$ with dilation $0$, 
+which is \eqref{e:compactExtensionConclusion} for $T$ with dilation $i_0$.  
+The only appeal to the hypothesis on $\mathcal D$ is at \eqref{e:c0}, which now reads 
+\begin{equation}
+\liminf_{N-M\to\infty}  \Expectation_{M\leq u<N} 
+m \bigl( E \cap T ^{-b ^{i_0+i}k_u}E \cap \cdots \cap T ^{-tb ^{i_0+i}k_u}E \bigr)>0 , 
+\end{equation}
+with $i$ the scale \eqref{e:scale}.  This is \eqref{e:CSZdef} for $\mathcal D$, for the same Cantor set $\mathcal C$, with dilation $i_0+i$, 
+and so is part of the hypothesis.  
+
+It is worth saying why the argument is organized in this way, rather than by asserting that $(X,\mathcal D,m,\widetilde T)$ is CSZ and quoting the case $i_0=0$.  
+That assertion would be false in general.  The CSZ property quantifies over all Cantor sets, and the dilations it provides for a second Cantor set 
+are powers of that set's base, not of $b$.  What is true, and all that is used, is the single instance displayed above.  
+\end{remark}
+
+\subsection{Systems whose eigenvalues are roots of unity} \label{sub:rootsOfUnity}
+
+This subsection is independent of the proof of the main theorem.  
+
+\begin{theorem} \label{t:compactSystem} 
+Let $(X,\mathcal A, m,T)$ be a measure preserving system in which the functions $h$ satisfying $T ^{q}h = h$, for some integer $q \geq 1$, 
+are dense in $L^2(X)$.  Then, for every $f\in L^\infty(X)$ with $0 \leq f \leq 1$, every $\epsilon >0$, and every integer $t \geq 0$, the set of indices 
+$n$ such that  
+\begin{equation} \label{e:compactSystem}
+\int \prod _{s=0} ^{t} T ^{s k_n } f 
+\;dm \geq \int f ^{t+1}\;dm - \epsilon 
+\end{equation}
+is syndetic.  
+\end{theorem}
+
+The hypothesis says exactly that $T$ has pure point spectrum and that all of its eigenvalues are roots of unity.  
+Indeed, for a given $q$ the functions with $T ^{q}h=h$ form a $T$-invariant subspace on which $T ^{q}$ is the identity, 
+and which is therefore spanned by eigenfunctions whose eigenvalues are $q$-th roots of unity; conversely, a finite linear combination of 
+eigenfunctions whose eigenvalues are roots of unity is fixed by $T ^{q}$, for $q$ the least common multiple of their orders.  
+Odometers are examples.  Such a system is compact, but a compact system need not satisfy the hypothesis: 
+for an irrational rotation of the circle, $T ^{q}$ is ergodic for every $q \geq 1$, so the only functions fixed by some $T ^{q}$ are the constants.  
+
+\begin{proof}
+Let $\eta \coloneqq \epsilon /(2(t+1))$, and choose $h$ and $q \geq 1$ with $T ^{q}h = h$ and $\lVert f-h\rVert _2 < \eta$.  
+Let $h' \coloneqq \min (1, \max (0, \operatorname{Re} h))$.  Then $T ^{q}h' = h'$, as $h'$ is a function of $h$; 
+and $\lvert f - h'\rvert \leq \lvert f-h\rvert$ pointwise, because $z \mapsto \min(1,\max(0,\operatorname{Re} z))$ is $1$-Lipschitz and fixes the values of $f$, which lie in $[0,1]$.  
+Hence $\lVert f-h'\rVert _1 \leq \lVert f - h'\rVert _2 < \eta$.  
+
+For functions $a_0 , \ldots, a_t$ and $b_0 , \ldots, b_t$ with values in $[0,1]$, telescoping gives 
+$\lvert \prod_s a_s - \prod_s b_s\rvert \leq \sum_s \lvert a_s - b_s\rvert$ pointwise.  As $T$ preserves $m$, it follows that, for every $n$, 
+\begin{equation}
+\Bigl\lvert \int \prod _{s=0} ^{t} T ^{s k_n } f \;dm - \int \prod _{s=0} ^{t} T ^{s k_n } h' \;dm \Bigr\rvert 
+\leq (t+1) \lVert f - h'\rVert _1 < \frac \epsilon 2 , 
+\end{equation}
+and likewise $\int h' {}^{t+1}\;dm \geq \int f ^{t+1}\;dm - \epsilon/2$.  
+
+Let $S_q$ be the set of indices $n$ with $k_n \equiv 0 \mod q$, which is syndetic by Lemma \ref{l:syndeticResidues}.  
+For $n \in S_q$ we have $T ^{sk_n}h' = h'$ for every $s$, so $\int \prod_{s=0}^t T ^{s k_n } h' \;dm = \int h' {}^{t+1}\;dm$, and therefore 
+\begin{equation}
+\int \prod _{s=0} ^{t} T ^{s k_n } f \;dm > \int h' {}^{t+1}\;dm - \frac \epsilon 2 \geq \int f ^{t+1}\;dm - \epsilon . 
+\end{equation}
+That is, \eqref{e:compactSystem} holds on the syndetic set $S_q$.  
+\end{proof}

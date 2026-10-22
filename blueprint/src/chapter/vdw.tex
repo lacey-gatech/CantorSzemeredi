@@ -1,0 +1,119 @@
+\label{chap:vdw}
+
+This chapter is \emph{not} used in the proof of the main theorem: the compact extension argument
+of Chapter~\ref{chap:compact} does not need it.  It is included because it is in the paper, it is
+the natural topological counterpart of Theorem~\ref{thm:main-ergodic}, and it is a good
+self-contained formalization target with no measure theory in it at all.
+
+Let $\Cantor = \Cantor_{b,D}$ with $0 \in D$; recall $b^h \Cantor \subset \Cantor$ for $h \geq 0$
+(Corollary~\ref{cor:self-similar}).  A \emph{topological dynamical system} is a pair $(X,T)$ with
+$X$ a compact metric space and $T : X \to X$ continuous (not necessarily invertible).
+
+\begin{theorem}[Cantor van der Waerden, dynamical form]
+  \label{thm:cvdw}
+  \lean{CantorSzemeredi.topological_vdW}
+  \uses{cor:self-similar, thm:cvdw-minimal}
+  Let $(X,T)$ be a topological dynamical system and $(U_\alpha)_{\alpha \in A}$ an open cover of
+  $X$.  Then for every $\ell \geq 1$ and every $h \geq 0$ there is an open set $U_\alpha$
+  containing an arithmetic progression $x, T^r x, \dots, T^{(\ell-1)r}x$ for some $x \in X$ and
+  some $r \in b^h\Cantor \setminus \{0\}$.
+\end{theorem}
+
+\begin{proof}
+  \uses{thm:cvdw-minimal}
+  Let $\mathbf F$ be the non-empty closed $T$-invariant subsets of $X$, ordered by inclusion;
+  $X \in \mathbf F$, and the intersection of a decreasing chain is again in $\mathbf F$ by
+  compactness.  By Zorn's lemma applied to reverse inclusion, $\mathbf F$ has a minimal element
+  $F$, and $(F, T|_F)$ is minimal.  Some $U_\alpha \cap F$ is non-empty and relatively open in
+  $F$, so Theorem~\ref{thm:cvdw-minimal} applied to $(F,T|_F)$ gives the progression.
+\end{proof}
+
+\begin{theorem}[Minimal case]
+  \label{thm:cvdw-minimal}
+  \lean{CantorSzemeredi.topological_vdW_minimal}
+  \uses{lem:color-focusing, cor:self-similar}
+  Let $(X,T)$ be a minimal topological dynamical system, $U \subset X$ non-empty open,
+  $\ell \geq 1$ and $h \geq 0$.  Then there are $y \in X$ and $r \in b^h\Cantor\setminus\{0\}$
+  with $y, T^r y, \dots, T^{(\ell-1)r}y \in U$.
+\end{theorem}
+
+\begin{remark}
+  Two consequences of minimality are used.  First, $T$ is onto: $T(X)$ is non-empty, closed and
+  invariant.  ($T$ is not assumed invertible; the proof simply chooses a preimage.)  Second, for
+  every $x$ and every non-empty open $U$ there is $n \geq 0$ with $T^n x \in U$.
+\end{remark}
+
+\begin{lemma}[Color focusing]
+  \label{lem:color-focusing}
+  \lean{CantorSzemeredi.color_focusing}
+  \uses{cor:self-similar}
+  In the setting of the proof of Theorem~\ref{thm:cvdw-minimal} --- a minimal $(X,T)$, a
+  non-empty open $U$, and a finite open cover $(U_\alpha)_{\alpha \in A}$ with each
+  $U_\alpha = T^{-n_\alpha}U$ --- for every $J \geq 0$ there exist points $x_0,\dots,x_J \in X$,
+  sets $U_{\alpha_0},\dots,U_{\alpha_J}$ from the cover (not necessarily distinct), and integers
+  $k_1,\dots,k_J$ such that
+  \begin{enumerate}
+    \item[(1)] $k_{j+1} + \cdots + k_{j'} \in b^h\Cantor \setminus \{0\}$ for all $0 \leq j < j' \leq J$;
+    \item[(2)] $x_j \in U_{\alpha_j}$ for all $0 \leq j \leq J$, and
+      $T^{i(k_{j+1}+\cdots+k_{j'})} x_{j'} \in U_{\alpha_j}$ for $0 \leq j < j' \leq J$ and
+      $1 \leq i \leq \ell-1$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  \uses{cor:self-similar}
+  Induct on $J$.  For $J=0$ take any $x_0$ and any $U_{\alpha_0} \ni x_0$.  Given the data up to
+  $J-1$, consider the finitely many continuous maps
+  $T^{i(k_{j+1}+\cdots+k_{J-1})}$, $0 \leq j < J$, $1 \leq i \leq \ell-1$.  Each carries $x_{J-1}$
+  into $U_{\alpha_j}$: for $j < J-1$ by (2) applied to the pair $j < j' = J-1$, and for $j = J-1$
+  the exponent is the empty sum $0$ and the requirement is $x_{J-1} \in U_{\alpha_{J-1}}$.  By
+  continuity choose a neighbourhood $V$ of $x_{J-1}$ with
+  \begin{equation}
+    \label{eq:Vsmall}
+    T^{i(k_{j+1}+\cdots+k_{J-1})}(V) \subset U_{\alpha_j} , \qquad 0 \leq j < J,\ 1 \leq i \leq \ell-1 .
+  \end{equation}
+  Note \eqref{eq:Vsmall} involves only data from the previous stage, so $V$ is fixed before the
+  next step.
+
+  Choose $h' \geq h$ so large that $k_1 + \cdots + k_{J-1} < b^{h'}$.  By
+  Theorem~\ref{thm:cvdw-minimal} for progressions of length $\ell-1$, with parameter $h'$,
+  applied to $V$, there are $y \in X$ and $r \in b^{h'}\Cantor\setminus\{0\}$ with
+  $y, T^r y, \dots, T^{(\ell-2)r}y \in V$.  Set $k_J \coloneqq r$ and choose $x_J$ with
+  $T^r x_J = y$ ($T$ is onto); then pick $U_{\alpha_J} \ni x_J$.  Property (1) for the new sums
+  holds because $r \in b^{h'}\Cantor$ with $b^{h'}$ exceeding all earlier partial sums: the base
+  $b$ digits of $r$ lie strictly above those already used, so the sum again has all its digits in
+  $D$.  Property (2) follows from \eqref{eq:Vsmall}.
+\end{proof}
+
+\begin{remark}
+  The auxiliary parameter $h$ is what makes the induction close: it lets one insist that the
+  differences produced at a given stage are supported on base $b$ digits beyond those already
+  used, so that sums of them stay inside $\Cantor$.  Without it the induction fails, since
+  $\Cantor$ is not closed under addition.  This is the one genuinely Cantor-specific ingredient
+  of the chapter; everything else is the classical van der Waerden argument.
+\end{remark}
+
+\begin{corollary}[Finitary form]
+  \label{cor:vdw-finitary}
+  \lean{CantorSzemeredi.vdW_finitary}
+  \uses{thm:cvdw}
+  For all integers $L, \ell \geq 1$ there is $W = W(L,\ell)$ such that for every
+  $\chi : [W] \to \{1,\dots,L\}$ there are $w_0 \in [W]$ and $r \in \Cantor\setminus\{0\}$ with
+  $w_0 + (\ell-1)r \leq W$ and $\chi(w_0) = \chi(w_0+r) = \cdots = \chi(w_0+(\ell-1)r)$.
+\end{corollary}
+
+\begin{proof}
+  \uses{thm:cvdw}
+  First, every $\chi : \NN \to \{1,\dots,L\}$ has a monochromatic $\ell$-term progression with
+  common difference in $\Cantor\setminus\{0\}$: let $\Omega = \{1,\dots,L\}^{\NN}$ with the product
+  topology, $T$ the \emph{one-sided} shift (used precisely so that the progression lies in
+  $\NN$), and $X$ the closure of the forward orbit of $\chi$.  The clopen sets
+  $U_c = \{\eta \in X : \eta(1) = c\}$ cover $X$; Theorem~\ref{thm:cvdw} with $h=0$ gives $c$,
+  $x \in X$ and $r \in \Cantor\setminus\{0\}$ with $x(1+ir) = c$ for $0 \leq i \leq \ell-1$.
+  These conditions involve only coordinates in $[1, 1+(\ell-1)r]$, and $x$ is a limit of the
+  $T^m\chi$, so $\chi(w_0+ir) = c$ for some $w_0 = m+1$.
+
+  The uniform bound follows by compactness: otherwise for each $W$ there is a bad colouring
+  $\chi_W$ of $[W]$; finitely many colourings of each $[W]$ and K\"onig's lemma produce a bad
+  colouring of $\NN$, contradicting the previous paragraph.
+\end{proof}

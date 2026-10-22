@@ -1,0 +1,85 @@
+name: Build blueprint and documentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Allow the workflow to publish to GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install elan
+        run: |
+          curl -sSfL https://github.com/leanprover/elan/releases/download/v4.0.0/elan-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          ./elan-init -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Get Mathlib cache
+        run: |
+          lake exe cache get || true
+
+      - name: Build the Lean project
+        run: lake build
+
+      - name: Install blueprint dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz libgraphviz-dev texlive-latex-recommended texlive-latex-extra texlive-science texlive-fonts-extra latexmk
+          python3 -m pip install --upgrade pip
+          python3 -m pip install leanblueprint
+
+      - name: Build the blueprint (PDF and web)
+        run: |
+          leanblueprint pdf
+          leanblueprint web
+
+      - name: Check that every \lean declaration exists
+        continue-on-error: true
+        run: leanblueprint checkdecls
+
+      - name: Build the API documentation
+        continue-on-error: true
+        run: |
+          lake -R -Kenv=dev build CantorSzemeredi:docs
+
+      - name: Assemble the site
+        run: |
+          mkdir -p _site
+          cp -r blueprint/web/* _site/ 2>/dev/null || true
+          mkdir -p _site/blueprint
+          cp -r blueprint/web/* _site/blueprint/ 2>/dev/null || true
+          cp blueprint/print/print.pdf _site/blueprint.pdf 2>/dev/null || true
+          if [ -d .lake/build/doc ]; then mkdir -p _site/docs && cp -r .lake/build/doc/* _site/docs/; fi
+
+      - name: Upload the site
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

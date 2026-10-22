@@ -1,0 +1,270 @@
+\label{chap:compact}
+
+Throughout, $\Cantor = \Cantor_{b,D} = \{0=k_0<k_1<\cdots\}$ with $0 \in D$, $\delta = \abs{D}$.
+
+\begin{theorem}[Part (K) of the extension principles]
+  \label{thm:compact-extension}
+  \lean{CantorSzemeredi.MPS.CSZ_of_compactExtension}
+  \uses{def:csz, def:compact-extension, lem:localize, lem:unfortunate, lem:return-time, cor:absorb, lem:diff}
+  Let $\Dbb$ be a CSZ factor of $(X,\Abb,m,T)$ and let $\Ebb$ be a compact extension of $\Dbb$.
+  Then $\Ebb$ is CSZ: for all integers $t \geq 1$, $i \geq 0$, and all non-zero
+  $0 \leq f \leq 1$ in $L^\infty(\Ebb)$,
+  \begin{equation}
+    \label{eq:compact-conclusion}
+    \unifliminf \unifavg \int \prod_{s=0}^{t} T^{s b^i k_n} f \, dm > 0 .
+  \end{equation}
+\end{theorem}
+
+\begin{remark}[Why this argument and not van der Waerden]
+  \uses{cor:absorb}
+  The Furstenberg--Katznelson--Ornstein argument produces a return time which is a
+  \emph{translate} $n+a$ of the averaging parameter by an element $a$ of a fixed finite set,
+  whereas Furstenberg's van der Waerden argument produces a \emph{dilate} $sn$.  The integers are
+  closed under dilation, so for Szemer\'edi's theorem either serves.  A Cantor set is \emph{not}
+  closed under dilation, but by Corollary~\ref{cor:absorb} it is closed under exactly the
+  translations needed, provided the finite set of translations is taken inside
+  $\Cantor \cap [0,b^i)$ and the averaging parameter inside $b^i \Cantor$.  The FKO argument also
+  works directly with uniform averages, which the van der Waerden argument does not.
+  Consequently Chapter~\ref{chap:vdw} is \emph{not} used here.
+\end{remark}
+
+\begin{lemma}[Localization]
+  \label{lem:localize}
+  \lean{CantorSzemeredi.exists_condCompact_restrict}
+  \uses{def:compact-extension}
+  Let $\Ebb \mid \Dbb$ be a compact extension.  For every $f \in L^2(\Ebb\mid\Dbb)$ and
+  $0 < \epsilon < 1$ there is $A \in \Dbb$ with $m(A) > 1-\epsilon$ such that $f\one_A$ is
+  conditionally compact.
+\end{lemma}
+
+\begin{proof}
+  See Moreira's notes, Lemma 8.4.3.  (A known lemma; it must be formalized, but it is a routine
+  consequence of density of the conditionally compact functions together with the fact that
+  conditional compactness is preserved by multiplication by $\Dbb$-measurable indicators.)
+\end{proof}
+
+\subsection*{Setup for the proof}
+
+We give the argument for $i = 0$; Remark~\ref{rem:compact-dilation} handles general $i$.
+
+Fix $t \geq 1$ and a non-zero $0 \leq f \leq 1$ in $L^2(\Ebb\mid\Dbb)$.  We may assume $f$ is
+conditionally compact: choose $0 < \eta < 1$ so small that $m(A_\ast) > 1-\eta$ implies
+$\int_{A_\ast} f \, dm > 0$, take $A_\ast$ from Lemma~\ref{lem:localize}, and replace $f$ by
+$f\one_{A_\ast}$; this is legitimate since $0 \leq f\one_{A_\ast} \leq f$ and all factors in
+\eqref{eq:compact-conclusion} are non-negative.  Set
+$g \coloneqq \Exp(f\mid\Dbb)$ and $\delta_0 \coloneqq \int_X f \, dm > 0$, and fix $\epsilon > 0$
+small enough that
+\begin{equation}
+  \label{eq:eps-choice}
+  c_1 \coloneqq (\delta_0/2)^{t+1} - t\epsilon > 0 .
+\end{equation}
+
+By conditional compactness there are $r \in \NN$ and $f_1,\dots,f_r$ with, for a.e.\ $x$ and all
+$n \in \NNz$,
+\begin{equation}
+  \label{eq:net}
+  \min_{1 \leq \ell \leq r} \cnorm{T^n f - f_\ell}(x) < \epsilon/2 .
+\end{equation}
+A pair $\{a,a'\}$ of distinct elements of $\Cantor$ is \emph{good at $x$} if
+$\cnorm{T^{sa}f - T^{sa'}f}(x) < \epsilon$ for $0 \leq s \leq t$; a finite $F \subset \Cantor$ is
+\emph{unfortunate at $x$} if no pair in $F$ is good at $x$.
+
+\begin{lemma}[Pigeonhole]
+  \label{lem:unfortunate}
+  \lean{CantorSzemeredi.not_unfortunate_of_card_le}
+  \uses{def:compact-extension, lem:cond-cs}
+  Set $M \coloneqq r^{t+1}+1$.  If $F \subset \Cantor$ has $\abs{F} \geq M$ then for a.e.\ $x$,
+  $F$ is not unfortunate at $x$.
+\end{lemma}
+
+\begin{proof}
+  \uses{lem:cond-cs}
+  On the full-measure set where \eqref{eq:net} holds for all $n$, associate to each $a \in F$ the
+  tuple $(\ell_0,\dots,\ell_t) \in [r]^{t+1}$ with $\ell_s$ least such that
+  $\cnorm{T^{sa}f - f_{\ell_s}}(x) < \epsilon/2$.  There are $r^{t+1}$ tuples, so two distinct
+  $a,a'$ share one; the conditional triangle inequality gives
+  $\cnorm{T^{sa}f-T^{sa'}f}(x) < \epsilon$ for $0 \leq s \leq t$.
+\end{proof}
+
+\subsection*{A maximal unfortunate set}
+
+For finite $F \subset \Cantor$ put
+$S(F) \coloneqq \{x : F \text{ unfortunate at } x\}$, which lies in $\Dbb$ because conditional
+norms are $\Dbb$-measurable, and
+\[
+  Q(F) \coloneqq \{ x \in S(F) : x \notin S(G) \text{ for every finite } G \subset \Cantor,\ \abs{G} > \abs{F} \} ,
+\]
+also in $\Dbb$, $\Cantor$ being countable.  Singletons are unfortunate everywhere, and by
+Lemma~\ref{lem:unfortunate} the sets $S(G)$ with $\abs{G} \geq M$ are null; so a.e.\ $x$ lies in
+$Q(F)$ for some finite $F$ with $0 < \abs{F} < M$.
+
+Let $A \coloneqq \{g > \delta_0/2\} \in \Dbb$; from
+$\delta_0 \leq m(A) + \delta_0/2$ we get $m(A) > \delta_0/2$.  Fix a finite $F \subset \Cantor$
+with $m(Q(F) \cap A) > 0$.  For $x \in Q(F)$ and each ordered pair $(a,a') \in F^{(2)}$ of
+distinct elements there is $s$ with $\cnorm{T^{sa}f - T^{sa'}f}(x) \geq \epsilon$, and necessarily
+$s \in [t]$ since $s = 0$ would read $0 \geq \epsilon$.  For each of the finitely many maps
+$q : F^{(2)} \to [t]$ let $E_q$ be the set of $x \in Q(F) \cap A$ with
+\begin{equation}
+  \label{eq:qmap}
+  \cnorm{T^{q(a,a')a}f - T^{q(a,a')a'}f}(x) \geq \epsilon , \qquad (a,a') \in F^{(2)} .
+\end{equation}
+These lie in $\Dbb$ and cover $Q(F) \cap A$; fix $q$ with $m(E_q) > 0$ and set $E \coloneqq E_q$.
+
+\emph{Fixing the scale.}  $F$ is a fixed finite subset of $\Cantor$, so fix $i \geq 1$ with
+\begin{equation}
+  \label{eq:scale}
+  F \subset \Cantor \cap [0, b^i) .
+\end{equation}
+
+\begin{lemma}[Return time]
+  \label{lem:return-time}
+  \lean{CantorSzemeredi.exists_good_translate}
+  \uses{cor:absorb, lem:unfortunate, lem:cond-cs}
+  Let $u \geq 1$ and $n = b^i k_u$.  For every
+  $x \in E \cap T^{-n}E \cap \cdots \cap T^{-tn}E$ there is $a = a(u,x) \in F$ with
+  \begin{equation}
+    \label{eq:good0}
+    \cnorm{T^{s(n+a)}f - f}(x) < \epsilon , \qquad 0 \leq s \leq t .
+  \end{equation}
+\end{lemma}
+
+\begin{proof}
+  \uses{cor:absorb, lem:unfortunate}
+  Let $a \neq a'$ in $F$, $s_0 = q(a,a') \in [t]$.  As $T^{s_0 n}x \in E$, \eqref{eq:qmap} applies
+  at $T^{s_0n}x$; conditional norms are equivariant,
+  $\cnorm{T^v h}(x) = \cnorm{h}(T^v x)$, so
+  $\cnorm{T^{s_0(n+a)}f - T^{s_0(n+a')}f}(x) = \cnorm{T^{s_0a}f-T^{s_0a'}f}(T^{s_0n}x) \geq \epsilon$.
+  Thus no pair of distinct elements of $F+n$ is good at $x$.
+
+  Set $G \coloneqq (F+n) \cup \{0\}$.  By \eqref{eq:scale} and
+  Corollary~\ref{cor:absorb}, $F+n \subset \Cantor$, and $0 \in \Cantor$.  Also
+  $n = b^i k_u \geq b^i > \max F$ as $u \geq 1$, so $0 \notin F+n$ and $\abs{G} = \abs{F}+1$.
+  Since $x \in E \subset Q(F)$, $G$ is not unfortunate at $x$, so it contains a good pair, which
+  by the previous paragraph must involve $0$: say $\{n+a, 0\}$ with $a \in F$.  That is
+  \eqref{eq:good0}.
+\end{proof}
+
+\subsection*{Conclusion of the proof of Theorem~\ref{thm:compact-extension}}
+
+\begin{proof}[Proof of Theorem~\ref{thm:compact-extension}]
+  \proves{thm:compact-extension}
+  \uses{lem:return-time, lem:unfortunate, lem:localize, def:csz, lem:diff, cor:absorb, lem:cond-cs}
+  Apply the CSZ property of $\Dbb$ to $E$, with the dilation $i$ of \eqref{eq:scale}, and with
+  the \emph{same} Cantor set $\Cantor$:
+  \begin{equation}
+    \label{eq:c0}
+    c_0 \coloneqq \unifliminf \avg{M \leq u < N} m(I_u) > 0 , \qquad
+    I_u \coloneqq E \cap T^{-b^i k_u}E \cap \cdots \cap T^{-t b^i k_u}E .
+  \end{equation}
+  This is the one and only point at which the hypothesis on $\Dbb$ is used.
+
+  Let $B \coloneqq \{u \geq 1 : m(I_u) > c_0/2\}$.  Splitting the average over $B$ and its
+  complement and using $m(I_u) \leq 1$ gives
+  $c_0 \leq \unifliminf \abs{B \cap [M,N)}/(N-M) + c_0/2$, so $B$ has lower uniform density at
+  least $c_0/2$.
+
+  Fix $u \in B$, write $n = b^i k_u$, let $x \in I_u$, and take $a = a(u,x) \in F$ from
+  Lemma~\ref{lem:return-time}; write $d = n+a$.  Telescoping,
+  $\prod_{s=0}^{t} T^{sd}f - f^{t+1}$ is a sum of $t$ terms $P \cdot (T^{sd}f - f) \cdot P'$ with
+  $1 \leq s \leq t$ and $P,P'$ bounded by $1$.  Conditional Cauchy--Schwarz on each term and then
+  conditional Jensen give
+  \[
+    \Exp\Bigl[ \prod_{s=0}^{t} T^{s(n+a)}f \;\Big\vert\; \Dbb \Bigr](x)
+      \geq \Exp(f^{t+1}\mid\Dbb)(x) - t\epsilon \geq g^{t+1}(x) - t\epsilon
+      \geq (\delta_0/2)^{t+1} - t\epsilon = c_1 > 0 ,
+  \]
+  the last two steps because $I_u \subset E \subset A$ and by \eqref{eq:eps-choice}.
+
+  Fix an ordering of $F$ and let $a(u,x)$ be the least $a \in F$ for which \eqref{eq:good0} holds
+  at $x$.  For each $a$ the set where \eqref{eq:good0} holds is in $\Dbb$, so $x \mapsto a(u,x)$
+  is $\Dbb$-measurable on $I_u$ with at most $\abs{F}$ values.  Hence there is $a_u \in F$ with
+  $J_u \coloneqq \{x \in I_u : a(u,x) = a_u\} \in \Dbb$ of measure $\geq m(I_u)/\abs{F}$.  Since
+  $f \geq 0$,
+  \begin{equation}
+    \label{eq:lowerbound}
+    \int_X \prod_{s=0}^{t} T^{s(n+a_u)}f \, dm
+      \geq \int_{J_u} \Exp\Bigl[\prod_{s=0}^{t}T^{s(n+a_u)}f \;\Big\vert\; \Dbb\Bigr] dm
+      \geq \frac{m(I_u)\,c_1}{\abs{F}} \geq \frac{c_0 c_1}{2\abs{F}} \eqqcolon c_2 > 0 .
+  \end{equation}
+
+  \emph{Back to the enumeration.}  Since $0 \in D$, the first $\delta^i$ elements of $\Cantor$
+  are exactly $\Cantor \cap [0,b^i)$ by Lemma~\ref{lem:diff}(i).  So $a_u = k_{\iota(a_u)}$ for a
+  unique $\iota(a_u) < \delta^i$, and by Corollary~\ref{cor:absorb},
+  $n + a_u = b^i k_u + k_{\iota(a_u)} = k_{v(u)}$ with $v(u) \coloneqq \delta^i u + \iota(a_u)$
+  lying in the block $[\delta^i u, \delta^i(u+1))$.  Hence
+  $\int_X \prod_{s=0}^{t} T^{s k_{v(u)}}f\,dm \geq c_2$ for every $u \in B$.
+
+  Let $V \coloneqq \{v(u) : u \in B\}$.  The blocks are consecutive intervals of length $\delta^i$
+  partitioning $\NNz$, so $u \mapsto v(u)$ is injective and $V$ meets the block of each $u \in B$
+  in exactly one point.  If $\lceil P/\delta^i\rceil \leq u < \lfloor Q/\delta^i \rfloor$ then the
+  whole block of $u$ lies in $[P,Q)$, so
+  \begin{equation}
+    \label{eq:count}
+    \abs{V \cap [P,Q)} \geq \abs{B \cap [\lceil P/\delta^i\rceil, \lfloor Q/\delta^i\rfloor)} .
+  \end{equation}
+  The interval on the right has length at least $(Q-P)/\delta^i - 2 \to \infty$.  Dividing by
+  $Q-P$ and using the lower uniform density of $B$,
+  $\liminf_{Q-P\to\infty} \abs{V \cap [P,Q)}/(Q-P) \geq c_0/(2\delta^i)$.  The integrand is
+  non-negative for every index and at least $c_2$ on $V$, so
+  \[
+    \liminf_{Q-P\to\infty} \avg{P \leq v < Q} \int_X \prod_{s=0}^{t} T^{s k_v} f \, dm
+      \geq \frac{c_0 c_2}{2\delta^i} > 0 ,
+  \]
+  which is \eqref{eq:compact-conclusion} with $i = 0$.
+\end{proof}
+
+\begin{remark}[General dilation]
+  \label{rem:compact-dilation}
+  \uses{lem:powers, rem:dilation}
+  For general $i_0 \geq 0$, run the proof with $T$ replaced by
+  $\widetilde T \coloneqq T^{b^{i_0}}$ throughout; this is legitimate since $\Ebb$ is a compact
+  extension of $\Dbb$ for $\widetilde T$ by Lemma~\ref{lem:powers}(1).  The conclusion is
+  \eqref{eq:compact-conclusion} for $\widetilde T$ at dilation $0$, i.e.\ for $T$ at dilation
+  $i_0$.  The only appeal to the hypothesis on $\Dbb$, \eqref{eq:c0}, becomes
+  \[
+    \unifliminf \avg{M \leq u < N} m\bigl( E \cap T^{-b^{i_0+i}k_u}E \cap \cdots \cap T^{-t b^{i_0+i}k_u}E \bigr) > 0 ,
+  \]
+  with $i$ the scale \eqref{eq:scale}: this is \eqref{eq:csz} for $\Dbb$, for the \emph{same}
+  Cantor set $\Cantor$, at dilation $i_0 + i$, and so is part of the hypothesis.
+
+  It is worth saying, since it is a trap for the formalizer, why the argument is organized this
+  way rather than by asserting that $(X,\Dbb,m,\widetilde T)$ is CSZ and quoting the case
+  $i_0 = 0$: that assertion is false in general, for the reason in
+  Remark~\ref{rem:dilation}(2).  Only the single displayed instance is used.
+\end{remark}
+
+\section{Systems whose eigenvalues are roots of unity}
+
+This section is independent of the main theorem and may be skipped.
+
+\begin{theorem}
+  \label{thm:compact-roots-of-unity}
+  \lean{CantorSzemeredi.syndetic_of_rootsOfUnity_spectrum}
+  \uses{lem:syndetic-residues, def:syndetic}
+  Let $(X,\Abb,m,T)$ be a measure preserving system in which the functions $h$ satisfying
+  $T^q h = h$ for some integer $q \geq 1$ are dense in $L^2(X)$.  Then for every
+  $f \in L^\infty(X)$ with $0 \leq f \leq 1$, every $\epsilon > 0$ and every integer $t \geq 0$,
+  the set of indices $n$ with
+  \begin{equation}
+    \label{eq:compact-system}
+    \int \prod_{s=0}^{t} T^{s k_n} f \, dm \geq \int f^{t+1}\, dm - \epsilon
+  \end{equation}
+  is syndetic.
+\end{theorem}
+
+\begin{proof}
+  \uses{lem:syndetic-residues}
+  Let $\eta \coloneqq \epsilon/(2(t+1))$ and choose $h$, $q \geq 1$ with $T^q h = h$ and
+  $\norm{f-h}_2 < \eta$.  Put $h' \coloneqq \min(1,\max(0,\operatorname{Re} h))$; then $T^q h' = h'$,
+  and $\abs{f-h'} \leq \abs{f-h}$ pointwise since $z \mapsto \min(1,\max(0,\operatorname{Re}z))$ is
+  $1$-Lipschitz and fixes $[0,1]$.  So $\norm{f-h'}_1 \leq \norm{f-h'}_2 < \eta$.
+
+  For $[0,1]$-valued $a_s, b_s$, telescoping gives
+  $\abs{\prod_s a_s - \prod_s b_s} \leq \sum_s \abs{a_s-b_s}$, so for every $n$,
+  $\bigl\lvert \int \prod_s T^{sk_n}f \,dm - \int \prod_s T^{sk_n}h'\,dm \bigr\rvert \leq (t+1)\norm{f-h'}_1 < \epsilon/2$,
+  and likewise $\int h'^{t+1} dm \geq \int f^{t+1} dm - \epsilon/2$.
+
+  By Lemma~\ref{lem:syndetic-residues} the set $S_q = \{n : q \mid k_n\}$ is syndetic, and for
+  $n \in S_q$ we have $T^{sk_n}h' = h'$, so $\int \prod_s T^{sk_n}h'\,dm = \int h'^{t+1}dm$.
+  Combining gives \eqref{eq:compact-system} on $S_q$.
+\end{proof}

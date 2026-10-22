@@ -1,0 +1,139 @@
+\section{Van der Waerden's Theorem} \label{sec:vdW}
+
+The Cantor set version of van der Waerden's theorem proved in this section is not needed for the main theorem: 
+the compact extension argument of \S\ref{sec:compact} does not use it.  We include it as a result of independent interest, 
+and because it is the natural topological counterpart of Theorem \ref{t:CSZ}.  
+
+We let $\mathcal C=\mathcal{C}_{b,D}$ be an integer Cantor set in base $b$ and digit set $D\subset \{0,\ldots ,b-1\}$, with $0\in D$.  
+Recall that $\mathcal C$ is closed under multiplication by powers of $b$, so that 
+\begin{equation} \label{e:bhC}
+b ^{h} \mathcal C \subset \mathcal C , \qquad h \geq 0 . 
+\end{equation}
+By a \emph{topological dynamical system} we mean a pair $(X,T)$ with $X$ a compact metric space and $T \colon X \to X$ continuous. 
+
+\begin{theorem}\label{thmCvdW} Let $(X,T)$ be a topological dynamical system, and $(U_\alpha)_{\alpha\in A}$ an open cover of $X$. Then for every $\ell \geq 1$ and every $h\geq 0$, there is an open set $U_\alpha$ which contains an arithmetic progression 
+$x,T^rx,T^{2r}x,\cdots ,T^{(\ell-1)r}x$ for some $x\in X$ and some $r\in b ^{h}\mathcal C\setminus \{0\}$.
+\end{theorem}
+
+This result is a corollary to work of Bergelson and Leibman \cite{MR1325795}*{Theorem 0.13}. We include a proof here for the sake of completeness.   
+Indeed, we follow the familiar lines of the proof of van der Waerden's Theorem.  
+The auxiliary parameter $h$ costs us nothing, and it is what makes the induction below close: it permits us to insist that the 
+differences produced at a given stage are supported on base $b$ digits beyond those already used.  
+
+The form in which we use the theorem is the following finitary statement.  
+
+\begin{corollary} \label{c:vdW}
+For all integers $L, \ell \geq 1$ there is an integer $W= W(L,\ell )$ so that for every map 
+$\chi \colon [W] \to \{1 , \ldots, L\}$ there are $w_0 \in [W]$ and $r \in \mathcal C \setminus \{0\}$ with 
+$w_0 + ( \ell -1)r \leq W$ and $\chi (w_0) = \chi (w_0 + r) = \cdots = \chi (w_0 + (\ell -1) r)$. 
+\end{corollary}
+
+\begin{proof}
+We first argue that every $\chi \colon \mathbb N \to \{1 , \ldots, L\}$ admits a monochromatic $\ell$-term progression with common difference in $\mathcal C\setminus \{0\}$.  
+Let $\Omega = \{1 , \ldots, L\} ^{\mathbb N}$ with the product topology, a compact metric space, and let $T$ be the one-sided shift, 
+$(T \eta )(n) = \eta (n+1)$, which is continuous.  Let $X \subset \Omega$ be the closure of the forward orbit $\{ T ^{m} \chi \colon m \geq 0\}$, 
+a compact set with $TX \subset X$.  We use the one-sided shift precisely so that the progression we produce lies in $\mathbb N$.  
+Let $U_c = \{ \eta \in X \colon \eta (1)=c\}$, for $1 \leq c \leq L$.  
+These are open and closed, and cover $X$. By Theorem \ref{thmCvdW}, with $h=0$, there are $c$, $x \in X$ and $r \in \mathcal C\setminus\{0\}$ 
+with $T ^{ir}x \in U_c$ for $0 \leq i \leq \ell -1$; that is, $x(1+ir)=c$ for $0 \leq i \leq \ell-1$.  
+These conditions involve only the coordinates of $x$ in $[1, 1+(\ell-1)r]$, and $x$ is a limit of the points $T ^{m} \chi$, $m \geq 0$.  
+So there is an $m \geq 0$ with $(T ^{m}\chi )(1+ir) = c$ for $0 \leq i \leq \ell-1$, that is, with 
+$\chi (w_0 + ir) = c$ for $w_0 \coloneqq m+1 \geq 1$.  
+
+The uniform bound $W(L,\ell)$ now follows by a compactness argument.  Were there no such $W$, then for every $W$ there would be a coloring 
+$\chi _W$ of $[W]$ with no monochromatic progression of the required type.  For each $W$, some coloring of $[W]$ is the restriction of 
+$\chi _{W'}$ for infinitely many $W' \geq W$, as there are finitely many colorings of $[W]$; these choices are consistent, so 
+K\"onig's lemma provides a coloring $\chi$ of $\mathbb N$ each of whose restrictions to an $[W]$ is a restriction of some $\chi _{W'}$.  
+Then $\chi$ has no monochromatic progression of the required type, since such a progression would lie in some $[W]$ and hence in $\chi _{W'}$.  
+This contradicts the previous paragraph. 
+\end{proof}
+
+The important special case of Theorem \ref{thmCvdW} is when the system $(X,T)$  is \emph{minimal}, that is, when the only non-empty closed set $F\subset X$ with $TF\subset F$ is $F=X$. 
+Two consequences of minimality will be used.  First, $T$ is onto: $T(X)$ is non-empty, closed as the continuous image of a compact set, 
+and satisfies $T(T(X)) \subset T(X)$, so $T(X)=X$.  We do not assume that $T$ is invertible, and in the proof below we will simply 
+choose some preimage.  Second, for every $x \in X$ and every non-empty open $U$ there is an $n \geq 0$ with $T ^{n}x \in U$, 
+since the closure of $\{T ^{n}x \colon n \geq 0\}$ is a non-empty closed invariant set, hence all of $X$.  
+
+
+ 
+\begin{theorem}\label{thm:2}
+    Let $(X,T)$ be a minimal topological dynamical system, $U\subset X$ a non-empty open set, $\ell \geq 1$, and $h \geq 0$. 
+    Then there are $y\in X$ and $r\in b ^{h}\mathcal C\setminus \{0\}$ such that $U$ contains the arithmetic progression $y, T^{r}y, \ldots, T^{(\ell-1)r}y$.
+\end{theorem}
+
+
+\begin{proof}[Proof that Theorem \ref{thm:2} implies Theorem \ref{thmCvdW}]
+This is a standard argument.   
+Given a  topological dynamical system $(X,T)$, let $\mathbf F$ 
+be the collection of non-empty closed $F\subset X$ which are $T$ invariant, thus $TF\subset F$.  
+It is non-empty, as $X \in \mathbf F$, and it is ordered by inclusion.  
+The intersection of a decreasing chain in $\mathbf F$ is again a non-empty closed invariant set, by compactness of $X$.  
+Hence by Zorn's Lemma, applied to $\mathbf F$ ordered by reverse inclusion, $\mathbf F$ has a minimal element $F$, and $(F, T\vert _F)$ is a minimal system. 
+Then, for any open cover $(U_\alpha)_{\alpha\in A}$ of $X$,  there is an $\alpha$ so that  $U_\alpha \cap F$ is non-empty, and it is relatively open in $F$. 
+Hence 
+$U_\alpha \cap F$ contains an  arithmetic progression of the desired type, by Theorem \ref{thm:2} applied to $(F,T\vert_F)$, so 
+Theorem \ref{thmCvdW} follows. 
+\end{proof}
+
+\begin{proof}[Proof of Theorem \ref{thm:2}] We induct on the length $\ell$ of the arithmetic progression.  The case $\ell=1$ is trivial, as we may take any $y \in U$ and any $r \in b ^{h}\mathcal C \setminus \{0\}$.  So we take $\ell\geq 2$ and assume that the Theorem has been proved for $\ell-1$, for all minimal systems and all values of $h$.
+
+Fix a minimal system $(X,T)$, a non-empty open $U$, and $h \geq 0$.  By minimality, finitely many of the sets $T ^{-n}U$ cover $X$; 
+we fix such a finite open cover $(U_\alpha)_{\alpha \in A}$ of $X$, with each $U_\alpha = T ^{-n_\alpha}U$.  
+It suffices to produce a progression $x, T ^{r}x, \ldots, T ^{(\ell-1)r}x$ inside one of the $U_\alpha$: applying $T ^{n_\alpha}$ to it 
+produces a progression with the same common difference inside $U$.  
+
+We now require the following Lemma, sometimes referred to as the `color focusing' Lemma. 
+
+\begin{lemma}\label{lem:1}
+   Let the notation and assumptions be as above. Then for any $J\geq 0$ there exist points $x_0,\cdots ,x_J$ in $X$, sets $U_{\alpha_0},\cdots ,U_{\alpha_J}$ in the open cover (not necessarily distinct), and integers $k_1,\cdots ,k_{J}$ such that
+   \begin{enumerate}
+       \item[(1)] $k_{j+1}+k_{j+2}+\cdots +k_{j'}\in b^{h}\mathcal C\setminus \{0\}$ for all $0\leq j< j'\leq J$;  
+       \item[(2)]  $x_{j}\in U_{\alpha_j}$ for all $0\leq j \leq J$, and 
+       \begin{align*}
+T^{i(k_{j+1}+k_{j+2}+\cdots +k_{j'})}x_{j'}\in U_{\alpha_j}, \qquad 0\leq j<j'\leq J, \quad 1\leq i\leq \ell-1 . 
+    \end{align*} 
+   \end{enumerate}
+\end{lemma}
+
+\begin{proof}[Proof of Lemma \ref{lem:1}] We induct on $J$. For $J=0$, take any $x_0 \in X$ and any $U_{\alpha_0}$ containing it. Now suppose inductively that $J\geq 1$, and that we have already constructed points $x_0,\cdots ,x_{J-1}$, sets  $U_{\alpha_0},\cdots ,U_{\alpha_{J-1}}$, and integers $k_1,\cdots ,k_{J-1}$ with the requisite properties. 
+
+We begin by fixing the neighborhood $V$ of $x_{J-1}$ in which the next progression will be found.  
+Consider the maps 
+\begin{equation} \label{e:finitelyMany}
+T^{i(k_{j+1}+\cdots +k_{J-1})} , \qquad 0 \leq j <J, \quad 1 \leq i \leq \ell -1 . 
+\end{equation}
+The maps \eqref{e:finitelyMany} are finitely many and continuous, and each of them carries $x_{J-1}$ into the open set $U_{\alpha _j}$: 
+for $j<J-1$ this is part (2) of the inductive hypothesis, applied to the pair $j<j'=J-1$, while for $j=J-1$ the exponent is the empty sum $0$, 
+and the requirement is just that $x_{J-1}\in U_{\alpha _{J-1}}$, which is the first clause of (2).  
+By continuity we may therefore choose a neighborhood $V$ of $x_{J-1}$ with 
+\begin{equation} \label{e:Vsmall}
+T^{i(k_{j+1}+\cdots +k_{J-1})}(V) \subset U_{\alpha _j}, \qquad 0 \leq j <J, \quad 1 \leq i \leq \ell -1 . 
+\end{equation}
+Note that \eqref{e:Vsmall} involves only data constructed at the previous stage, so $V$ is fixed before the next step.  
+
+Now choose $h'\geq h$ so large that $k_1+\cdots +k_{J-1}<b^{h'}$. By Theorem \ref{thm:2} for progressions of length $\ell-1$, with the parameter $h'$, applied to the non-empty open set $V$, there are $y\in X$ and $r\in b^{h'}\mathcal C\setminus\{0\}$ with $y,T^{r}y,\cdots ,T^{(\ell-2)r}y \in V$.  
+Set $k_J \coloneqq r$, choose $x_J \in X$ with $T ^{r}x_J = y$, which is possible as $T$ is onto, 
+and let $U_{\alpha_J}$ be a member of the open cover that contains $x_J$.  
+
+First we check (1).  Let $0 \leq j <J$.  The sum $k_{j+1}+\cdots +k_{J-1}$, which is the empty sum $0$ when $j=J-1$, 
+lies in $b ^{h}\mathcal C$ by the inductive hypothesis and is less than $b^{h'}$; so its non-zero base $b$ digits lie in the positions $h, \ldots, h'-1$, and are in $D$.  
+The digits of $k_J \in b^{h'}\mathcal C$ lie in the positions $h'$ and above, and are in $D$.  
+The two summands are therefore supported on disjoint ranges of base $b$ digits, and adding them involves no carrying: 
+$k_{j+1}+\cdots+k_J$ has all of its digits in $D$ and vanishing digits below the position $h$, that is, it lies in $b^{h}\mathcal C$.  It is non-zero, since $k_J$ is.  
+The sums with $j' <J$ are unchanged from the previous stage.  
+
+Now we check (2).  First, $x_J \in U_{\alpha_J}$ by the choice of $U_{\alpha _J}$.  Next, for $1 \leq i \leq \ell -1$,  
+\begin{equation}
+T^{i k_J}x_J=T^{(i-1)r}\bigl( T ^{r} x_J\bigr) = T ^{(i-1)r}y \in V ,
+\end{equation}
+since $y, T^{r}y, \ldots, T^{(\ell-2)r}y\in V$.  Consequently, for $0\leq j<J$ and $1\leq i\leq \ell-1$, 
+\begin{align*}
+    T^{i(k_{j+1}+\cdots +k_{J-1}+k_{J})}x_J = T^{i(k_{j+1}+\cdots +k_{J-1})}\bigl( T^{ik_J}x_J \bigr) 
+    \in T^{i(k_{j+1}+\cdots +k_{J-1})}(V) \subset U_{\alpha _j} ,
+\end{align*} 
+the last inclusion being \eqref{e:Vsmall}.  The conditions in (2) with $j'<J$ are unchanged from the previous stage.  
+This completes the induction on $J$, and so proves the lemma. 
+\end{proof}
+
+We then apply the above lemma with $J$ equal to the number of sets in the open cover. By the pigeonhole principle, we can then find some $0\leq j< j'\leq J$ such that $U_{\alpha_j}=U_{\alpha_{j'}}$. If we set $x:=x_{j'}$ and $r:=k_{j+1}+\cdots +k_{j'} \in b ^{h} \mathcal C \setminus \{0\}$, then  $x \in U_{\alpha_{j'}} = U_{\alpha _j}$ and $T ^{ir}x \in U_{\alpha _j}$ for $1 \leq i \leq \ell -1$.  That is, $U_{\alpha_j}$ contains the progression $x, T^{r}x , \ldots, T^{(\ell-1)r}x$. This completes the induction step for $\ell$, and so proves Theorem \ref{thm:2}. 
+\end{proof}
