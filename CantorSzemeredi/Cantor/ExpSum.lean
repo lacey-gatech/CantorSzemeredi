@@ -167,6 +167,110 @@ theorem sum_block_eq (β : ℝ) (i m : ℕ) :
   rw [← e_add]
   ring_nf
 
+/-- The trivial bound: a sum of `N - M` unit vectors. -/
+theorem norm_sum_Ico_le_card (β : ℝ) (M N : ℕ) :
+    ‖∑ n ∈ Finset.Ico M N, e (β * C.enum n)‖ ≤ (N - M : ℕ) := by
+  calc ‖∑ n ∈ Finset.Ico M N, e (β * C.enum n)‖
+      ≤ ∑ n ∈ Finset.Ico M N, ‖e (β * C.enum n)‖ := norm_sum_le _ _
+    _ = (N - M : ℕ) := by simp
+
+/-- **The window split, `eq:window-split`.**  For every window of indices `[M, N)` and every
+scale `i`,
+
+  `‖∑_{M ≤ n < N} e (β k_n)‖ ≤ (N - M) * ‖P_i β‖ + 2 δ^i`.
+
+The right-hand side does not depend on `M`.  That is the whole point: it is what makes the
+averages of this project uniform in the starting index, and hence what turns positivity of an
+average into a *syndetic* set of good indices. -/
+theorem norm_sum_Ico_le (β : ℝ) (i M N : ℕ) :
+    ‖∑ n ∈ Finset.Ico M N, e (β * C.enum n)‖
+      ≤ (N - M : ℕ) * ‖C.blockAvg β i‖ + 2 * (C.delta ^ i : ℕ) := by
+  have hδ : 0 < C.delta := by have := C.two_le_delta; omega
+  set q := C.delta ^ i with hq_def
+  have hq : 0 < q := Nat.pow_pos hδ
+  set Mi := (M + q - 1) / q with hMi_def
+  set Ni := N / q with hNi_def
+  have hmod1 : q * Mi + (M + q - 1) % q = M + q - 1 := Nat.div_add_mod _ _
+  have hmod1' : (M + q - 1) % q < q := Nat.mod_lt _ hq
+  have hmod2 : q * Ni + N % q = N := Nat.div_add_mod _ _
+  have hmod2' : N % q < q := Nat.mod_lt _ hq
+  have hMlo : M ≤ q * Mi := by omega
+  have hMhi : q * Mi ≤ M + q - 1 := by omega
+  have hNlo : q * Ni ≤ N := by omega
+  have hNhi : N < q * Ni + q := by omega
+  have hnonneg : (0 : ℝ) ≤ ‖C.blockAvg β i‖ := norm_nonneg _
+  rcases le_or_gt Mi Ni with hMN | hMN
+  · -- The generic case: there is at least one full block.
+    have h1 : M ≤ q * Mi := hMlo
+    have h2 : q * Mi ≤ q * Ni := Nat.mul_le_mul_left q hMN
+    have h3 : q * Ni ≤ N := hNlo
+    have hsplit :
+        ∑ n ∈ Finset.Ico M N, e (β * C.enum n)
+          = (∑ n ∈ Finset.Ico M (q * Mi), e (β * C.enum n))
+            + (∑ n ∈ Finset.Ico (q * Mi) (q * Ni), e (β * C.enum n))
+            + ∑ n ∈ Finset.Ico (q * Ni) N, e (β * C.enum n) := by
+      rw [← Finset.sum_Ico_consecutive _ h1 (h2.trans h3),
+        ← Finset.sum_Ico_consecutive _ h2 h3, add_assoc]
+    -- The middle part: full blocks, each contributing `q * blockAvg` up to a unit factor.
+    have hmid : ‖∑ n ∈ Finset.Ico (q * Mi) (q * Ni), e (β * C.enum n)‖
+        ≤ ((Ni - Mi : ℕ) : ℝ) * q * ‖C.blockAvg β i‖ := by
+      rw [sum_Ico_mul_reindex q hMN]
+      have hterm : ∀ m ∈ Finset.Ico Mi Ni,
+          ∑ r ∈ range q, e (β * C.enum (q * m + r))
+            = e (β * (C.base ^ i * C.enum m)) * ((q : ℕ) : ℂ) * C.blockAvg β i :=
+        fun m _ => C.sum_block_eq β i m
+      rw [Finset.sum_congr rfl hterm]
+      calc ‖∑ m ∈ Finset.Ico Mi Ni,
+              e (β * (C.base ^ i * C.enum m)) * ((q : ℕ) : ℂ) * C.blockAvg β i‖
+          ≤ ∑ m ∈ Finset.Ico Mi Ni,
+              ‖e (β * (C.base ^ i * C.enum m)) * ((q : ℕ) : ℂ) * C.blockAvg β i‖ :=
+            norm_sum_le _ _
+        _ = ∑ _m ∈ Finset.Ico Mi Ni, (q : ℝ) * ‖C.blockAvg β i‖ := by
+            refine Finset.sum_congr rfl fun m _ => ?_
+            rw [norm_mul, norm_mul, abs_e, one_mul]
+            simp
+        _ = ((Ni - Mi : ℕ) : ℝ) * q * ‖C.blockAvg β i‖ := by
+            rw [Finset.sum_const, Nat.card_Ico]
+            push_cast
+            ring
+    -- The two end pieces have fewer than `q` indices each.
+    have hleft : ‖∑ n ∈ Finset.Ico M (q * Mi), e (β * C.enum n)‖ ≤ (q : ℝ) := by
+      refine (C.norm_sum_Ico_le_card β _ _).trans ?_
+      have : q * Mi - M ≤ q := by omega
+      exact_mod_cast this
+    have hright : ‖∑ n ∈ Finset.Ico (q * Ni) N, e (β * C.enum n)‖ ≤ (q : ℝ) := by
+      refine (C.norm_sum_Ico_le_card β _ _).trans ?_
+      have : N - q * Ni ≤ q := by omega
+      exact_mod_cast this
+    have hcount : ((Ni - Mi : ℕ) : ℝ) * q ≤ ((N - M : ℕ) : ℝ) := by
+      have hnat : (Ni - Mi) * q ≤ N - M := by
+        have h4 : (Ni - Mi) * q = Ni * q - Mi * q := Nat.sub_mul _ _ _
+        have h5 : Ni * q = q * Ni := Nat.mul_comm _ _
+        have h6 : Mi * q = q * Mi := Nat.mul_comm _ _
+        omega
+      exact_mod_cast hnat
+    calc ‖∑ n ∈ Finset.Ico M N, e (β * C.enum n)‖
+        ≤ ‖∑ n ∈ Finset.Ico M (q * Mi), e (β * C.enum n)‖
+          + ‖∑ n ∈ Finset.Ico (q * Mi) (q * Ni), e (β * C.enum n)‖
+          + ‖∑ n ∈ Finset.Ico (q * Ni) N, e (β * C.enum n)‖ := by
+          rw [hsplit]
+          exact (norm_add_le _ _).trans (by gcongr; exact norm_add_le _ _)
+      _ ≤ (q : ℝ) + ((Ni - Mi : ℕ) : ℝ) * q * ‖C.blockAvg β i‖ + (q : ℝ) := by
+          gcongr
+      _ ≤ (q : ℝ) + ((N - M : ℕ) : ℝ) * ‖C.blockAvg β i‖ + (q : ℝ) := by
+          gcongr
+      _ = ((N - M : ℕ) : ℝ) * ‖C.blockAvg β i‖ + 2 * q := by ring
+  · -- Degenerate case: the window is too short to contain a full block, so `N - M < 2q`.
+    have hstep : q * (Ni + 1) ≤ q * Mi := Nat.mul_le_mul_left q hMN
+    have hstep' : q * (Ni + 1) = q * Ni + q := by ring
+    have hshort : N - M ≤ 2 * q := by omega
+    calc ‖∑ n ∈ Finset.Ico M N, e (β * C.enum n)‖
+        ≤ ((N - M : ℕ) : ℝ) := C.norm_sum_Ico_le_card β M N
+      _ ≤ 2 * (q : ℝ) := by exact_mod_cast hshort
+      _ ≤ ((N - M : ℕ) : ℝ) * ‖C.blockAvg β i‖ + 2 * q := by
+          have := mul_nonneg (Nat.cast_nonneg (α := ℝ) (N - M)) hnonneg
+          linarith
+
 end CantorData
 
 end CantorSzemeredi
