@@ -12,6 +12,7 @@ the formalization.
 \begin{definition}[Integer Cantor set]
   \label{def:cantor}
   \lean{CantorSzemeredi.CantorData, CantorSzemeredi.CantorData.enum, CantorSzemeredi.CantorData.set}
+  \leanok
   Given $b$ and $D$ as above, set
   $\Cantor_{b,D} \coloneqq \{ \sum_{j=0}^{k} d_j b^j : k \in \NNz,\ d_j \in D \}$,
   and let $k_n$ denote the $n$-th element in increasing order, $k_0 = 0$.
@@ -30,6 +31,7 @@ the formalization.
 \begin{definition}[Syndetic set]
   \label{def:syndetic}
   \lean{CantorSzemeredi.Syndetic}
+  \leanok
   A set $B \subset \NNz$ is \emph{syndetic} if there is an $L$ with
   $B \cap [n, n+L] \neq \emptyset$ for every $n$.
 \end{definition}
@@ -37,6 +39,7 @@ the formalization.
 \begin{definition}[Upper Banach density]
   \label{def:banach-density}
   \lean{CantorSzemeredi.upperBanachDensity}
+  \leanok
   For $A \subset \ZZ$,
   $\dstar(A) \coloneqq \limsup_{N - M \to \infty} \abs{A \cap [M,N)} / (N-M)$.
 \end{definition}
@@ -44,6 +47,7 @@ the formalization.
 \begin{definition}[Uniform average and uniform liminf]
   \label{def:uniform-liminf}
   \lean{CantorSzemeredi.uniformAvg, CantorSzemeredi.uniformLiminf}
+  \leanok
   For a bounded sequence $(a_n)_{n \geq 0}$ put $\unifavg a_n = \frac{1}{N-M}\sum_{M \leq n < N} a_n$,
   and $\unifliminf \unifavg a_n \coloneqq \sup_{L} \inf \{ \avg{M \leq n < M+L'} a_n : M \geq 0,\ L' \geq L \}$.
 \end{definition}
@@ -60,6 +64,7 @@ the formalization.
 \begin{lemma}[Positive uniform liminf gives a syndetic set]
   \label{lem:pos-liminf-syndetic}
   \lean{CantorSzemeredi.syndetic_of_uniformLiminf_pos}
+  \leanok
   \uses{def:syndetic, def:uniform-liminf}
   Let $(a_n)_{n \geq 0}$ be non-negative with $\unifliminf \unifavg a_n > 0$.  Then
   $\{ n : a_n > 0 \}$ is syndetic.
@@ -67,6 +72,7 @@ the formalization.
 
 \begin{proof}
   \uses{def:syndetic, def:uniform-liminf}
+  \leanok
   Write $c > 0$ for the uniform liminf.  If the set were not syndetic there would be intervals
   $[M_i, N_i)$ with $N_i - M_i \to \infty$ containing no such index; the average over each is
   then $0$, contradicting $c > 0$.
@@ -76,7 +82,9 @@ the formalization.
 
 \begin{lemma}[Enumeration of the Cantor set]
   \label{lem:diff}
-  \lean{CantorSzemeredi.enum_eq_digitTransfer, CantorSzemeredi.enum_block}
+  \lean{CantorSzemeredi.CantorData.enum_strictMono, CantorSzemeredi.CantorData.mem_set_iff,
+    CantorSzemeredi.CantorData.enum_block}
+  \leanok
   \uses{def:cantor}
   Let $D = \{0 = d_0 < d_1 < \cdots < d_{\delta-1}\}$.  Then:
   \begin{enumerate}
@@ -89,6 +97,7 @@ the formalization.
 
 \begin{proof}
   \uses{def:cantor}
+  \leanok
   For (i), define $\varphi(n) \coloneqq \sum_c d_{n_c} b^c$.  Since $d_0 = 0$, leading zeros do
   not change $\varphi(n)$, and the base $b$ digits of $\varphi(n)$ are exactly the $d_{n_c}$.
   Hence $\varphi$ maps $\NNz$ onto $\Cantor$.  It is strictly increasing --- compare at the
@@ -101,19 +110,23 @@ the formalization.
 
 \begin{corollary}[Self-similarity]
   \label{cor:self-similar}
-  \lean{CantorSzemeredi.pow_mul_mem, CantorSzemeredi.enum_pow_mul}
+  \lean{CantorSzemeredi.CantorData.pow_mul_mem, CantorSzemeredi.CantorData.enum_pow_mul}
+  \leanok
   \uses{lem:diff}
   For $i \geq 0$, $b^i \Cantor \subset \Cantor$; explicitly $b^i k_n = k_{\delta^i n}$.
 \end{corollary}
 
 \begin{proof}
   \uses{lem:diff}
+  \leanok
   Lemma~\ref{lem:diff}(ii) with $j = 0$, using $k_0 = 0$.
 \end{proof}
 
 \begin{corollary}[Absorption of small translates]
   \label{cor:absorb}
-  \lean{CantorSzemeredi.enum_add_mem_block}
+  \lean{CantorSzemeredi.CantorData.enum_add_mem_block,
+    CantorSzemeredi.CantorData.pow_mul_enum_add_mem}
+  \leanok
   \uses{lem:diff}
   Let $i \geq 0$, let $a \in \Cantor \cap [0, b^i)$ and write $\iota(a) < \delta^i$ for the
   index of $a$, so $a = k_{\iota(a)}$.  Then for every $u \geq 0$,
@@ -126,6 +139,7 @@ the formalization.
 
 \begin{proof}
   \uses{lem:diff}
+  \leanok
   Immediate from Lemma~\ref{lem:diff}(ii).
 \end{proof}
 
@@ -138,7 +152,9 @@ the formalization.
 
 \begin{lemma}[Differences along a shift]
   \label{lem:differences}
-  \lean{CantorSzemeredi.enum_sub_enum_eq, CantorSzemeredi.card_goodResidues_ge}
+  \lean{CantorSzemeredi.CantorData.enum_sub_enum_eq,
+    CantorSzemeredi.CantorData.card_goodResidues_ge}
+  \leanok
   \uses{lem:diff}
   Fix integers $h \geq 1$ and $\ell \geq 1$ with $\delta^\ell > h$.  For
   $0 \leq c < \delta^\ell - h$ set $P_c \coloneqq \{ n \geq 0 : n \equiv c \bmod \delta^\ell \}$
@@ -155,6 +171,7 @@ the formalization.
 
 \begin{proof}
   \uses{lem:diff}
+  \leanok
   For (i), write $n = \delta^\ell a + c$ with $0 \leq c < \delta^\ell - h$; then also
   $n + h = \delta^\ell a + (c+h)$ with $0 \leq c+h < \delta^\ell$, so Lemma~\ref{lem:diff}(ii)
   gives $k_n = b^\ell k_a + k_c$ and $k_{n+h} = b^\ell k_a + k_{c+h}$.  Subtract.
@@ -165,7 +182,7 @@ the formalization.
 
 \begin{lemma}[Syndetic residues]
   \label{lem:syndetic-residues}
-  \lean{CantorSzemeredi.syndetic_dvd_enum}
+  \lean{CantorSzemeredi.CantorData.syndetic_dvd_enum}
   \uses{lem:diff, def:syndetic}
   For every integer $q \geq 1$ the set $S_q \coloneqq \{ n \in \NNz : q \mid k_n \}$ is syndetic.
 \end{lemma}
