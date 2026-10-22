@@ -231,7 +231,6 @@ theorem norm_sum_Ico_le (β : ℝ) (i M N : ℕ) :
             simp
         _ = ((Ni - Mi : ℕ) : ℝ) * q * ‖C.blockAvg β i‖ := by
             rw [Finset.sum_const, Nat.card_Ico]
-            push_cast
             ring
     -- The two end pieces have fewer than `q` indices each.
     have hleft : ‖∑ n ∈ Finset.Ico M (q * Mi), e (β * C.enum n)‖ ≤ (q : ℝ) := by
@@ -270,6 +269,43 @@ theorem norm_sum_Ico_le (β : ℝ) (i M N : ℕ) :
       _ ≤ ((N - M : ℕ) : ℝ) * ‖C.blockAvg β i‖ + 2 * q := by
           have := mul_nonneg (Nat.cast_nonneg (α := ℝ) (N - M)) hnonneg
           linarith
+
+/-! ### The uniform quantity `Φ` -/
+
+/-- **Definition `def:Phi`.**  `Φ_L β = sup_{M ≥ 0} |E_{M ≤ n < M+L} e (β k_n)|`, the largest
+size of an average of `e (β k_n)` over *any* window of `L` consecutive indices. -/
+noncomputable def Phi (L : ℕ) (β : ℝ) : ℝ :=
+  ⨆ M : ℕ, ‖(L : ℂ)⁻¹ * ∑ n ∈ Finset.Ico M (M + L), e (β * C.enum n)‖
+
+theorem Phi_nonneg (L : ℕ) (β : ℝ) : 0 ≤ C.Phi L β := by
+  refine Real.iSup_nonneg fun M => norm_nonneg _
+
+/-- Each window average is bounded by `‖P_i β‖ + 2 δ^i / L`, uniformly in the window. -/
+theorem norm_avg_le (β : ℝ) (i L M : ℕ) (hL : 0 < L) :
+    ‖(L : ℂ)⁻¹ * ∑ n ∈ Finset.Ico M (M + L), e (β * C.enum n)‖
+      ≤ ‖C.blockAvg β i‖ + 2 * (C.delta ^ i : ℕ) / L := by
+  have hL' : (0 : ℝ) < L := by exact_mod_cast hL
+  rw [norm_mul, norm_inv]
+  have hnorm : ‖(L : ℂ)‖ = (L : ℝ) := by simp
+  rw [hnorm, inv_mul_le_iff₀ hL']
+  have hsum := C.norm_sum_Ico_le β i M (M + L)
+  have hcard : ((M + L - M : ℕ) : ℝ) = (L : ℝ) := by
+    congr 1
+    simp
+  rw [hcard] at hsum
+  calc ‖∑ n ∈ Finset.Ico M (M + L), e (β * C.enum n)‖
+      ≤ (L : ℝ) * ‖C.blockAvg β i‖ + 2 * (C.delta ^ i : ℕ) := hsum
+    _ = (L : ℝ) * (‖C.blockAvg β i‖ + 2 * (C.delta ^ i : ℕ) / L) := by
+        field_simp
+
+/-- **The uniform form of the window split.**  `Φ_L β ≤ ‖P_i β‖ + 2 δ^i / L` for every scale
+`i`, with no dependence on the window. -/
+theorem Phi_le (β : ℝ) (i L : ℕ) (hL : 0 < L) :
+    C.Phi L β ≤ ‖C.blockAvg β i‖ + 2 * (C.delta ^ i : ℕ) / L := by
+  refine Real.iSup_le (fun M => C.norm_avg_le β i L M hL) ?_
+  have : (0 : ℝ) ≤ ‖C.blockAvg β i‖ := norm_nonneg _
+  have h2 : (0 : ℝ) ≤ 2 * (C.delta ^ i : ℕ) / L := by positivity
+  linarith
 
 end CantorData
 

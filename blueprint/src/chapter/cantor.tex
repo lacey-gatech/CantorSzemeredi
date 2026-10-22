@@ -237,16 +237,61 @@ $\theta$ to the nearest integer.
 
 \begin{definition}
   \label{def:Phi}
-  \lean{CantorSzemeredi.Phi}
+  \lean{CantorSzemeredi.CantorData.Phi}
+  \leanok
   \uses{def:cantor}
   For $\beta \in \RR$ and $L \geq 1$,
   $\Phi_L(\beta) \coloneqq \sup_{M \geq 0} \bigl\lvert \avg{M \leq n < M+L} e(\beta k_n) \bigr\rvert$.
 \end{definition}
 
+\begin{lemma}[Block factorization, \eqref{eq:Pell}]
+  \label{lem:blockAvg}
+  \lean{CantorSzemeredi.CantorData.blockAvg, CantorSzemeredi.CantorData.blockAvg_eq_prod,
+    CantorSzemeredi.CantorData.norm_blockAvg_le_one}
+  \leanok
+  \uses{lem:diff}
+  Let $\rho(\theta) \coloneqq \avg{d \in D} e(d\theta)$ and
+  $P_\ell(\beta) \coloneqq \avg{0 \leq j < \delta^\ell} e(\beta k_j)$.  Then
+  \[ P_\ell(\beta) = \prod_{c=0}^{\ell-1} \rho(b^c \beta) , \]
+  and in particular $\abs{P_\ell(\beta)} \leq 1$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  \uses{lem:diff}
+  By Lemma~\ref{lem:diff}(ii), peeling the top base $\delta$ digit of the index factors the sum
+  over a block of length $\delta^{\ell+1}$ as a digit sum at scale $b^\ell$ times the sum over a
+  block of length $\delta^\ell$; induct on $\ell$.
+\end{proof}
+
+\begin{lemma}[Window split, \eqref{eq:window-split}]
+  \label{lem:window-split}
+  \lean{CantorSzemeredi.CantorData.norm_sum_Ico_le, CantorSzemeredi.CantorData.Phi_le}
+  \leanok
+  \uses{lem:diff, lem:blockAvg, def:Phi}
+  For every window $[M,N)$ of indices and every $i \geq 0$,
+  \[
+    \Bigl\lvert \sum_{M \leq n < N} e(\beta k_n) \Bigr\rvert
+      \leq (N-M)\abs{P_i(\beta)} + 2\delta^i ,
+  \]
+  and consequently $\Phi_L(\beta) \leq \abs{P_i(\beta)} + 2\delta^i/L$.  Neither bound depends
+  on $M$.
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  \uses{lem:diff, lem:blockAvg}
+  If $[M,N)$ contains a full block, split it into the indices below $\delta^i\lceil M/\delta^i\rceil$,
+  the full blocks, and the indices above $\delta^i\lfloor N/\delta^i\rfloor$; there are fewer than
+  $\delta^i$ of the former and of the latter, and by Lemma~\ref{lem:diff}(ii) the sum over each
+  full block is $\delta^i P_i(\beta) e(\beta b^i k_m)$, of modulus at most $\delta^i\abs{P_i(\beta)}$.
+  Otherwise $N - M < 2\delta^i$ and the trivial bound suffices.
+\end{proof}
+
 \begin{lemma}[Uniform exponential sum estimate]
   \label{lem:irrational}
-  \lean{CantorSzemeredi.tendsto_Phi_zero}
-  \uses{lem:diff, def:Phi}
+  \lean{CantorSzemeredi.CantorData.tendsto_Phi_zero}
+  \uses{lem:diff, def:Phi, lem:window-split, lem:blockAvg}
   Let $E_0 \subset \TT$ be the set of $\beta$ for which $\gcd(D)\,\beta$ is a $b$-adic rational
   modulo $1$; it is countable.  Then for every $\beta \notin E_0$,
   \[ \lim_{L \to \infty} \Phi_L(\beta) = 0 . \]
