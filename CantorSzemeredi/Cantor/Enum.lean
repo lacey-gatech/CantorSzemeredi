@@ -74,6 +74,10 @@ theorem enum_mul_add {n c : ℕ} (hc : c < C.delta) :
   rw [C.enum_eq (C.delta * n + c), Nat.mul_add_mod, Nat.mod_eq_of_lt hc,
     Nat.mul_add_div hδ, Nat.div_eq_of_lt hc, Nat.add_zero]
 
+/-- Below `δ` the enumeration is just the digit map: `k_c = d_c`. -/
+theorem enum_eq_digit {c : ℕ} (hc : c < C.delta) : C.enum c = C.digit c := by
+  rw [C.enum_eq c, Nat.mod_eq_of_lt hc, Nat.div_eq_of_lt hc, enum_zero, Nat.mul_zero, Nat.add_zero]
+
 /-- The range of the enumeration is exactly the set of numbers all of whose base-`b` digits
 (in some finite expansion) lie in `D`.  This is the original Definition `def:cantor`. -/
 theorem mem_set_iff {m : ℕ} :
