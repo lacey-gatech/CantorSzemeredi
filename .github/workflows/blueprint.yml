@@ -59,11 +59,6 @@ jobs:
         continue-on-error: true
         run: leanblueprint checkdecls
 
-      - name: Build the API documentation
-        continue-on-error: true
-        run: |
-          lake -R -Kenv=dev build CantorSzemeredi:docs
-
       - name: Assemble the site
         run: |
           mkdir -p _site
@@ -71,16 +66,19 @@ jobs:
           mkdir -p _site/blueprint
           cp -r blueprint/web/* _site/blueprint/ 2>/dev/null || true
           cp blueprint/print/print.pdf _site/blueprint.pdf 2>/dev/null || true
-          if [ -d .lake/build/doc ]; then mkdir -p _site/docs && cp -r .lake/build/doc/* _site/docs/; fi
 
+      # Pages must be enabled for the repository (Settings -> Pages) and, on a
+      # free plan, the repository must be public.  Until then, set the repository
+      # variable PUBLISH_PAGES to 'true' to turn this on; otherwise the blueprint
+      # is still built and checked on every push, just not published.
       - name: Upload the site
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && vars.PUBLISH_PAGES == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && vars.PUBLISH_PAGES == 'true'
     needs: build
     runs-on: ubuntu-latest
     environment:

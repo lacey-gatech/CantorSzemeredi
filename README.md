@@ -29,8 +29,16 @@ paper in a form intended for Lean, records the dependency graph, and flags the p
 Mathlib infrastructure is missing.
 
 - Source: `blueprint/src/` (`content.tex` plus `chapter/*.tex`).
-- Built web version and dependency graph: published to GitHub Pages by
-  `.github/workflows/blueprint.yml` on every push to `main`.
+- `.github/workflows/blueprint.yml` builds the PDF and the web version on every
+  push, and runs `leanblueprint checkdecls` to list the declarations still to write.
+- Publishing to GitHub Pages is off until the repository has Pages enabled
+  (Settings -> Pages; on a free plan that also means making the repository
+  public).  To turn it on, set the repository variable `PUBLISH_PAGES` to
+  `true`:
+
+  ```bash
+  gh variable set PUBLISH_PAGES --body true
+  ```
 
 Read `blueprint/src/chapter/overview.tex` first; it contains the staging plan.
 
