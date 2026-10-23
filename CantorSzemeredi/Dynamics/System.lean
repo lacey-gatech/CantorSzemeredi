@@ -80,6 +80,16 @@ theorem preimage_T_image (s : Set S.X) : S.T ⁻¹' (S.T '' s) = s := by
     exact this ▸ hy
   · exact fun hx => ⟨x, hx, rfl⟩
 
+/-- `T⁻¹` preserves the measure too. -/
+theorem measurePreserving_Tinv (S : MPS) : MeasurePreserving S.Tinv S.m S.m := by
+  refine ⟨S.measurable_Tinv, ?_⟩
+  have hmap := S.measurePreserving.map_eq
+  calc Measure.map S.Tinv S.m
+      = Measure.map S.Tinv (Measure.map S.T S.m) := by rw [hmap]
+    _ = Measure.map (S.Tinv ∘ S.T) S.m :=
+        Measure.map_map S.measurable_Tinv S.measurable_T
+    _ = S.m := by simp [Function.comp_def]
+
 /-- `T` is a measure preserving *equivalence*, so `m (T '' s) = m s` for measurable `s`. -/
 theorem measure_image_T {s : Set S.X} (hs : MeasurableSet s) : S.m (S.T '' s) = S.m s := by
   have himg : S.T '' s = S.Tinv ⁻¹' s := by
@@ -90,14 +100,7 @@ theorem measure_image_T {s : Set S.X} (hs : MeasurableSet s) : S.m (S.T '' s) = 
       simpa using hy
     · exact fun hx => ⟨S.Tinv x, hx, by simp⟩
   rw [himg]
-  have : MeasurePreserving S.Tinv S.m S.m := by
-    refine ⟨S.measurable_Tinv, ?_⟩
-    have := S.measurePreserving.map_eq
-    calc Measure.map S.Tinv S.m
-        = Measure.map S.Tinv (Measure.map S.T S.m) := by rw [this]
-      _ = Measure.map (S.Tinv ∘ S.T) S.m :=
-          Measure.map_map S.measurable_Tinv S.measurable_T
-      _ = S.m := by simp [Function.comp_def]
+  have : MeasurePreserving S.Tinv S.m S.m := S.measurePreserving_Tinv
   rw [← this.measure_preimage hs.nullMeasurableSet]
 
 /-! ### The `ℤ`-indexed orbit

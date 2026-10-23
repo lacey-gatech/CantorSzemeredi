@@ -7,6 +7,7 @@ import CantorSzemeredi.Dynamics.CSZ
 import CantorSzemeredi.Dynamics.Extensions
 import CantorSzemeredi.Dynamics.HilbertModule
 import CantorSzemeredi.Dynamics.Joining
+import CantorSzemeredi.Dynamics.Koopman
 import CantorSzemeredi.Dynamics.Spectral
 import CantorSzemeredi.Dynamics.SpectralExists
 import CantorSzemeredi.Dynamics.System
