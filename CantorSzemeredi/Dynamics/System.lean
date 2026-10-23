@@ -100,6 +100,31 @@ theorem measure_image_T {s : Set S.X} (hs : MeasurableSet s) : S.m (S.T '' s) = 
       _ = S.m := by simp [Function.comp_def]
   rw [← this.measure_preimage hs.nullMeasurableSet]
 
+/-! ### The `ℤ`-indexed orbit
+
+`T` is invertible, so the orbit of a point is indexed by `ℤ`.  The conditional compactness of
+`def:compact-extension` takes a supremum over `n ∈ ℤ`, so this is needed to state it. -/
+
+/-- `S.iter n` is `T^n` for `n : ℤ`, using `T⁻¹` for negative `n`. -/
+noncomputable def iter (S : MPS) : ℤ → S.X → S.X
+  | Int.ofNat n => S.T^[n]
+  | Int.negSucc n => S.Tinv^[n + 1]
+
+@[simp] theorem iter_natCast (S : MPS) (n : ℕ) : S.iter n = S.T^[n] := rfl
+
+@[simp] theorem iter_zero (S : MPS) : S.iter 0 = id := rfl
+
+theorem measurable_iter (S : MPS) (n : ℤ) : Measurable (S.iter n) := by
+  cases n with
+  | ofNat n => exact S.measurable_T.iterate n
+  | negSucc n => exact S.measurable_Tinv.iterate (n + 1)
+
+theorem measurePreserving_T_iterate (S : MPS) (n : ℕ) :
+    MeasurePreserving S.T^[n] S.m S.m := by
+  induction n with
+  | zero => simpa using MeasurePreserving.id S.m
+  | succ n ih => rw [Function.iterate_succ]; exact ih.comp S.measurePreserving
+
 /-! ### Factors -/
 
 /-- **Definition `def:factor`.**  A *factor* of `S` is a `T`-invariant sub-σ-algebra of `𝒜`.
