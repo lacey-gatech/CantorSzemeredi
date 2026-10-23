@@ -290,14 +290,28 @@ $\theta$ to the nearest integer.
 
 \begin{lemma}[Uniform exponential sum estimate]
   \label{lem:irrational}
-  \lean{CantorSzemeredi.CantorData.tendsto_Phi_zero}
+  \lean{CantorSzemeredi.CantorData.excSet, CantorSzemeredi.CantorData.norm_rhoRed_lt_one,
+    CantorSzemeredi.CantorData.exists_kappa, CantorSzemeredi.exists_nrm_ge,
+    CantorSzemeredi.CantorData.exists_norm_blockAvg_lt,
+    CantorSzemeredi.CantorData.tendsto_Phi_zero}
+  \leanok
   \uses{lem:diff, def:Phi, lem:window-split, lem:blockAvg}
   Let $E_0 \subset \TT$ be the set of $\beta$ for which $\gcd(D)\,\beta$ is a $b$-adic rational
   modulo $1$; it is countable.  Then for every $\beta \notin E_0$,
   \[ \lim_{L \to \infty} \Phi_L(\beta) = 0 . \]
 \end{lemma}
 
+\begin{remark}[Lean design note]
+  The formalization does not build the auxiliary Cantor set $\Cantor_{b,D'}$ of the reduction
+  below.  Instead it reduces only the \emph{digit average}: with $s = \gcd(D)$ it defines
+  $\rho'(\theta) \coloneqq \avg{d \in D} e((d/s)\theta)$
+  (\texttt{CantorData.rhoRed}), so that $\rho(\theta) = \rho'(s\theta)$ and the reduced
+  digits have gcd $1$.  Everything after the reduction is then carried out for $\rho'$, and
+  the enumeration $k_n$ is never changed.
+\end{remark}
+
 \begin{proof}
+  \leanok
   \uses{lem:diff, def:Phi}
   \emph{Reduction to $\gcd(D) = 1$.}  With $s \coloneqq \gcd(D)$ and
   $D' \coloneqq \{d/s : d \in D\}$ we have $k_n = s k'_n$ and $e(\beta k_n) = e(s\beta\, k'_n)$,
