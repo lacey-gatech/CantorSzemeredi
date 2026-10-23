@@ -222,15 +222,25 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
   (1) $\{T^{kn} f\} \subset \{T^n f\}$, so conditional compactness is inherited and the
   conditionally compact functions remain dense.
 
-  (2) Set $\phi_n \coloneqq \abs{\cip{T^n f}{g}}$ and $a_n \coloneqq \norm{\phi_n}_{L^2(\Dbb)}$.
-  Conditional Cauchy--Schwarz gives $0 \leq \phi_n \leq C$.  From the hypothesis,
-  $\avg{N} \norm{\phi_n}_{L^1(\Dbb)} \leq \lVert \avg{N} \phi_n \rVert_{L^2(\Dbb)} \to 0$, whence
-  $\avg{N} a_n^2 \leq C \avg{N}\norm{\phi_n}_{L^1(\Dbb)} \to 0$ and so $\avg{N} a_n \to 0$ by
-  Cauchy--Schwarz.  A bounded non-negative sequence has $\avg{N} a_n \to 0$ iff $a_n \to 0$ along
-  a set of density one; the complement has density zero, so
-  $\abs{S^c \cap [1,kN]} = o(N)$, giving $a_{kn} \to 0$ along a set of density one and
-  $\avg{N} a_{kn} \to 0$.  Finally $\lVert \avg{N} \phi_{kn} \rVert_{L^2(\Dbb)} \leq \avg{N} a_{kn}$.
+  (2) Set $\phi_n \coloneqq \abs{\cip{T^n f}{g}} \geq 0$.  Since
+  $\{kn \colon n<N\} \subset \{m \colon m<kN\}$ and the $\phi_m$ are non-negative, the
+  subsampled average is dominated pointwise by $k$ times the full average,
+  \begin{equation} \label{eq:subsample}
+    \avg{n<N} \phi _{kn} \leq k \cdot \avg{m<kN} \phi _m .
+  \end{equation}
+  Taking $L^2(\Dbb)$ norms and letting $N \to \infty$ gives the claim.
 \end{proof}
+
+\begin{remark}[A simplification found while formalizing]
+  \leanok
+  The proof of (2) just given is shorter than the one in the first draft of the paper, which
+  passed through the characterization of $\avg{N}a_n \to 0$ by convergence of $a_n$ along a set
+  of density one, and then argued that a $k$-subsampling of a density one set again has density
+  one.  That detour is unnecessary: \eqref{eq:subsample} is a pointwise inequality between
+  non-negative quantities, and costs only the harmless constant $k$.  No density argument, no
+  Cauchy--Schwarz, and no $L^1$/$L^2$ comparison is needed.  In Lean the inequality
+  \eqref{eq:subsample} is \texttt{CantorSzemeredi.MPS.avg\_subsample\_le}.
+\end{remark}
 
 \section{The van der Corput inequality}
 

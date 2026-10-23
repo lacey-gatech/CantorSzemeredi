@@ -145,6 +145,113 @@ theorem CompactExtension.pow {D E : Factor S} (h : CompactExtension D E) (k : �
   obtain ⟨g, hg, hclose⟩ := h f hmeas hmem ε hε
   exact ⟨g, hg.pow k, hclose⟩
 
+/-! ### `lem:powers`(2): conditional weak mixing passes to powers
+
+The blueprint proves this by showing that a bounded non-negative sequence with Cesàro limit
+zero tends to zero along a set of density one, and that a `k`-subsampling of a density-one set
+again has density one.  That detour is avoidable.  Since the averaged quantities are
+*non-negative*, the subsampled average is dominated pointwise by `k` times the full average:
+
+  `N⁻¹ ∑_{n < N} φ_{kn} ≤ k · (kN)⁻¹ ∑_{m < kN} φ_m`,
+
+because `{kn : n < N} ⊆ {m : m < kN}`.  Taking `L²(D)` norms and letting `N → ∞` finishes it,
+with no density argument, no Cauchy–Schwarz, and no `L¹`/`L²` comparison. -/
+
+/-- The subsampling bound: for a non-negative sequence, averaging over `{0, k, 2k, …}` costs at
+most a factor `k` against averaging over everything. -/
+theorem avg_subsample_le {φ : ℕ → ℝ} (hφ : ∀ n, 0 ≤ φ n) {k : ℕ} (hk : 1 ≤ k) (N : ℕ) :
+    (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, φ (k * n)
+      ≤ k * ((k * N : ℕ) : ℝ)⁻¹ * ∑ m ∈ Finset.range (k * N), φ m := by
+  rcases Nat.eq_zero_or_pos N with rfl | hN
+  · simp
+  have hkN : 0 < k * N := Nat.mul_pos hk hN
+  have hsub : ∑ n ∈ Finset.range N, φ (k * n) ≤ ∑ m ∈ Finset.range (k * N), φ m := by
+    rw [← Finset.sum_image (f := φ) (g := fun n => k * n)]
+    · refine Finset.sum_le_sum_of_subset_of_nonneg ?_ fun m _ _ => hφ m
+      intro m hm
+      simp only [Finset.mem_image, Finset.mem_range] at hm ⊢
+      obtain ⟨n, hn, rfl⟩ := hm
+      exact (Nat.mul_lt_mul_left (by omega)).2 hn
+    · intro a _ b _ hab
+      exact Nat.eq_of_mul_eq_mul_left (by omega) hab
+  have hNR : (0 : ℝ) < N := by exact_mod_cast hN
+  have hkR : (0 : ℝ) < k := by exact_mod_cast hk
+  have hcast : ((k * N : ℕ) : ℝ) = (k : ℝ) * (N : ℝ) := by push_cast; ring
+  rw [hcast]
+  rw [show (k : ℝ) * ((k : ℝ) * (N : ℝ))⁻¹ = (N : ℝ)⁻¹ by field_simp]
+  exact mul_le_mul_of_nonneg_left hsub (by positivity)
+
+/-- **Lemma `lem:powers`(2).**  Conditional weak mixing for `T` gives conditional weak mixing
+for `T^k`. -/
+theorem CondWeaklyMixing.pow {D : Factor S} {f : S.X → ℝ} (h : CondWeaklyMixing D f)
+    {k : ℕ} (hk : 1 ≤ k) : CondWeaklyMixing (D.toPow k) (S := S.pow k) f := by
+  -- `(S.pow k).m`, `(S.pow k).T` and `(D.toPow k).σ` are definitionally `S.m`, `S.T^[k]` and
+  -- `D.σ`; retype the goal once, so no `pow` friction remains.
+  show Filter.Tendsto (fun N : ℕ => eLpNorm (fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N,
+      |condInner D (f ∘ (S.T^[k])^[n]) f x|) 2 S.m) atTop (𝓝 0)
+  set φ : ℕ → S.X → ℝ := fun n x => |condInner D (f ∘ S.T^[n]) f x| with hφdef
+  have hφ : ∀ n x, 0 ≤ φ n x := fun n x => abs_nonneg _
+  -- The `T^k` averages, rewritten in terms of the `T` orbit.
+  have hiter : ∀ n : ℕ, (S.T^[k])^[n] = S.T^[k * n] := fun n =>
+    (Function.iterate_mul S.T k n).symm
+  have hrewrite : ∀ N : ℕ,
+      (fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N,
+          |condInner D (f ∘ (S.T^[k])^[n]) f x|)
+        = fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, φ (k * n) x := by
+    intro N
+    funext x
+    congr 1
+    refine Finset.sum_congr rfl fun n _ => ?_
+    rw [hiter n]
+  -- Dominate the subsampled average by `k` times the full average, pointwise.
+  set G : ℕ → S.X → ℝ := fun N x => ((N : ℕ) : ℝ)⁻¹ * ∑ m ∈ Finset.range N, φ m x with hG
+  have hdom : ∀ N : ℕ, ∀ᵐ x ∂S.m,
+      ‖(N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, φ (k * n) x‖ ≤ ‖((k : ℝ) • G (k * N)) x‖ := by
+    intro N
+    filter_upwards with x
+    have h₁ := avg_subsample_le (φ := fun n => φ n x) (fun n => hφ n x) hk N
+    have hnn : 0 ≤ (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, φ (k * n) x :=
+      mul_nonneg (by positivity) (Finset.sum_nonneg fun n _ => hφ _ x)
+    have hnn' : 0 ≤ ((k : ℝ) • G (k * N)) x := by
+      refine mul_nonneg (by positivity) (mul_nonneg (by positivity)
+        (Finset.sum_nonneg fun m _ => hφ m x))
+    rw [Real.norm_eq_abs, Real.norm_eq_abs, abs_of_nonneg hnn, abs_of_nonneg hnn']
+    simpa [hG, smul_eq_mul, mul_assoc] using h₁
+  -- Measurability of the averaged quantities, needed for `eLpNorm_mono_ae`.
+  have hmeasφ : ∀ n : ℕ, AEStronglyMeasurable (φ n) S.m := by
+    intro n
+    have hsm : StronglyMeasurable (condInner D (f ∘ S.T^[n]) f) :=
+      stronglyMeasurable_condExp.mono D.le
+    have habs : StronglyMeasurable fun x => |condInner D (f ∘ S.T^[n]) f x| := by
+      simpa [Real.norm_eq_abs] using hsm.norm
+    exact habs.aestronglyMeasurable
+  have hmeasavg : ∀ N : ℕ,
+      AEStronglyMeasurable (fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, φ (k * n) x) S.m := by
+    intro N
+    simp only [← Finset.sum_apply]
+    exact (Finset.aestronglyMeasurable_sum _ fun n _ => hmeasφ (k * n)).const_mul _
+  -- Take `L²` norms.
+  have hsq : ∀ N : ℕ,
+      eLpNorm (fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N,
+          |condInner D (f ∘ (S.T^[k])^[n]) f x|) 2 S.m
+        ≤ (‖(k : ℝ)‖ₑ) * eLpNorm (G (k * N)) 2 S.m := by
+    intro N
+    rw [hrewrite N]
+    refine le_trans (eLpNorm_mono_ae (hmeasavg N) (hdom N)) ?_
+    rw [eLpNorm_const_smul]
+  -- And pass to the limit along `N ↦ k * N`.
+  have hkk : Filter.Tendsto (fun N : ℕ => k * N) atTop atTop :=
+    Filter.tendsto_atTop_atTop.2 fun b =>
+      ⟨b, fun a ha => le_trans ha (Nat.le_mul_of_pos_left a hk)⟩
+  have hGtend : Filter.Tendsto (fun N : ℕ => eLpNorm (G (k * N)) 2 S.m) atTop (𝓝 0) :=
+    h.comp hkk
+  have hbound : Filter.Tendsto
+      (fun N : ℕ => (‖(k : ℝ)‖ₑ) * eLpNorm (G (k * N)) 2 S.m) atTop (𝓝 0) := by
+    have hmul := ENNReal.Tendsto.const_mul (a := (‖(k : ℝ)‖ₑ)) hGtend (Or.inr (by simp))
+    simpa using hmul
+  refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hbound
+    (Eventually.of_forall fun N => by simp) (Eventually.of_forall hsq)
+
 end MPS
 
 end CantorSzemeredi
