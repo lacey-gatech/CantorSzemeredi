@@ -153,6 +153,23 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
   with $\Exp(f \mid \Dbb) = 0$ is conditionally weakly mixing.
 \end{definition}
 
+\begin{remark}[State of the formalization of Lemma~\ref{lem:atomless}]
+  The inputs are all in place: the spectral measure exists
+  (\texttt{hasSpectralMeasure\_specMeasure}), Wiener's lemma is proved in the form
+  \texttt{noAtoms\_of\_tendsto\_cesaro\_zero}, and \eqref{eq:joining} holds for bounded
+  functions (\texttt{integral\_joining}).  The Koopman operator is built as a unitary of
+  $L^2(X;\CC)$ (\texttt{koopman}), with its powers acting along the orbit
+  (\texttt{coeFn\_koopman\_zpow}), and for a bounded real $f$ the correlations
+  $\langle f, U^n f\rangle$ are identified with $\int \cip{T^n f}{f} \;dm$
+  (\texttt{inner\_toLpC}, \texttt{integral\_eq\_integral\_condInner}).
+
+  Two steps remain.  For (i), converting the \texttt{eLpNorm} in the definition of
+  \texttt{CondWeaklyMixing} into the bound $\avg{N}\int \abs{\cip{T^n f}{f}} \to 0$ and feeding
+  it to Wiener.  For (ii), building the product system $(X\times X, \lambda, T\times T)$ as an
+  \texttt{MPS}; \texttt{joining\_invariant} supplies its invariance and
+  \texttt{integral\_joining} the identity \eqref{eq:psi-identity}.
+\end{remark}
+
 \begin{definition}[Conditionally compact function; compact extension]
   \label{def:compact-extension}
   \lean{CantorSzemeredi.MPS.CondCompact, CantorSzemeredi.MPS.CompactExtension,
@@ -234,7 +251,9 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
 
 \begin{lemma}[Conditional weak mixing gives atomless spectral measures]
   \label{lem:atomless}
-  \lean{CantorSzemeredi.spectralMeasure_noAtoms_of_condWeaklyMixing}
+  \lean{CantorSzemeredi.MPS.koopman, CantorSzemeredi.MPS.coeFn_koopman_zpow,
+    CantorSzemeredi.MPS.inner_koopman_zpow_eq_integral, CantorSzemeredi.MPS.toLpC,
+    CantorSzemeredi.MPS.inner_toLpC, CantorSzemeredi.MPS.integral_eq_integral_condInner}
   \uses{def:cwm, lem:joining, lem:wiener, def:spectral-measure}
   Let $f \in L^\infty(\Ebb)$ be conditionally weakly mixing and set $G \coloneqq f \otimes \bar f$.
   Then
