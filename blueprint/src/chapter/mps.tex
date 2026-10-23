@@ -147,14 +147,16 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
 
 \begin{definition}[Relatively independent self-joining]
   \label{def:joining}
-  \lean{CantorSzemeredi.relIndepSelfJoining}
+  \lean{CantorSzemeredi.MPS.joining, CantorSzemeredi.MPS.condKernel}
+  \leanok
   \uses{def:factor}
   $\lambda \coloneqq \int m_x \otimes m_x \, dm(x)$, a probability measure on $X \times X$.
 \end{definition}
 
 \begin{lemma}[Properties of $\lambda$]
   \label{lem:joining}
-  \lean{CantorSzemeredi.integral_joining, CantorSzemeredi.joining_invariant}
+  \lean{CantorSzemeredi.MPS.joining_invariant, CantorSzemeredi.MPS.joining_prod_apply,
+    CantorSzemeredi.MPS.condKernel_comp, CantorSzemeredi.MPS.prodMap}
   \uses{def:joining, lem:condexp-commutes}
   For $a, a' \in L^\infty(X)$,
   \begin{equation}
@@ -171,6 +173,27 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
   $\lambda(R^{-1}(B \times B')) = \int (\Exp(\one_B \mid \Dbb)\Exp(\one_{B'} \mid \Dbb)) \circ T \, dm
    = \lambda(B \times B')$; rectangles generate and are closed under intersection.
 \end{proof}
+
+\begin{remark}[State of the formalization]
+  \leanok
+  The invariance of $\lambda$ under $R = T\times T$ is proved in Lean
+  (\texttt{joining\_invariant}), via the rectangle formula
+  $\lambda(B\times B') = \int \kappa_x(B)\,\kappa_x(B')\;dm$
+  (\texttt{joining\_prod\_apply}), the equivariance $\kappa_x(T^{-1}B) = \kappa_{Tx}(B)$
+  (\texttt{condKernel\_comp}, which is Lemma~\ref{lem:condexp-commutes} read through the
+  kernel), and the fact that measurable rectangles form a $\pi$-system generating the product
+  $\sigma$-algebra.
+
+  The disintegration itself is Mathlib's \texttt{ProbabilityTheory.condExpKernel}, which exists
+  for standard Borel spaces --- exactly the standing assumption that $X$ is compact metric with
+  its Borel $\sigma$-algebra.
+
+  What is \emph{not} yet formalized is \eqref{eq:joining} for general bounded $a,a'$, as opposed
+  to indicators: that needs the Bochner integral against a measure composed with a kernel, which
+  Mathlib does not currently provide, and so requires the usual approximation by simple
+  functions.  It is used only in Lemma~\ref{lem:atomless}, which is in any case blocked on the
+  spectral measure (Definition~\ref{def:spectral-measure}).
+\end{remark}
 
 \begin{lemma}[Conditional weak mixing gives atomless spectral measures]
   \label{lem:atomless}

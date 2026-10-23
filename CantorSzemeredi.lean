@@ -6,5 +6,6 @@ import CantorSzemeredi.Cantor.Residues
 import CantorSzemeredi.Dynamics.CSZ
 import CantorSzemeredi.Dynamics.Extensions
 import CantorSzemeredi.Dynamics.HilbertModule
+import CantorSzemeredi.Dynamics.Joining
 import CantorSzemeredi.Dynamics.System
 import CantorSzemeredi.Dynamics.VanDerCorput
