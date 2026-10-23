@@ -109,8 +109,23 @@
   \texttt{eLpNorm\_sum\_le} followed by Cauchy--Schwarz), \textbf{that first step is now
   proved}, as \texttt{exists\_atom\_of\_not\_condWeaklyMixing}.
 
-  The remainder --- passing from an atom of $\sigma_G$ to a non-trivial conditionally compact
-  function, and from those to the factor $\Ebb$ --- is untouched, and is the bulk of the work.
+  \smallskip
+  \emph{The Hilbert--Schmidt step.}  Its first half is also formalized:
+  \texttt{exists\_eigenvector\_of\_atom} turns an atom of the spectral measure at $\theta$ into a
+  genuine eigenvector, $Uw = e(\theta)w$ with $w \neq 0$.  Von Neumann's mean ergodic theorem
+  (which Mathlib has) makes the Birkhoff averages of the contraction $e(-\theta)U$ converge to
+  the orthogonal projection onto its fixed points, and
+  \texttt{tendsto\_norm\_birkhoff\_sq} --- the quadratic form identity \texttt{norm\_sum\_sq}
+  followed by dominated convergence against the kernel $\abs{\mathrm{ces}_N(\alpha-\theta)} ^2$
+  --- shows the limit has squared norm $\sigma(\{\theta\}) \neq 0$.
+
+  What remains is the second half: viewing the eigenfunction $H \in L^2(\lambda)$ as a kernel on
+  the fibres and passing to the conditionally compact functions it generates, then assembling
+  the factor $\Ebb$.  \textbf{This is blocked on Mathlib}, which has no theory of
+  Hilbert--Schmidt operators --- only Gram--Schmidt orthogonalization, which is unrelated.
+  Supplying that theory (Hilbert--Schmidt operators, their compactness, and the correspondence
+  between kernels in $L^2(\mu\otimes\mu)$ and operators on $L^2(\mu)$) is a Mathlib contribution
+  in its own right, and is the real obstacle to finishing Lemma~\ref{lem:dichotomy}.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}

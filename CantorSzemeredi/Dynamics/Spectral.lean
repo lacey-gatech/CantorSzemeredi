@@ -305,6 +305,78 @@ theorem tendsto_cesaroChar_of_ne_zero {t : Torus} (ht : t ≠ 0) :
     (by filter_upwards [Filter.eventually_gt_atTop 0] with N hN using hbound N hN)
     (tendsto_const_div_atTop_nhds_zero_nat _)
 
+/-! ### The `range`-indexed kernel
+
+`birkhoffAverage` averages over `Finset.range N`, so the `Icc 1 N` kernel above needs a
+companion.  The two differ by at most `2/N`, which is enough to transport the limits. -/
+
+/-- The Cesàro mean of the characters over `range N`, matching `birkhoffAverage`. -/
+noncomputable def cesaroChar' (N : ℕ) (t : Torus) : ℂ :=
+  (N : ℂ)⁻¹ * ∑ n ∈ Finset.range N, fourier (n : ℤ) t
+
+theorem norm_cesaroChar'_le_one (N : ℕ) (t : Torus) : ‖cesaroChar' N t‖ ≤ 1 := by
+  rcases Nat.eq_zero_or_pos N with rfl | hN
+  · simp [cesaroChar']
+  rw [cesaroChar', norm_mul, norm_inv, Complex.norm_natCast]
+  have hsum : ‖∑ n ∈ Finset.range N, fourier (n : ℤ) t‖ ≤ (N : ℝ) := by
+    calc ‖∑ n ∈ Finset.range N, fourier (n : ℤ) t‖
+        ≤ ∑ n ∈ Finset.range N, ‖fourier (n : ℤ) t‖ := norm_sum_le _ _
+      _ = (N : ℝ) := by
+          have hone : ∀ n ∈ Finset.range N, ‖fourier (n : ℤ) t‖ = 1 := by
+            intro n _
+            rw [fourier_apply]
+            exact Circle.norm_coe _
+          rw [Finset.sum_congr rfl hone]
+          simp
+  have hNR : (0 : ℝ) < N := by exact_mod_cast hN
+  rw [inv_mul_le_iff₀ hNR]
+  simpa using hsum
+
+@[simp] theorem cesaroChar'_zero {N : ℕ} (hN : 0 < N) : cesaroChar' N (0 : Torus) = 1 := by
+  rw [cesaroChar']
+  have hone : ∀ n ∈ Finset.range N, fourier (n : ℤ) (0 : Torus) = 1 := by
+    intro n _
+    simp
+  rw [Finset.sum_congr rfl hone, Finset.sum_const, Finset.card_range]
+  simp only [nsmul_eq_mul, mul_one]
+  exact inv_mul_cancel₀ (by exact_mod_cast hN.ne')
+
+/-- The two kernels differ by at most `2/N`: their index sets differ only at `0` and `N`. -/
+theorem norm_cesaroChar'_sub_le (N : ℕ) (t : Torus) :
+    ‖cesaroChar' N t - cesaroChar N t‖ ≤ 2 / N := by
+  rcases Nat.eq_zero_or_pos N with rfl | hN
+  · simp [cesaroChar', cesaroChar]
+  have hNR : (0 : ℝ) < N := by exact_mod_cast hN
+  have hsplit : ∑ n ∈ Finset.range N, fourier (n : ℤ) t
+      = fourier (0 : ℤ) t + ∑ n ∈ Finset.Icc 1 (N - 1), fourier (n : ℤ) t := by
+    have hset : Finset.range N = insert 0 (Finset.Icc 1 (N - 1)) := by
+      ext n
+      simp only [Finset.mem_range, Finset.mem_insert, Finset.mem_Icc]
+      omega
+    rw [hset, Finset.sum_insert (by simp)]
+    norm_num
+  have hsplit2 : ∑ n ∈ Finset.Icc 1 N, fourier (n : ℤ) t
+      = (∑ n ∈ Finset.Icc 1 (N - 1), fourier (n : ℤ) t) + fourier (N : ℤ) t := by
+    have hset : Finset.Icc 1 N = insert N (Finset.Icc 1 (N - 1)) := by
+      ext n
+      simp only [Finset.mem_Icc, Finset.mem_insert]
+      omega
+    rw [hset, Finset.sum_insert (by simp; omega), add_comm]
+  rw [cesaroChar', cesaroChar, hsplit, hsplit2, ← mul_sub]
+  have harith : (fourier (0 : ℤ) t + ∑ n ∈ Finset.Icc 1 (N - 1), fourier (n : ℤ) t)
+      - ((∑ n ∈ Finset.Icc 1 (N - 1), fourier (n : ℤ) t) + fourier (N : ℤ) t)
+      = fourier (0 : ℤ) t - fourier (N : ℤ) t := by ring
+  rw [harith, norm_mul, norm_inv, Complex.norm_natCast]
+  have hnum : ‖fourier (0 : ℤ) t - fourier (N : ℤ) t‖ ≤ 2 := by
+    refine (norm_sub_le _ _).trans ?_
+    have h0 : ‖fourier (0 : ℤ) t‖ = 1 := by rw [fourier_apply]; exact Circle.norm_coe _
+    have hN' : ‖fourier (N : ℤ) t‖ = 1 := by rw [fourier_apply]; exact Circle.norm_coe _
+    rw [h0, hN']
+    norm_num
+  rw [inv_mul_le_iff₀ hNR]
+  calc ‖fourier (0 : ℤ) t - fourier (N : ℤ) t‖ ≤ 2 := hnum
+    _ = (N : ℝ) * (2 / (N : ℝ)) := by field_simp
+
 /-! ### Wiener's lemma proper
 
 `|σ̂(n)|²` is a double integral against `σ × σ`; averaging in `n` turns the integrand into the
@@ -475,7 +547,7 @@ theorem prod_diagonal_eq_lintegral :
 theorem exists_atom_of_diagonal_ne_zero
     (h : (σ.prod σ) {q : Torus × Torus | q.1 = q.2} ≠ 0) : ∃ θ : Torus, σ {θ} ≠ 0 := by
   by_contra hcon
-  push_neg at hcon
+  push Not at hcon
   refine h ?_
   rw [prod_diagonal_eq_lintegral]
   have hzero : (fun α => σ {α}) = fun _ => 0 := funext fun α => hcon α
@@ -494,5 +566,185 @@ theorem exists_atom_of_not_tendsto_cesaro_zero
   refine h ?_
   have := tendsto_cesaro_sq_norm_sigmaHat (σ := σ)
   rwa [hzero, ENNReal.toReal_zero] at this
+
+/-! ### Eigenfunctions from atoms
+
+The entry point of the Hilbert–Schmidt step of `lem:dichotomy`: an atom of the spectral
+measure at `θ` produces a genuine eigenvector of `U` with eigenvalue `e(θ)`.
+
+The two ingredients are Mathlib's von Neumann mean ergodic theorem, applied to the
+contraction `e(-θ) • U`, and the quadratic form identity `norm_sum_sq`, which turns the norm
+of a Birkhoff average into `∫ |cesaroChar' N (α - θ)|² dσ` and hence, by dominated
+convergence, into `σ({θ})`.
+-/
+
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
+
+namespace HasSpectralMeasure
+
+variable {U : H ≃ₗᵢ[ℂ] H} {v : H} {σ : Measure Torus}
+
+/-- The Birkhoff averages of `e(-θ) • U` at `v` have squared norm tending to `σ({θ})`. -/
+theorem tendsto_norm_birkhoff_sq (h : HasSpectralMeasure U v σ) (θ : Torus) :
+    Filter.Tendsto
+      (fun N : ℕ => ‖∑ n ∈ Finset.range N,
+        ((N : ℂ)⁻¹ * (starRingEnd ℂ) (fourier (n : ℤ) θ)) • (U ^ (n : ℤ)) v‖ ^ 2)
+      Filter.atTop (nhds ((σ {θ}).toReal)) := by
+  have := h.isFinite
+  -- The quadratic form identity turns each norm into an integral of the kernel.
+  have hnorm : ∀ N : ℕ, ‖∑ n ∈ Finset.range N,
+      ((N : ℂ)⁻¹ * (starRingEnd ℂ) (fourier (n : ℤ) θ)) • (U ^ (n : ℤ)) v‖ ^ 2
+      = ∫ α, ‖cesaroChar' N (α - θ)‖ ^ 2 ∂σ := by
+    intro N
+    rw [h.norm_sum_sq (Finset.range N)
+      (fun n => (N : ℂ)⁻¹ * (starRingEnd ℂ) (fourier (n : ℤ) θ)) (fun n => (n : ℤ))]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun α => ?_)
+    have hinner : ∑ n ∈ Finset.range N,
+        ((N : ℂ)⁻¹ * (starRingEnd ℂ) (fourier (n : ℤ) θ)) * fourier (n : ℤ) α
+        = cesaroChar' N (α - θ) := by
+      rw [cesaroChar', Finset.mul_sum]
+      refine Finset.sum_congr rfl fun n _ => ?_
+      have hchar : fourier (n : ℤ) (α - θ)
+          = fourier (n : ℤ) α * (starRingEnd ℂ) (fourier (n : ℤ) θ) := by
+        have hneg : (AddCircle.toCircle (-((n : ℤ) • θ)) : ℂ)
+            = (starRingEnd ℂ) (fourier (n : ℤ) θ) := by
+          rw [fourier_apply]
+          exact fourier_neg' (T := (1 : ℝ))
+        rw [fourier_apply, fourier_apply, smul_sub, sub_eq_add_neg, AddCircle.toCircle_add]
+        push_cast
+        rw [hneg, fourier_apply]
+      rw [hchar]
+      ring
+    simp only []
+    rw [hinner]
+  -- Dominated convergence: the kernel tends to the indicator of `{θ}`.
+  have hcont : ∀ N : ℕ, Continuous fun α : Torus => cesaroChar' N (α - θ) := by
+    intro N
+    have hk : Continuous (cesaroChar' N) :=
+      continuous_const.mul (continuous_finsetSum _ fun n _ => (fourier (n : ℤ)).continuous)
+    exact hk.comp (continuous_id.sub continuous_const)
+  have hptw : ∀ α : Torus, Filter.Tendsto (fun N => ‖cesaroChar' N (α - θ)‖ ^ 2)
+      Filter.atTop (nhds (Set.indicator {θ} (fun _ => (1 : ℝ)) α)) := by
+    intro α
+    by_cases hα : α = θ
+    · subst hα
+      rw [Set.indicator_of_mem (by simp : α ∈ ({α} : Set Torus))]
+      refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+      filter_upwards [Filter.eventually_gt_atTop 0] with N hN
+      rw [show α - α = (0 : Torus) by simp, cesaroChar'_zero hN]
+      simp
+    · rw [Set.indicator_of_notMem (by simpa using hα)]
+      have hne : α - θ ≠ 0 := sub_ne_zero.2 hα
+      have hdiff : Filter.Tendsto (fun N => cesaroChar' N (α - θ)) Filter.atTop (nhds 0) := by
+        have hIcc := tendsto_cesaroChar_of_ne_zero hne
+        have hsmall : Filter.Tendsto
+            (fun N : ℕ => cesaroChar' N (α - θ) - cesaroChar N (α - θ))
+            Filter.atTop (nhds 0) := by
+          refine squeeze_zero_norm' (a := fun N : ℕ => 2 / (N : ℝ))
+            (Filter.Eventually.of_forall fun N => norm_cesaroChar'_sub_le N (α - θ))
+            (tendsto_const_div_atTop_nhds_zero_nat 2)
+        simpa using hsmall.add hIcc
+      have := (continuous_pow 2).continuousAt.tendsto.comp
+        ((continuous_norm.tendsto 0).comp hdiff)
+      simpa [Function.comp_def] using this
+  have hdct := MeasureTheory.tendsto_integral_of_dominated_convergence
+    (F := fun (N : ℕ) (α : Torus) => ‖cesaroChar' N (α - θ)‖ ^ 2)
+    (f := Set.indicator {θ} (fun _ => (1 : ℝ)))
+    (bound := fun _ => (1 : ℝ))
+    (fun N => ((hcont N).norm.pow 2).aestronglyMeasurable)
+    (integrable_const (μ := σ) 1)
+    (fun N => Filter.Eventually.of_forall fun α => by
+      rw [Real.norm_eq_abs, abs_of_nonneg (by positivity)]
+      have := norm_cesaroChar'_le_one N (α - θ)
+      nlinarith [norm_nonneg (cesaroChar' N (α - θ))])
+    (Filter.Eventually.of_forall hptw)
+  rw [integral_indicator_const _ (measurableSet_singleton θ)] at hdct
+  simp only [smul_eq_mul, mul_one, Measure.real] at hdct
+  exact (Filter.Tendsto.congr (fun N => (hnorm N).symm) hdct)
+
+/-- **Eigenfunction from an atom.**  If the spectral measure of `U` at `v` has an atom at `θ`,
+then `U` has an eigenvector with eigenvalue `e(θ)`.
+
+This is the entry point of the Hilbert–Schmidt step of `lem:dichotomy`.  Von Neumann's mean
+ergodic theorem makes the Birkhoff averages of the contraction `e(-θ) • U` converge to the
+orthogonal projection onto its fixed points, and `tendsto_norm_birkhoff_sq` shows that the
+limit has squared norm `σ({θ}) ≠ 0`, so it is a non-zero fixed point. -/
+theorem exists_eigenvector_of_atom [CompleteSpace H] (h : HasSpectralMeasure U v σ)
+    {θ : Torus} (hθ : σ {θ} ≠ 0) :
+    ∃ w : H, w ≠ 0 ∧ U w = fourier 1 θ • w := by
+  classical
+  have hfin := h.isFinite
+  set c : ℂ := (starRingEnd ℂ) (fourier 1 θ) with hc
+  have hcnorm : ‖c‖ = 1 := by
+    rw [hc, RCLike.norm_conj, fourier_apply]
+    exact Circle.norm_coe _
+  -- The contraction `W = e(-θ) • U`.
+  set W : H →L[ℂ] H := c • (U.toLinearIsometry.toContinuousLinearMap) with hW
+  have hWnorm : ‖W‖ ≤ 1 := by
+    rw [hW, norm_smul, hcnorm, one_mul]
+    exact LinearIsometry.norm_toContinuousLinearMap_le U.toLinearIsometry
+  -- Its Birkhoff averages are the sums appearing in `tendsto_norm_birkhoff_sq`.
+  have hiter : ∀ (n : ℕ) (x : H), W^[n] x = (c ^ n) • (U ^ (n : ℤ)) x := by
+    intro n
+    induction n with
+    | zero => intro x; simp
+    | succ n ih =>
+      intro x
+      rw [Function.iterate_succ_apply', ih, hW]
+      simp only [smul_apply, LinearIsometry.coe_toContinuousLinearMap,
+        LinearIsometryEquiv.coe_toLinearIsometry, map_smul]
+      have hUU : U ((U ^ (n : ℤ)) x) = (U ^ ((n + 1 : ℕ) : ℤ)) x := by
+        rw [show (((n + 1 : ℕ)) : ℤ) = 1 + (n : ℤ) by push_cast; ring,
+          zpow_add U 1 (n : ℤ), zpow_one]
+        rfl
+      rw [hUU, smul_smul, pow_succ, mul_comm (c ^ n) c]
+  have hbirk : ∀ N : ℕ, birkhoffAverage ℂ W _root_.id N v
+      = ∑ n ∈ Finset.range N, ((N : ℂ)⁻¹ * c ^ n) • (U ^ (n : ℤ)) v := by
+    intro N
+    rw [birkhoffAverage, birkhoffSum, Finset.smul_sum]
+    refine Finset.sum_congr rfl fun n _ => ?_
+    rw [show _root_.id (W^[n] v) = W^[n] v from rfl, hiter n v, smul_smul]
+  -- Mean ergodic theorem.
+  set Psub := (W.eqLocus (1 : H →L[ℂ] H)).orthogonalProjectionOnto v with hPsub
+  set w : H := (Psub : H) with hw
+  have hme := W.tendsto_birkhoffAverage_orthogonalProjection hWnorm v
+  -- The norms converge to `σ({θ}) ≠ 0`, so the limit is non-zero.
+  have hcpow : ∀ n : ℕ, c ^ n = (starRingEnd ℂ) (fourier (n : ℤ) θ) := by
+    intro n
+    rw [hc, ← map_pow]
+    congr 1
+    rw [fourier_eq_zpow (n : ℤ) θ, zpow_natCast]
+  have hnormlim := h.tendsto_norm_birkhoff_sq θ
+  have hnormlim' : Filter.Tendsto (fun N : ℕ => ‖birkhoffAverage ℂ W _root_.id N v‖ ^ 2)
+      Filter.atTop (nhds ((σ {θ}).toReal)) := by
+    refine hnormlim.congr fun N => ?_
+    rw [hbirk N]
+    congr 2
+    exact Finset.sum_congr rfl fun n _ => by rw [hcpow n]
+  have hlim : Filter.Tendsto (fun N : ℕ => ‖birkhoffAverage ℂ W _root_.id N v‖ ^ 2)
+      Filter.atTop (nhds (‖w‖ ^ 2)) :=
+    ((continuous_pow 2).continuousAt.tendsto.comp ((continuous_norm.tendsto _).comp hme))
+  have hwnorm : ‖w‖ ^ 2 = (σ {θ}).toReal := tendsto_nhds_unique hlim hnormlim'
+  have hwne : w ≠ 0 := by
+    intro hzero
+    rw [hzero, norm_zero] at hwnorm
+    refine hθ ?_
+    have hz : (σ {θ}).toReal = 0 := by simpa using hwnorm.symm
+    exact (ENNReal.toReal_eq_zero_iff _).1 hz |>.resolve_right (measure_ne_top _ _)
+  -- A fixed point of `W` is an eigenvector of `U`.
+  refine ⟨w, hwne, ?_⟩
+  have hfix : c • U w = w := by
+    have hmem : W w = w := Psub.2
+    rw [hW] at hmem
+    simpa using hmem
+  have hcinv : (fourier 1 θ) * c = 1 := by
+    rw [hc, mul_comm, ← Complex.normSq_eq_conj_mul_self, Complex.normSq_eq_norm_sq,
+      show ‖fourier (1 : ℤ) θ‖ = 1 by rw [fourier_apply]; exact Circle.norm_coe _]
+    norm_num
+  calc U w = (fourier 1 θ * c) • U w := by rw [hcinv, one_smul]
+    _ = fourier 1 θ • (c • U w) := by rw [smul_smul]
+    _ = fourier 1 θ • w := by rw [hfix]
+
+end HasSpectralMeasure
 
 end CantorSzemeredi
