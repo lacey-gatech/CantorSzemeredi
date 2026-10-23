@@ -7,6 +7,7 @@ Authors: Alex Burgin, Anastasios Fragkos, Michael T. Lacey, Dario Mena, Maria Ca
 import CantorSzemeredi.Dynamics.Koopman
 import CantorSzemeredi.Dynamics.Extensions
 import CantorSzemeredi.Dynamics.SpectralExists
+import CantorSzemeredi.Dynamics.Joining
 
 /-!
 # Conditional weak mixing gives atomless spectral measures
@@ -21,13 +22,10 @@ turns that into the absence of atoms.
 
 ## State
 
-Part (i) is proved, as `noAtoms_specMeasure_of_condWeaklyMixing`.
-
-Part (ii) — the statement for `G = f ⊗ f` on `L²(λ)` with `R = T × T`, together with the
-identity `eq:psi-identity` — is not formalized.  It needs the product system
-`(X × X, λ, T × T)` built as an `MPS`: `joining_invariant` supplies its invariance and
-`integral_joining` the identity, so what remains there is construction rather than new
-mathematics.
+Both parts are proved: `noAtoms_specMeasure_of_condWeaklyMixing` (i) and
+`noAtoms_specMeasure_prod_of_condWeaklyMixing` (ii), the latter on the product system
+`prodSystem D = (X × X, λ, T × T)`.  The identity `eq:psi-identity` is
+`integral_tensorSq_comp`.
 -/
 
 namespace CantorSzemeredi
@@ -247,6 +245,205 @@ theorem noAtoms_specMeasure_of_condWeaklyMixing (D : Factor S) {f : S.X → ℝ}
     simpa using this
   -- Squeeze and apply Wiener.
   have : IsFiniteMeasure σ := hspec.isFinite
+  refine noAtoms_of_tendsto_cesaro_zero ?_
+  refine squeeze_zero' (Filter.Eventually.of_forall fun N => ?_)
+    (Filter.Eventually.of_forall hdom) hprod
+  exact mul_nonneg (by positivity) (Finset.sum_nonneg fun n _ => by positivity)
+
+/-! ### Part (ii): the product system
+
+`G = f ⊗ f` on `L²(λ)`, where `λ` is the relatively independent self-joining and the
+transformation is `R = T × T`.  The identity `eq:psi-identity` says that the correlations of
+`G` are the squared `L²(D)` norms of the conditional correlations of `f`; it is `eq:joining`
+applied to `a = a' = f · (f ∘ Tⁿ)`.
+-/
+
+variable [StandardBorelSpace S.X]
+
+omit [StandardBorelSpace S.X] in
+/-- `|E(g|D)| ≤ K` almost everywhere when `|g| ≤ K`. -/
+theorem abs_condExp_le (D : Factor S) {g : S.X → ℝ} {K : ℝ} (hg : Integrable g S.m)
+    (hK : ∀ x, |g x| ≤ K) : ∀ᵐ x ∂S.m, |(S.m[g|D.σ]) x| ≤ K := by
+  have hub : (S.m[g|D.σ]) ≤ᵐ[S.m] fun _ => K := by
+    have h := condExp_mono (m := D.σ) hg (integrable_const K)
+      (Filter.Eventually.of_forall fun x => le_trans (le_abs_self _) (hK x))
+    rw [condExp_const (μ := S.m) (m := D.σ) D.le K] at h
+    exact h
+  have hlb : (fun _ => -K) ≤ᵐ[S.m] (S.m[g|D.σ]) := by
+    have h := condExp_mono (m := D.σ) (integrable_const (-K)) hg
+      (Filter.Eventually.of_forall fun x => by
+        have := hK x
+        rw [abs_le] at this
+        exact this.1)
+    rw [condExp_const (μ := S.m) (m := D.σ) D.le (-K)] at h
+    exact h
+  filter_upwards [hub, hlb] with x hx hx'
+  rw [abs_le]
+  exact ⟨hx', hx⟩
+
+/-- `G = f ⊗ f` as a bounded measurable function on `X × X`. -/
+noncomputable def tensorSq (f : S.X → ℝ) : S.X × S.X → ℝ := fun p => f p.1 * f p.2
+
+omit [StandardBorelSpace S.X] in
+theorem measurable_tensorSq {f : S.X → ℝ} (hm : Measurable f) : Measurable (tensorSq f) :=
+  (hm.comp measurable_fst).mul (hm.comp measurable_snd)
+
+omit [StandardBorelSpace S.X] in
+theorem abs_tensorSq_le {f : S.X → ℝ} {C : ℝ} (hb : ∀ x, |f x| ≤ C) (p : S.X × S.X) :
+    |tensorSq f p| ≤ C * C := by
+  have h₀ : (0 : ℝ) ≤ C := le_trans (abs_nonneg _) (hb p.1)
+  rw [tensorSq, abs_mul]
+  exact mul_le_mul (hb _) (hb _) (abs_nonneg _) h₀
+
+/-- **Equation `eq:psi-identity`.**  The correlations of `G = f ⊗ f` under `R = T × T` are the
+squared `L²(D)` norms of the conditional correlations of `f`. -/
+theorem integral_tensorSq_comp (D : Factor S) {f : S.X → ℝ} {C : ℝ}
+    (hm : Measurable f) (hb : ∀ x, |f x| ≤ C) (n : ℕ) :
+    ∫ p, tensorSq f p * tensorSq f ((prodMap S)^[n] p) ∂(joining D)
+      = ∫ x, (condInner D (f ∘ S.T^[n]) f x) ^ 2 ∂S.m := by
+  classical
+  set a : S.X → ℝ := fun x => f x * f (S.T^[n] x) with ha
+  have hmeas : Measurable a := hm.mul (hm.comp (S.measurable_T.iterate n))
+  have hbnd : ∀ x, |a x| ≤ C * C := by
+    intro x
+    have h₀ : (0 : ℝ) ≤ C := le_trans (abs_nonneg _) (hb x)
+    rw [ha, abs_mul]
+    exact mul_le_mul (hb _) (hb _) (abs_nonneg _) h₀
+  -- The integrand is the tensor `a ⊗ a`.
+  have hint : (fun p : S.X × S.X => tensorSq f p * tensorSq f ((prodMap S)^[n] p))
+      = fun p : S.X × S.X => a p.1 * a p.2 := by
+    funext p
+    rw [tensorSq, tensorSq, prodMap_iterate, ha]
+    ring
+  rw [hint, integral_joining D hmeas hmeas hbnd hbnd]
+  refine integral_congr_ae ?_
+  filter_upwards with x
+  have hcond : (S.m[a|D.σ]) x = condInner D (f ∘ S.T^[n]) f x := by
+    rw [condInner]
+    congr 1
+    funext y
+    simp [ha, mul_comm]
+  rw [hcond, sq]
+
+/-- **Lemma `lem:atomless`(ii).**  For conditionally weakly mixing `f`, the spectral measure
+of `G = f ⊗ f` for the Koopman operator of `R = T × T` on `L²(λ)` has no atoms. -/
+theorem noAtoms_specMeasure_prod_of_condWeaklyMixing (D : Factor S) {f : S.X → ℝ} {C : ℝ}
+    (hm : Measurable f) (hb : ∀ x, |f x| ≤ C) (hcwm : CondWeaklyMixing D f) :
+    ∀ θ : Torus, specMeasure (prodSystem D).koopman
+      (toLpC (prodSystem D) (measurable_tensorSq hm) (abs_tensorSq_le hb)) {θ} = 0 := by
+  set P := prodSystem D with hP
+  set G := toLpC P (measurable_tensorSq hm) (abs_tensorSq_le hb) with hG
+  set σ := specMeasure P.koopman G with hσ
+  have hspec := hasSpectralMeasure_specMeasure P.koopman G
+  have : IsFiniteMeasure σ := hspec.isFinite
+  set ψ : ℕ → ℝ := fun n => ∫ x, (condInner D (f ∘ S.T^[n]) f x) ^ 2 ∂S.m with hψ
+  set φ : ℕ → ℝ := fun n => ∫ x, |condInner D (f ∘ S.T^[n]) f x| ∂S.m with hφ
+  have hψnn : ∀ n, 0 ≤ ψ n := fun n => integral_nonneg fun x => sq_nonneg _
+  -- The Fourier coefficients of `σ` are the `ψ n`.
+  have hcoeff : ∀ n : ℕ, sigmaHat σ (n : ℤ) = ((ψ n : ℝ) : ℂ) := by
+    intro n
+    rw [sigmaHat, ← hspec.inner_eq (n : ℤ),
+      inner_toLpC (S := P) (measurable_tensorSq hm) (abs_tensorSq_le hb) n, hψ]
+    congr 1
+    exact integral_tensorSq_comp D hm hb n
+  -- `ψ n ≤ C² φ n`, by the pointwise bound on the conditional correlation.
+  have hbound : ∀ n : ℕ, ψ n ≤ (C * C) * φ n := by
+    intro n
+    have hprodint : Integrable ((f ∘ S.T^[n]) * f) S.m := by
+      refine MemLp.integrable (q := ⊤) le_top ?_
+      refine memLp_top_of_bound
+        (((hm.comp (S.measurable_T.iterate n)).mul hm).aestronglyMeasurable) (C * C) ?_
+      filter_upwards with x
+      have h₀ : (0 : ℝ) ≤ C := le_trans (abs_nonneg _) (hb x)
+      simp only [Pi.mul_apply, Function.comp_apply, Real.norm_eq_abs, abs_mul]
+      exact mul_le_mul (hb _) (hb _) (abs_nonneg _) h₀
+    have hptw : ∀ᵐ x ∂S.m, |condInner D (f ∘ S.T^[n]) f x| ≤ C * C := by
+      refine abs_condExp_le D hprodint ?_
+      intro x
+      have h₀ : (0 : ℝ) ≤ C := le_trans (abs_nonneg _) (hb x)
+      simp only [Pi.mul_apply, Function.comp_apply, abs_mul]
+      exact mul_le_mul (hb _) (hb _) (abs_nonneg _) h₀
+    have hsqint : Integrable (fun x => (condInner D (f ∘ S.T^[n]) f x) ^ 2) S.m := by
+      refine MemLp.integrable (q := ⊤) le_top ?_
+      have hsm : StronglyMeasurable fun x => (condInner D (f ∘ S.T^[n]) f x) ^ 2 :=
+        (stronglyMeasurable_condExp.mono D.le).pow 2
+      refine memLp_top_of_bound hsm.aestronglyMeasurable ((C * C) * (C * C)) ?_
+      filter_upwards [hptw] with x hx
+      rw [Real.norm_eq_abs, abs_pow, sq]
+      have h₀ : (0 : ℝ) ≤ |condInner D (f ∘ S.T^[n]) f x| := abs_nonneg _
+      exact mul_le_mul hx hx h₀ (by nlinarith [h₀, hx])
+    rw [hψ, hφ, ← integral_const_mul]
+    refine integral_mono_ae hsqint ?_ ?_
+    · exact (integrable_abs_condInner D hm hb n).const_mul _
+    · filter_upwards [hptw] with x hx
+      rw [sq]
+      rcases abs_cases (condInner D (f ∘ S.T^[n]) f x) with ⟨he, _⟩ | ⟨he, _⟩ <;> nlinarith [hx,
+        abs_nonneg (condInner D (f ∘ S.T^[n]) f x)]
+  -- The Cesàro means of `‖σ̂(n)‖²` vanish, so Wiener applies.
+  have hA := tendsto_cesaro_integral_abs_condInner D hm hb hcwm
+  have hsqbound : ∀ n : ℕ, ‖sigmaHat σ (n : ℤ)‖ ^ 2 ≤ (‖G‖ ^ 2 * (C * C)) * φ n := by
+    intro n
+    have hnorm : ‖sigmaHat σ (n : ℤ)‖ ≤ ‖G‖ ^ 2 := by
+      rw [sigmaHat, ← hspec.inner_eq (n : ℤ)]
+      calc ‖(inner ℂ G ((P.koopman ^ (n : ℤ)) G) : ℂ)‖
+          ≤ ‖G‖ * ‖(P.koopman ^ (n : ℤ)) G‖ := norm_inner_le_norm _ _
+        _ = ‖G‖ ^ 2 := by rw [LinearIsometryEquiv.norm_map]; ring
+    have hψbound : ‖sigmaHat σ (n : ℤ)‖ ≤ (C * C) * φ n := by
+      rw [hcoeff n, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg (hψnn n)]
+      exact hbound n
+    calc ‖sigmaHat σ (n : ℤ)‖ ^ 2 = ‖sigmaHat σ (n : ℤ)‖ * ‖sigmaHat σ (n : ℤ)‖ := sq _
+      _ ≤ (‖G‖ ^ 2) * ((C * C) * φ n) :=
+          mul_le_mul hnorm hψbound (norm_nonneg _) (by positivity)
+      _ = (‖G‖ ^ 2 * (C * C)) * φ n := by ring
+  have hdom : ∀ N : ℕ, (N : ℝ)⁻¹ * ∑ n ∈ Finset.Icc 1 N, ‖sigmaHat σ (n : ℤ)‖ ^ 2
+      ≤ (‖G‖ ^ 2 * (C * C)) * (((N : ℝ) + 1) / N)
+        * (((N : ℝ) + 1)⁻¹ * ∑ n ∈ Finset.range (N + 1), φ n) := by
+    intro N
+    rcases Nat.eq_zero_or_pos N with rfl | hN
+    · simp
+    have hNR : (0 : ℝ) < N := by exact_mod_cast hN
+    have hK : (0 : ℝ) ≤ ‖G‖ ^ 2 * (C * C) := by
+      have h₀ : (0 : ℝ) ≤ C := le_trans (abs_nonneg _) (hb Classical.ofNonempty)
+      positivity
+    have hsum : ∑ n ∈ Finset.Icc 1 N, ‖sigmaHat σ (n : ℤ)‖ ^ 2
+        ≤ (‖G‖ ^ 2 * (C * C)) * ∑ n ∈ Finset.range (N + 1), φ n := by
+      calc ∑ n ∈ Finset.Icc 1 N, ‖sigmaHat σ (n : ℤ)‖ ^ 2
+          ≤ ∑ n ∈ Finset.Icc 1 N, (‖G‖ ^ 2 * (C * C)) * φ n :=
+            Finset.sum_le_sum fun n _ => hsqbound n
+        _ = (‖G‖ ^ 2 * (C * C)) * ∑ n ∈ Finset.Icc 1 N, φ n := by rw [Finset.mul_sum]
+        _ ≤ (‖G‖ ^ 2 * (C * C)) * ∑ n ∈ Finset.range (N + 1), φ n := by
+            refine mul_le_mul_of_nonneg_left ?_ hK
+            refine Finset.sum_le_sum_of_subset_of_nonneg ?_
+              fun n _ _ => integral_nonneg fun x => abs_nonneg _
+            intro n hn
+            simp only [Finset.mem_Icc, Finset.mem_range] at hn ⊢
+            omega
+    rw [show (‖G‖ ^ 2 * (C * C)) * (((N : ℝ) + 1) / N)
+        * (((N : ℝ) + 1)⁻¹ * ∑ n ∈ Finset.range (N + 1), φ n)
+        = (N : ℝ)⁻¹ * ((‖G‖ ^ 2 * (C * C)) * ∑ n ∈ Finset.range (N + 1), φ n) by field_simp]
+    exact mul_le_mul_of_nonneg_left hsum (by positivity)
+  have hA' : Filter.Tendsto (fun N : ℕ => ((N : ℝ) + 1)⁻¹ * ∑ n ∈ Finset.range (N + 1), φ n)
+      Filter.atTop (nhds 0) := by
+    have hcomp := hA.comp (Filter.tendsto_add_atTop_nat 1)
+    refine hcomp.congr fun N => ?_
+    simp only [Function.comp_def, hφ]
+    push_cast
+    ring_nf
+  have hratio : Filter.Tendsto (fun N : ℕ => ((N : ℝ) + 1) / N) Filter.atTop (nhds 1) := by
+    have hform : ∀ N : ℕ, 0 < N → ((N : ℝ) + 1) / N = 1 + (N : ℝ)⁻¹ := by
+      intro N hN
+      have : (N : ℝ) ≠ 0 := by positivity
+      field_simp
+    refine Filter.Tendsto.congr' ?_ (by
+      simpa using (tendsto_const_nhds (x := (1 : ℝ))).add
+        (tendsto_one_div_atTop_nhds_zero_nat (𝕜 := ℝ)))
+    filter_upwards [Filter.eventually_gt_atTop 0] with N hN using (hform N hN).symm
+  have hprod : Filter.Tendsto
+      (fun N : ℕ => (‖G‖ ^ 2 * (C * C)) * (((N : ℝ) + 1) / N)
+        * (((N : ℝ) + 1)⁻¹ * ∑ n ∈ Finset.range (N + 1), φ n))
+      Filter.atTop (nhds 0) := by
+    have := ((tendsto_const_nhds (x := ‖G‖ ^ 2 * (C * C))).mul hratio).mul hA'
+    simpa using this
   refine noAtoms_of_tendsto_cesaro_zero ?_
   refine squeeze_zero' (Filter.Eventually.of_forall fun N => ?_)
     (Filter.Eventually.of_forall hdom) hprod

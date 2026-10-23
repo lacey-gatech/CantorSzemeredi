@@ -171,10 +171,14 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
   $\norm{f}_2 ^2$, so their squares are dominated by a constant times them, and Wiener's lemma
   applies.
 
-  Part (ii) remains: it needs the product system $(X\times X, \lambda, T\times T)$ built as an
-  \texttt{MPS}.  \texttt{joining\_invariant} supplies its invariance and
-  \texttt{integral\_joining} the identity \eqref{eq:psi-identity}, so what is left there is
-  construction rather than new mathematics.
+  \textbf{Part (ii) is proved} as well, as
+  \texttt{noAtoms\_specMeasure\_prod\_of\_condWeaklyMixing}.  The product system
+  $(X\times X,\lambda,T\times T)$ is \texttt{prodSystem}, its measure preservation being
+  \texttt{joining\_invariant}; the identity \eqref{eq:psi-identity} is
+  \texttt{integral\_tensorSq\_comp}, which is \eqref{eq:joining} applied to
+  $a = a' = f \cdot (f\circ T^n)$.  The bound $\psi(n) \leq C^2 \phi(n)$ needs
+  $\abs{\cip{T^nf}{f}} \leq C ^2$ pointwise, which is \texttt{abs\_condExp\_le}, proved from
+  \texttt{condExp\_mono} against the constants $\pm C^2$.
 \end{remark}
 
 \begin{definition}[Conditionally compact function; compact extension]
@@ -262,7 +266,10 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
     CantorSzemeredi.MPS.inner_koopman_zpow_eq_integral, CantorSzemeredi.MPS.toLpC,
     CantorSzemeredi.MPS.inner_toLpC, CantorSzemeredi.MPS.integral_eq_integral_condInner,
     CantorSzemeredi.MPS.tendsto_cesaro_integral_abs_condInner,
-    CantorSzemeredi.MPS.noAtoms_specMeasure_of_condWeaklyMixing}
+    CantorSzemeredi.MPS.noAtoms_specMeasure_of_condWeaklyMixing,
+    CantorSzemeredi.MPS.prodSystem, CantorSzemeredi.MPS.integral_tensorSq_comp,
+    CantorSzemeredi.MPS.noAtoms_specMeasure_prod_of_condWeaklyMixing}
+  \leanok
   \uses{def:cwm, lem:joining, lem:wiener, def:spectral-measure}
   Let $f \in L^\infty(\Ebb)$ be conditionally weakly mixing and set $G \coloneqq f \otimes \bar f$.
   Then
