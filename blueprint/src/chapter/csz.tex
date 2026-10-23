@@ -2,7 +2,8 @@
 
 \begin{definition}[CSZ system]
   \label{def:csz}
-  \lean{CantorSzemeredi.MPS.CSZ}
+  \lean{CantorSzemeredi.MPS.Factor.CSZ, CantorSzemeredi.MPS.multiCorr}
+  \leanok
   \uses{def:mps, def:cantor, def:uniform-liminf}
   A measure preserving system $(X,\Abb,m,T)$ is \emph{Cantor--Szemer\'edi}, or \emph{CSZ}, if
   for all measurable $A \subset X$ with $m(A) > 0$, all integers $t \geq 1$, all integers
@@ -52,12 +53,14 @@
 
 \begin{lemma}[The trivial factor is CSZ]
   \label{lem:trivial-csz}
-  \lean{CantorSzemeredi.MPS.CSZ_trivial}
+  \lean{CantorSzemeredi.MPS.Factor.trivial_CSZ}
+  \leanok
   \uses{def:csz}
   The factor consisting of the null and conull sets is CSZ.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   \uses{def:csz}
   If $A$ lies in it and $m(A) > 0$ then $A$ is conull, so every integral in \eqref{eq:csz}
   equals $1$.
