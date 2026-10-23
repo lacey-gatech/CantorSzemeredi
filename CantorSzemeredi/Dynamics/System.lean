@@ -125,6 +125,88 @@ theorem measurePreserving_T_iterate (S : MPS) (n : ℕ) :
   | zero => simpa using MeasurePreserving.id S.m
   | succ n ih => rw [Function.iterate_succ]; exact ih.comp S.measurePreserving
 
+/-! ### Powers of a system
+
+The development repeatedly replaces `T` by `T^k`: the compact extension argument runs at
+`T^(b^i)` (`rem:compact-dilation`), and the weakly mixing induction applies its hypothesis to
+`T^(b^ℓ)`.  `S.pow k` is the same space and measure with `T` replaced by `T^k`. -/
+
+/-- The measurable equivalence `T^k`. -/
+noncomputable def equivPow (S : MPS) : ℕ → (S.X ≃ᵐ S.X)
+  | 0 => MeasurableEquiv.refl S.X
+  | k + 1 => (S.equivPow k).trans S.measurableEquiv
+
+theorem coe_equivPow (S : MPS) (k : ℕ) : ⇑(S.equivPow k) = S.T^[k] := by
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    funext x
+    simp only [equivPow, MeasurableEquiv.coe_trans, Function.comp_apply, ih,
+      S.coe_measurableEquiv]
+    rw [← Function.iterate_succ_apply' S.T k]
+
+/-- `S.pow k` is the system `(X, 𝒜, m, T^k)`. -/
+noncomputable def pow (S : MPS) (k : ℕ) : MPS where
+  X := S.X
+  measurableSpace := S.measurableSpace
+  m := S.m
+  isProb := S.isProb
+  T := S.T^[k]
+  measurableEquiv := S.equivPow k
+  coe_measurableEquiv := S.coe_equivPow k
+  measurePreserving := S.measurePreserving_T_iterate k
+
+@[simp] theorem pow_X (S : MPS) (k : ℕ) : (S.pow k).X = S.X := rfl
+
+@[simp] theorem pow_m (S : MPS) (k : ℕ) : (S.pow k).m = S.m := rfl
+
+@[simp] theorem pow_T (S : MPS) (k : ℕ) : (S.pow k).T = S.T^[k] := rfl
+
+theorem leftInverse_Tinv (S : MPS) : Function.LeftInverse S.Tinv S.T := S.Tinv_T
+
+theorem rightInverse_Tinv (S : MPS) : Function.RightInverse S.Tinv S.T := S.T_Tinv
+
+@[simp] theorem pow_Tinv (S : MPS) (k : ℕ) : (S.pow k).Tinv = S.Tinv^[k] := by
+  funext x
+  have hleft : Function.LeftInverse S.Tinv^[k] S.T^[k] := S.leftInverse_Tinv.iterate k
+  have hcoe : ⇑(S.equivPow k) = S.T^[k] := S.coe_equivPow k
+  have hinj : Function.Injective (S.T^[k]) := by
+    rw [← hcoe]
+    exact (S.equivPow k).injective
+  refine hinj ?_
+  have h₁ : S.T^[k] ((S.pow k).Tinv x) = x := (S.pow k).T_Tinv x
+  have h₂ : S.T^[k] (S.Tinv^[k] x) = x := S.rightInverse_Tinv.iterate k x
+  rw [h₁, h₂]
+
+/-- `S.iter` at a negative integer is an iterate of `T⁻¹`. -/
+theorem iter_neg_natCast (S : MPS) (j : ℕ) : S.iter (-(j : ℤ)) = S.Tinv^[j] := by
+  cases j with
+  | zero => rfl
+  | succ j =>
+    have hneg : -((j + 1 : ℕ) : ℤ) = Int.negSucc j := by
+      simp [Int.negSucc_eq]
+    rw [hneg]
+    rfl
+
+/-- The `ℤ`-orbit of `S.pow k` sits inside the `ℤ`-orbit of `S`: `(T^k)^n = T^(k n)`. -/
+theorem pow_iter_eq (S : MPS) (k : ℕ) (n : ℤ) : (S.pow k).iter n = S.iter (k * n) := by
+  cases n with
+  | ofNat n =>
+    simp only [Int.ofNat_eq_coe, iter_natCast, pow_T]
+    rw [show ((k : ℤ) * (n : ℤ)) = ((k * n : ℕ) : ℤ) by push_cast; ring, iter_natCast,
+      Function.iterate_mul]
+    rfl
+  | negSucc n =>
+    have hlhs : (S.pow k).iter (Int.negSucc n) = S.Tinv^[k * (n + 1)] := by
+      change (S.pow k).Tinv^[n + 1] = _
+      rw [S.pow_Tinv k]
+      exact (Function.iterate_mul S.Tinv k (n + 1)).symm
+    have hmul : (k : ℤ) * Int.negSucc n = -((k * (n + 1) : ℕ) : ℤ) := by
+      simp only [Int.negSucc_eq]
+      push_cast
+      ring
+    rw [hlhs, hmul, S.iter_neg_natCast]
+
 /-! ### Factors -/
 
 /-- **Definition `def:factor`.**  A *factor* of `S` is a `T`-invariant sub-σ-algebra of `𝒜`.

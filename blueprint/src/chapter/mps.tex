@@ -49,6 +49,7 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 \begin{definition}[Weak mixing]
   \label{def:weak-mixing}
   \lean{CantorSzemeredi.MPS.WeaklyMixing}
+  \leanok
   \uses{def:mps}
   $(X,\Abb,m,T)$ is \emph{weakly mixing} if
   $\lim_N \avg{1 \leq n \leq N} \abs{m(A \cap T^{-n}B) - m(A)m(B)} = 0$ for all $A,B \in \Abb$.
@@ -57,7 +58,8 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{definition}[Compact system]
   \label{def:compact-system}
-  \lean{CantorSzemeredi.MPS.CompactSystem}
+  \lean{CantorSzemeredi.MPS.CompactSystem, CantorSzemeredi.MPS.CompactFunction}
+  \leanok
   \uses{def:mps}
   $f \in L^2(X)$ is \emph{compact} if $\overline{\{T^n f : n \in \ZZ\}}$ is compact in $L^2(X)$;
   the system is \emph{compact} if every $f \in L^2(X)$ is compact.
@@ -105,7 +107,8 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{definition}[Conditionally weakly mixing function; weakly mixing extension]
   \label{def:cwm}
-  \lean{CantorSzemeredi.CondWeaklyMixing, CantorSzemeredi.WeaklyMixingExtension}
+  \lean{CantorSzemeredi.MPS.CondWeaklyMixing, CantorSzemeredi.MPS.WeaklyMixingExtension}
+  \leanok
   \uses{def:hilbert-module}
   $f \in L^2(\Ebb)$ is \emph{conditionally weakly mixing} if
   $\lim_N \avg{1 \leq n \leq N} \abs{\cip{T^n f}{f}} = 0$ in $L^2(\Dbb)$.
@@ -115,7 +118,9 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{definition}[Conditionally compact function; compact extension]
   \label{def:compact-extension}
-  \lean{CantorSzemeredi.CondCompact, CantorSzemeredi.CompactExtension}
+  \lean{CantorSzemeredi.MPS.CondCompact, CantorSzemeredi.MPS.CompactExtension,
+    CantorSzemeredi.MPS.MemModule}
+  \leanok
   \uses{def:hilbert-module}
   $f \in L^2(\Ebb \mid \Dbb)$ is \emph{conditionally compact} if for every $\epsilon > 0$ there
   are finitely many $g_1,\dots,g_r \in L^2(\Ebb \mid \Dbb)$ with
@@ -200,7 +205,8 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
 
 \begin{lemma}[Powers]
   \label{lem:powers}
-  \lean{CantorSzemeredi.compactExtension_pow, CantorSzemeredi.condWeaklyMixing_pow}
+  \lean{CantorSzemeredi.MPS.CompactExtension.pow, CantorSzemeredi.MPS.CondCompact.pow,
+    CantorSzemeredi.MPS.pow, CantorSzemeredi.MPS.pow_iter_eq}
   \uses{def:compact-extension, def:cwm}
   Let $k \geq 1$.
   \begin{enumerate}

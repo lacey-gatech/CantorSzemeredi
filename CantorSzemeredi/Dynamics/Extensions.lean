@@ -94,6 +94,57 @@ def CompactFunction (S : MPS) (f : S.X → ℝ) : Prop :=
 def CompactSystem (S : MPS) : Prop :=
   ∀ f : S.X → ℝ, MemLp f 2 S.m → S.CompactFunction f
 
+/-! ### Passing to powers
+
+`lem:powers`(1): a compact extension for `T` is one for `T^k`.  The orbit of `T^k` is a subset
+of the orbit of `T` (`pow_iter_eq`), so the finite nets that witness conditional compactness
+for `T` serve unchanged for `T^k`. -/
+
+/-- `D`-measurability is unchanged by pulling back along any iterate of `T`. -/
+theorem Factor.measurableSet_iterate_preimage_iff (D : Factor S) (k : ℕ) (s : Set S.X) :
+    MeasurableSet[D.σ] (S.T^[k] ⁻¹' s) ↔ MeasurableSet[D.σ] s := by
+  induction k generalizing s with
+  | zero => simp
+  | succ j ih =>
+    rw [Function.iterate_succ', Set.preimage_comp, ih, D.invariant]
+
+/-- Transport a factor of `S` to a factor of `S.pow k`.  The underlying σ-algebra is the same;
+only the invariance proof changes, and `T`-invariance gives `T^k`-invariance. -/
+def Factor.toPow (D : Factor S) (k : ℕ) : Factor (S.pow k) where
+  σ := D.σ
+  le := D.le
+  invariant s := D.measurableSet_iterate_preimage_iff k s
+
+@[simp] theorem Factor.toPow_σ (D : Factor S) (k : ℕ) : (D.toPow k).σ = D.σ := rfl
+
+@[simp] theorem condInner_pow (D : Factor S) (k : ℕ) (f g : S.X → ℝ) :
+    condInner (D.toPow k) f g = condInner D f g := rfl
+
+@[simp] theorem condNorm_pow (D : Factor S) (k : ℕ) (f : S.X → ℝ) :
+    condNorm (D.toPow k) f = condNorm D f := rfl
+
+theorem MemModule.toPow {D E : Factor S} {k : ℕ} {f : S.X → ℝ} (h : MemModule D E f) :
+    MemModule (D.toPow k) (E.toPow k) f :=
+  ⟨h.meas, h.memLp, h.bddCondNorm⟩
+
+/-- **Lemma `lem:powers`(1).**  Conditional compactness is inherited by `T^k`. -/
+theorem CondCompact.pow {D E : Factor S} {f : S.X → ℝ} (hf : CondCompact D E f) (k : ℕ) :
+    CondCompact (D.toPow k) (E.toPow k) f := by
+  intro ε hε
+  obtain ⟨r, g, hg, hcover⟩ := hf ε hε
+  refine ⟨r, g, fun q => (hg q).toPow, fun n => ?_⟩
+  obtain ⟨q, hq⟩ := hcover (k * n)
+  refine ⟨q, ?_⟩
+  rw [(S.pow_iter_eq k n)]
+  exact hq
+
+/-- **Lemma `lem:powers`(1).**  A compact extension for `T` is a compact extension for `T^k`. -/
+theorem CompactExtension.pow {D E : Factor S} (h : CompactExtension D E) (k : ℕ) :
+    CompactExtension (D.toPow k) (E.toPow k) := by
+  intro f hmeas hmem ε hε
+  obtain ⟨g, hg, hclose⟩ := h f hmeas hmem ε hε
+  exact ⟨g, hg.pow k, hclose⟩
+
 end MPS
 
 end CantorSzemeredi
