@@ -62,6 +62,7 @@
   \label{lem:dichotomy}
   \lean{CantorSzemeredi.MPS.weaklyMixingExtension_or_compactExtension}
   \notready
+  \uses{lem:wiener}
   \uses{def:factor, def:cwm, def:compact-extension}
   Let $(X,\Abb,m,T)$ be an ergodic system satisfying the standing assumption, and let
   $\Dbb \neq \Abb$ be a factor.  Then either $\Abb$ is a weakly mixing extension of $\Dbb$, or
@@ -91,6 +92,23 @@
   Recommended strategy: state Lemma~\ref{lem:dichotomy} as an axiom-free \texttt{theorem} with
   \texttt{sorry}, behind a clearly documented interface, and complete the rest of the development
   against it.  Discharging it is its own project.
+
+  \smallskip
+  \emph{What is in place towards it.}  The proof begins by taking $f$ in the module with
+  $\Exp(f\mid\Dbb)=0$ which is \emph{not} conditionally weakly mixing, and producing an atom of
+  the spectral measure $\sigma_G$ of $G = f \otimes f$.  The measure-theoretic half of that step
+  is formalized: \texttt{exists\_atom\_of\_not\_tendsto\_cesaro\_zero} turns a non-vanishing
+  Ces\`aro mean of $\abs{\widehat{\sigma}(n)} ^2$ into an atom.  Notably this needs only
+  $(\sigma\times\sigma)(\Delta) = \int \sigma(\{\alpha\})\,d\sigma$, which is Fubini, and not the
+  full identity $\sum_\theta \sigma(\{\theta\}) ^2 = (\sigma\times\sigma)(\Delta)$: an integral of
+  a non-negative function is zero as soon as the function vanishes identically, so positivity of
+  the diagonal exhibits an atom directly.  Together with \texttt{integral\_tensorSq\_comp}, which
+  identifies $\widehat{\sigma_G}(n)$ with $\psi(n)$, what is still wanted for that first step is
+  the converse estimate $\avg{N}\psi \to 0 \Rightarrow$ conditional weak mixing, which is the
+  triangle inequality and Cauchy--Schwarz but at the level of \texttt{eLpNorm}.
+
+  The remainder --- passing from an atom of $\sigma_G$ to a non-trivial conditionally compact
+  function, and from those to the factor $\Ebb$ --- is untouched, and is the bulk of the work.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}

@@ -449,6 +449,26 @@ theorem noAtoms_specMeasure_prod_of_condWeaklyMixing (D : Factor S) {f : S.X →
     (Filter.Eventually.of_forall hdom) hprod
   exact mul_nonneg (by positivity) (Finset.sum_nonneg fun n _ => by positivity)
 
+/-! ### Towards `lem:dichotomy`
+
+The first step of the Furstenberg dichotomy: if `f` is **not** conditionally weakly mixing,
+then the spectral measure of `G = f ⊗ f` has an atom.  This is the converse of part (ii),
+and it is where the dichotomy's compact extension will eventually come from.
+
+The measure-theoretic half is done: `exists_atom_of_not_tendsto_cesaro_zero` turns a
+non-vanishing Cesàro mean into an atom, and `integral_tensorSq_comp` identifies the Fourier
+coefficients of `σ_G` with `ψ(n) = ‖⟨Tⁿf,f⟩_{E|D}‖²_{L²(D)}`.
+
+What is missing to complete the step is the converse of the estimate used in part (ii): that
+vanishing Cesàro means of `ψ` give conditional weak mixing, i.e.
+`‖E_N u_n‖_{L²} ≤ E_N ‖u_n‖_{L²} ≤ √(E_N ψ n)` by the triangle inequality and
+Cauchy–Schwarz.  In Lean that needs `eLpNorm`-level API (the `L²` norm of a finite sum, and
+`∫ g² = ‖g‖²_{L²}`) that Mathlib does not provide in directly usable form.
+
+Even with that step, the dichotomy itself would remain: see the blueprint's remark on
+`lem:dichotomy`, which scopes it as a project of its own.
+-/
+
 end MPS
 
 end CantorSzemeredi

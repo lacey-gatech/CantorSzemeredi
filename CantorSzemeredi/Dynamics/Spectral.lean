@@ -453,4 +453,46 @@ theorem noAtoms_of_tendsto_cesaro_zero
   have hzero : (σ {θ}).toReal = 0 := by nlinarith [sq_nonneg ((σ {θ}).toReal)]
   exact (ENNReal.toReal_eq_zero_iff _).1 hzero |>.resolve_right (measure_ne_top _ _)
 
+/-! ### The converse: a non-vanishing Cesàro mean forces an atom
+
+This is the entry point of the Furstenberg dichotomy (`lem:dichotomy`).  Note that it does
+**not** need the full identity `(σ × σ)(Δ) = ∑_θ σ({θ})²`: by Fubini the diagonal's measure is
+`∫⁻ σ({α}) dσ(α)`, and an integral of a non-negative function is zero as soon as the function
+vanishes identically.  So positivity of the diagonal directly exhibits an atom.
+-/
+
+/-- The measure of the diagonal is the integral of the atom sizes. -/
+theorem prod_diagonal_eq_lintegral :
+    (σ.prod σ) {q : Torus × Torus | q.1 = q.2} = ∫⁻ α, σ {α} ∂σ := by
+  rw [Measure.prod_apply (measurableSet_eq_fun measurable_fst measurable_snd)]
+  congr 1
+  funext α
+  congr 1
+  ext β
+  simp [eq_comm]
+
+/-- If the diagonal has positive measure then `σ` has an atom. -/
+theorem exists_atom_of_diagonal_ne_zero
+    (h : (σ.prod σ) {q : Torus × Torus | q.1 = q.2} ≠ 0) : ∃ θ : Torus, σ {θ} ≠ 0 := by
+  by_contra hcon
+  push_neg at hcon
+  refine h ?_
+  rw [prod_diagonal_eq_lintegral]
+  have hzero : (fun α => σ {α}) = fun _ => 0 := funext fun α => hcon α
+  rw [hzero]
+  simp
+
+/-- **The converse of Wiener's lemma.**  If the Cesàro means of `|σ̂(n)|²` do not vanish then
+`σ` has an atom. -/
+theorem exists_atom_of_not_tendsto_cesaro_zero
+    (h : ¬ Filter.Tendsto
+      (fun N : ℕ => ((N : ℝ)⁻¹ * ∑ n ∈ Finset.Icc 1 N, ‖sigmaHat σ (n : ℤ)‖ ^ 2 : ℝ))
+      Filter.atTop (nhds 0)) :
+    ∃ θ : Torus, σ {θ} ≠ 0 := by
+  refine exists_atom_of_diagonal_ne_zero ?_
+  intro hzero
+  refine h ?_
+  have := tendsto_cesaro_sq_norm_sigmaHat (σ := σ)
+  rwa [hzero, ENNReal.toReal_zero] at this
+
 end CantorSzemeredi
