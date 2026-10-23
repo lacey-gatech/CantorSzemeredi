@@ -1,0 +1,171 @@
+/-
+Copyright (c) 2026 Alex Burgin, Anastasios Fragkos, Michael T. Lacey, Dario Mena,
+Maria Carmen Reguera. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Alex Burgin, Anastasios Fragkos, Michael T. Lacey, Dario Mena, Maria Carmen Reguera
+-/
+import CantorSzemeredi.Basic
+
+/-!
+# Spectral measures of a unitary
+
+Blueprint: `def:spectral-measure` and `lem:wiener` in `blueprint/src/chapter/mps.tex`.
+
+For a unitary `U` on a complex Hilbert space and a vector `v`, the spectral measure `σ_v` is
+the finite positive Borel measure on `𝕋 = ℝ/ℤ` with
+
+  `⟪v, Uⁿ v⟫ = ∫ e(nα) dσ_v(α)`   for all `n : ℤ`.
+
+## Why this file is phrased as a predicate
+
+The blueprint flags the *existence* of `σ_v` — the Herglotz theorem for positive definite
+sequences on `ℤ` — as the largest piece of analysis infrastructure this project needs, and
+recommends isolating it so that the rest of the development depends only on the defining
+property.  That is what is done here: `HasSpectralMeasure U v σ` records the defining property,
+and everything downstream (the quadratic form identity, Wiener's lemma, and in due course
+`lem:atomless` and `cor:uniform-ergodic`) is proved *from* it.  Existence can then be supplied
+separately without touching any of those proofs.
+
+Mathlib has neither Herglotz nor the weak-* compactness of finite measures that the classical
+Fejér-kernel proof uses.  It does have the Riesz–Markov–Kakutani theorem
+(`RealRMK.integral_rieszMeasure`) and the continuous functional calculus for star-normal
+elements, which together give a viable route; see the blueprint for the options.
+-/
+
+namespace CantorSzemeredi
+
+open MeasureTheory Finset Complex
+
+/-- The circle `𝕋 = ℝ/ℤ`, on which spectral measures live. -/
+abbrev Torus := AddCircle (1 : ℝ)
+
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
+
+/-- **Definition `def:spectral-measure`.**  `σ` is a spectral measure for the unitary `U` at
+the vector `v`: a finite positive Borel measure on `𝕋` whose Fourier coefficients are the
+correlations `⟪v, Uⁿ v⟫`. -/
+structure HasSpectralMeasure (U : H ≃ₗᵢ[ℂ] H) (v : H) (σ : Measure Torus) : Prop where
+  /-- `σ` is finite. -/
+  isFinite : IsFiniteMeasure σ
+  /-- The defining property. -/
+  inner_eq : ∀ n : ℤ, (inner ℂ v ((U ^ n) v) : ℂ) = ∫ α, fourier n α ∂σ
+
+namespace HasSpectralMeasure
+
+variable {U : H ≃ₗᵢ[ℂ] H} {v : H} {σ : Measure Torus}
+
+/-- The total mass of a spectral measure is `‖v‖²`. -/
+theorem measure_univ_eq (h : HasSpectralMeasure U v σ) :
+    (σ Set.univ).toReal = ‖v‖ ^ 2 := by
+  haveI := h.isFinite
+  have h0 := h.inner_eq 0
+  simp only [zpow_zero, LinearIsometryEquiv.coe_one, id_eq] at h0
+  have hint : ∫ α, fourier (0 : ℤ) α ∂σ = ((σ Set.univ).toReal : ℂ) := by
+    simp [fourier_zero, Measure.real]
+  rw [hint] at h0
+  have hvv : (inner ℂ v v : ℂ) = ((‖v‖ ^ 2 : ℝ) : ℂ) := by
+    rw [inner_self_eq_norm_sq_to_K]
+    norm_cast
+  rw [hvv] at h0
+  exact_mod_cast h0.symm
+
+/-- The correlations are the Fourier coefficients of `σ`, in the shifted form the expansion
+below needs: `⟪U^a v, U^b v⟫ = ∫ e((b-a)α) dσ`. -/
+theorem inner_zpow (h : HasSpectralMeasure U v σ) (a b : ℤ) :
+    (inner ℂ ((U ^ a) v) ((U ^ b) v) : ℂ) = ∫ α, fourier (b - a) α ∂σ := by
+  rw [← h.inner_eq (b - a)]
+  have hb : (U ^ b) v = (U ^ a) ((U ^ (b - a)) v) := by
+    have : U ^ b = (U ^ a) * (U ^ (b - a)) := by
+      rw [← zpow_add U a (b - a)]
+      congr 1
+      ring
+    rw [this]
+    rfl
+  rw [hb, LinearIsometryEquiv.inner_map_map]
+
+/-- **The quadratic form identity.**  For a finite family of coefficients `a` and exponents
+`k`,
+
+  `‖∑ a i • U^(k i) v‖² = ∫ |∑ a i e(k i α)|² dσ`.
+
+This is the form in which the spectral measure is used throughout: with `a` the constants of an
+average and `k i = s·k_n`, the left side is the `L²` norm of an ergodic average and the right
+side is the exponential sum estimate of `lem:irrational`. -/
+theorem norm_sum_sq (h : HasSpectralMeasure U v σ) {ι : Type*} (F : Finset ι)
+    (a : ι → ℂ) (k : ι → ℤ) :
+    ‖∑ i ∈ F, a i • (U ^ (k i)) v‖ ^ 2
+      = ∫ α, ‖∑ i ∈ F, a i * fourier (k i) α‖ ^ 2 ∂σ := by
+  haveI := h.isFinite
+  set X : H := ∑ i ∈ F, a i • (U ^ (k i)) v with hX
+  set g : Torus → ℂ := fun α => ∑ i ∈ F, a i * fourier (k i) α with hg
+  -- Every `fourier n` is integrable: it is continuous of modulus one and `σ` is finite.
+  have hfint : ∀ n : ℤ, Integrable (fun α : Torus => fourier n α) σ := by
+    intro n
+    refine MemLp.integrable (q := ⊤) le_top ?_
+    refine memLp_top_of_bound (fourier n).continuous.aestronglyMeasurable 1 ?_
+    filter_upwards with α
+    rw [fourier_apply]
+    exact le_of_eq (Circle.norm_coe _)
+  -- Expand the inner product into a double sum.
+  have expand : (inner ℂ X X : ℂ)
+      = ∑ i ∈ F, ∑ j ∈ F, (starRingEnd ℂ) (a i) * a j
+          * (inner ℂ ((U ^ (k i)) v) ((U ^ (k j)) v) : ℂ) := by
+    rw [hX, sum_inner]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [inner_sum]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    rw [inner_smul_left, inner_smul_right]
+    ring
+  -- Each inner product is a Fourier coefficient.
+  have hpoint : ∀ α : Torus, ∑ i ∈ F, ∑ j ∈ F, (starRingEnd ℂ) (a i) * a j
+      * fourier (k j - k i) α = (starRingEnd ℂ) (g α) * g α := by
+    intro α
+    have hconj : (starRingEnd ℂ) (g α) * g α
+        = ∑ i ∈ F, ∑ j ∈ F,
+            ((starRingEnd ℂ) (a i) * (starRingEnd ℂ) (fourier (k i) α))
+              * (a j * fourier (k j) α) := by
+      rw [hg]
+      simp only [map_sum, map_mul, Finset.sum_mul, Finset.mul_sum]
+      exact Finset.sum_comm
+    rw [hconj]
+    refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
+    rw [sub_eq_add_neg, fourier_add, fourier_neg]
+    ring
+  -- Put the pieces together, interchanging the finite sums with the integral.
+  have hcomplex : (inner ℂ X X : ℂ) = ∫ α, (starRingEnd ℂ) (g α) * g α ∂σ := by
+    rw [expand]
+    have hterm : ∀ i ∈ F, ∀ j ∈ F,
+        (starRingEnd ℂ) (a i) * a j * (inner ℂ ((U ^ (k i)) v) ((U ^ (k j)) v) : ℂ)
+          = ∫ α, (starRingEnd ℂ) (a i) * a j * fourier (k j - k i) α ∂σ := by
+      intro i _ j _
+      rw [h.inner_zpow, integral_const_mul]
+    rw [Finset.sum_congr rfl fun i hi =>
+      Finset.sum_congr rfl fun j hj => hterm i hi j hj]
+    have hinner : ∀ i ∈ F, ∑ j ∈ F, ∫ α, (starRingEnd ℂ) (a i) * a j * fourier (k j - k i) α ∂σ
+        = ∫ α, ∑ j ∈ F, (starRingEnd ℂ) (a i) * a j * fourier (k j - k i) α ∂σ := by
+      intro i _
+      rw [← integral_finsetSum]
+      intro j _
+      exact (hfint (k j - k i)).const_mul _
+    rw [Finset.sum_congr rfl hinner, ← integral_finsetSum]
+    · exact integral_congr_ae (by filter_upwards with α using hpoint α)
+    · intro i _
+      refine integrable_finsetSum _ fun j _ => ?_
+      exact (hfint (k j - k i)).const_mul _
+  -- Convert the complex identity into the real one.
+  have hXnorm : (inner ℂ X X : ℂ) = ((‖X‖ ^ 2 : ℝ) : ℂ) := by
+    rw [inner_self_eq_norm_sq_to_K]
+    norm_cast
+  have hgnorm : ∀ α : Torus, (starRingEnd ℂ) (g α) * g α = ((‖g α‖ ^ 2 : ℝ) : ℂ) := by
+    intro α
+    have := Complex.mul_conj (g α)
+    rw [mul_comm] at this
+    rw [this, Complex.normSq_eq_norm_sq]
+  rw [hXnorm] at hcomplex
+  rw [show (fun α => (starRingEnd ℂ) (g α) * g α) = fun α => ((‖g α‖ ^ 2 : ℝ) : ℂ) from
+    funext hgnorm, integral_complex_ofReal] at hcomplex
+  exact_mod_cast hcomplex
+
+end HasSpectralMeasure
+
+end CantorSzemeredi
