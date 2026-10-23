@@ -210,6 +210,49 @@ theorem joining_invariant (D : Factor S) :
   · rw [Measure.map_apply (measurable_prodMap S) MeasurableSet.univ]
     simp
 
+/-- Iterates of `R = T × T` are pairs of iterates. -/
+theorem prodMap_iterate (S : MPS) (n : ℕ) (p : S.X × S.X) :
+    (prodMap S)^[n] p = (S.T^[n] p.1, S.T^[n] p.2) := by
+  induction n generalizing p with
+  | zero => simp
+  | succ n ih =>
+    rw [Function.iterate_succ_apply, ih, Function.iterate_succ_apply,
+      Function.iterate_succ_apply]
+    rfl
+
+/-- `R = T × T` as a measurable equivalence. -/
+noncomputable def prodEquiv (S : MPS) : (S.X × S.X) ≃ᵐ (S.X × S.X) :=
+  S.measurableEquiv.prodCongr S.measurableEquiv
+
+theorem coe_prodEquiv (S : MPS) : ⇑(prodEquiv S) = prodMap S := by
+  funext p
+  have hc : ⇑S.measurableEquiv = S.T := S.coe_measurableEquiv
+  show (S.measurableEquiv p.1, S.measurableEquiv p.2) = (S.T p.1, S.T p.2)
+  rw [hc]
+
+/-- **The product system** `(X × X, λ, T × T)`, on which the spectral measure of
+`G = f ⊗ f` lives. -/
+noncomputable def prodSystem (D : Factor S) : MPS where
+  X := S.X × S.X
+  measurableSpace := inferInstance
+  m := joining D
+  isProb := inferInstance
+  T := prodMap S
+  measurableEquiv := prodEquiv S
+  coe_measurableEquiv := coe_prodEquiv S
+  measurePreserving := ⟨measurable_prodMap S, joining_invariant D⟩
+
+@[simp] theorem prodSystem_X (D : Factor S) : (prodSystem D).X = (S.X × S.X) := rfl
+
+@[simp] theorem prodSystem_m (D : Factor S) : (prodSystem D).m = joining D := rfl
+
+@[simp] theorem prodSystem_T (D : Factor S) : (prodSystem D).T = prodMap S := rfl
+
+/-- The orbit of the product system is the pair of orbits. -/
+theorem prodSystem_iter (D : Factor S) (n : ℕ) (p : S.X × S.X) :
+    (prodSystem D).iter (n : ℤ) p = (S.iter (n : ℤ) p.1, S.iter (n : ℤ) p.2) :=
+  prodMap_iterate S n p
+
 end MPS
 
 end CantorSzemeredi
