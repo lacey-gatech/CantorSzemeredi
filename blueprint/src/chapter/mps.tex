@@ -246,7 +246,9 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
 
 \begin{lemma}[van der Corput]
   \label{lem:vdc}
-  \lean{CantorSzemeredi.van_der_corput}
+  \lean{CantorSzemeredi.VdCData, CantorSzemeredi.corr,
+    CantorSzemeredi.VdCData.van_der_corput, CantorSzemeredi.VdCData.van_der_corput_avg}
+  \leanok
   Let $u_M,\dots,u_{N-1}$ be vectors of norm at most $1$ in a Hilbert space and $1 \leq H < N-M$.
   Then
   \begin{equation}
@@ -258,6 +260,7 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   Write $L = N-M$ and set $u_n = 0$ off $[M,N)$.  Each $u_n$, $n \in [M,N)$, occurs exactly $H$
   times among the $u_{m+h}$ with $1 \leq h \leq H$ and $m \in I \coloneqq [M-H, N-1)$, an
   interval of fewer than $L+H$ integers.  Cauchy--Schwarz in $m$ gives
@@ -269,3 +272,17 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
   $\lVert \unifavg u_n \rVert^2 \leq \frac1H + \frac1L + \frac{2(L+H)}{L}\avg{1 \leq r \leq H}\abs{c_r}$,
   and $H < L$ gives \eqref{eq:vdc}.
 \end{proof}
+
+\begin{remark}[Lean form]
+  \leanok
+  The Lean statement \texttt{van\_der\_corput} is slightly stronger: its right hand side is
+  $4\, \avg{1 \leq h \leq H} \abs{S(h)}/L + 2/H$, with $S(h) = \sum_{M \leq n<N} \langle u_{n+h}, u_n\rangle$
+  divided by the full length $L$, rather than $\abs{c_h} = \abs{S(h)}/(L-h)$.  Since $L-h \leq L$ this
+  implies \eqref{eq:vdc}, which is \texttt{van\_der\_corput\_avg}.
+
+  Two points of the formalization are worth recording.  Indices run over $\ZZ$ rather than
+  $\NN$: the proof sums over $m \in [M-H,N)$, and with $\NN$ subtraction $M-H$ truncates at $0$
+  when $M<H$, which breaks the covering count.  And the vectors are taken in a \emph{real}
+  inner product space, which makes $S(-r)=S(r)$ the symmetry of the real inner product rather
+  than a statement about conjugates; everything this lemma is applied to is real.
+\end{remark}
