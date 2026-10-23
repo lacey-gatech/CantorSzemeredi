@@ -79,6 +79,60 @@ theorem joining_prod_apply (D : Factor S) {B B' : Set S.X}
   rw [Kernel.prod_apply]
   exact Measure.prod_prod _ _
 
+/-! ### The integral against the joining
+
+Mathlib has `lintegral_bind` but no Bochner `integral_bind`.  It does have
+`ProbabilityTheory.integral_comp` for a composition of *kernels*, and
+`Measure.comp_eq_comp_const_apply` rewrites `κ ∘ₘ μ` as a kernel composition applied at the
+unique point of `Unit`.  Routing through that gives the Bochner formula. -/
+
+/-- `∫ F d(κ ∘ₘ μ) = ∫ x, (∫ y, F y ∂κ x) ∂μ`. -/
+theorem integral_kernel_comp_measure {X Y : Type*} [MeasurableSpace X] [MeasurableSpace Y]
+    {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
+    (μ : Measure X) [SFinite μ] (κ : Kernel X Y) [IsSFiniteKernel κ]
+    {F : Y → E} (hF : Integrable F (κ ∘ₘ μ)) :
+    ∫ y, F y ∂(κ ∘ₘ μ) = ∫ x, (∫ y, F y ∂(κ x)) ∂μ := by
+  have hrw : (κ ∘ₘ μ) = (κ ∘ₖ (Kernel.const Unit μ)) () := Measure.comp_eq_comp_const_apply
+  rw [hrw] at hF ⊢
+  rw [ProbabilityTheory.Kernel.integral_comp hF, Kernel.const_apply]
+
+/-- **Equation `eq:joining`.**  `∫ a ⊗ a' dλ = ∫ E(a|D) E(a'|D) dm`, for bounded measurable
+`a` and `a'`. -/
+theorem integral_joining (D : Factor S) {a a' : S.X → ℝ} {C C' : ℝ}
+    (hma : Measurable a) (hma' : Measurable a')
+    (hba : ∀ x, |a x| ≤ C) (hba' : ∀ x, |a' x| ≤ C') :
+    ∫ p : S.X × S.X, a p.1 * a' p.2 ∂(joining D)
+      = ∫ x, (S.m[a|D.σ]) x * (S.m[a'|D.σ]) x ∂S.m := by
+  classical
+  -- Bounded measurable functions are integrable against every probability measure here.
+  have hint : ∀ (ν : Measure S.X) [IsProbabilityMeasure ν], Integrable a ν := by
+    intro ν _
+    refine MemLp.integrable (q := ⊤) le_top ?_
+    exact memLp_top_of_bound hma.aestronglyMeasurable C (Filter.Eventually.of_forall fun x =>
+      by simpa [Real.norm_eq_abs] using hba x)
+  have hint' : ∀ (ν : Measure S.X) [IsProbabilityMeasure ν], Integrable a' ν := by
+    intro ν _
+    refine MemLp.integrable (q := ⊤) le_top ?_
+    exact memLp_top_of_bound hma'.aestronglyMeasurable C' (Filter.Eventually.of_forall fun x =>
+      by simpa [Real.norm_eq_abs] using hba' x)
+  have hprodint : Integrable (fun p : S.X × S.X => a p.1 * a' p.2) (joining D) := by
+    refine MemLp.integrable (q := ⊤) le_top ?_
+    refine memLp_top_of_bound
+      ((hma.comp measurable_fst).mul (hma'.comp measurable_snd)).aestronglyMeasurable (C * C') ?_
+    filter_upwards with p
+    rw [Real.norm_eq_abs, abs_mul]
+    have h₁ : (0 : ℝ) ≤ C := le_trans (abs_nonneg _) (hba p.1)
+    exact mul_le_mul (hba p.1) (hba' p.2) (abs_nonneg _) h₁
+  -- Expand the joining as a composition and use the product structure fibrewise.
+  rw [joining, integral_kernel_comp_measure _ _ (by rwa [← joining])]
+  refine integral_congr_ae ?_
+  filter_upwards [condExp_eq_integral_condKernel D (hint S.m),
+    condExp_eq_integral_condKernel D (hint' S.m)] with x hx hx'
+  rw [hx, hx']
+  have hfib : (condKernel D ×ₖ condKernel D) x
+      = (condKernel D x).prod (condKernel D x) := Kernel.prod_apply _ _ _
+  rw [hfib, integral_prod_mul]
+
 /-! ### Equivariance of the disintegration
 
 The content of `lem:joining`'s invariance claim: the conditional measures satisfy
