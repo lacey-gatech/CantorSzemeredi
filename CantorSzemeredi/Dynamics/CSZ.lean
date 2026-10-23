@@ -52,7 +52,7 @@ theorem multiCorr_zero (A : Set S.X) (t : ℕ) : S.multiCorr A t 0 = (S.m A).toR
   have : (⋂ s ∈ Finset.range (t + 1), (S.T^[s * 0]) ⁻¹' A) = A := by
     ext x
     simp only [Set.mem_iInter, Finset.mem_range, Nat.mul_zero, Function.iterate_zero,
-      Set.preimage_id, id_eq]
+      Set.preimage_id]
     exact ⟨fun h => h 0 (Nat.succ_pos t), fun h _ _ => h⟩
   rw [multiCorr, this]
 
@@ -98,7 +98,7 @@ theorem trivial_CSZ (S : MPS) : (Factor.trivial S).CSZ := by
     rw [Filter.eventually_iff, mem_uniformFilter_iff]
     refine ⟨1, fun M N hMN => ?_⟩
     have hlt : M < N := by omega
-    simp only [Set.mem_setOf_eq, uniformAvg]
+    simp only [Set.mem_ofPred_eq, uniformAvg]
     rw [Finset.sum_congr rfl fun n _ => hone n]
     rw [Finset.sum_const, Nat.card_Ico, nsmul_eq_mul, mul_one]
     exact div_self (by

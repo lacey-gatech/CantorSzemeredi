@@ -192,7 +192,7 @@ theorem iter_neg_natCast (S : MPS) (j : ℕ) : S.iter (-(j : ℤ)) = S.Tinv^[j] 
 theorem pow_iter_eq (S : MPS) (k : ℕ) (n : ℤ) : (S.pow k).iter n = S.iter (k * n) := by
   cases n with
   | ofNat n =>
-    simp only [Int.ofNat_eq_coe, iter_natCast, pow_T]
+    simp only [Int.ofNat_eq_natCast, iter_natCast, pow_T]
     rw [show ((k : ℤ) * (n : ℤ)) = ((k * n : ℕ) : ℤ) by push_cast; ring, iter_natCast,
       Function.iterate_mul]
     rfl

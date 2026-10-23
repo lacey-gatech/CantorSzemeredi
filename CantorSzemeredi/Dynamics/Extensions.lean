@@ -187,7 +187,7 @@ theorem CondWeaklyMixing.pow {D : Factor S} {f : S.X → ℝ} (h : CondWeaklyMix
     {k : ℕ} (hk : 1 ≤ k) : CondWeaklyMixing (D.toPow k) (S := S.pow k) f := by
   -- `(S.pow k).m`, `(S.pow k).T` and `(D.toPow k).σ` are definitionally `S.m`, `S.T^[k]` and
   -- `D.σ`; retype the goal once, so no `pow` friction remains.
-  show Filter.Tendsto (fun N : ℕ => eLpNorm (fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N,
+  change Filter.Tendsto (fun N : ℕ => eLpNorm (fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N,
       |condInner D (f ∘ (S.T^[k])^[n]) f x|) 2 S.m) atTop (𝓝 0)
   set φ : ℕ → S.X → ℝ := fun n x => |condInner D (f ∘ S.T^[n]) f x| with hφdef
   have hφ : ∀ n x, 0 ≤ φ n x := fun n x => abs_nonneg _

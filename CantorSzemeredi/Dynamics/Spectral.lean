@@ -218,6 +218,29 @@ theorem fourier_eq_pow (n : ℕ) (t : Torus) : fourier (n : ℤ) t = (fourier 1 
     have : ((n + 1 : ℕ) : ℤ) = (n : ℤ) + 1 := by push_cast; ring
     rw [this, fourier_add, ih, pow_succ]
 
+/-- Characters at integer frequencies are integer powers of the first character. -/
+theorem fourier_eq_zpow (n : ℤ) (t : Torus) : fourier n t = (fourier 1 t) ^ n := by
+  have hne : fourier 1 t ≠ 0 := by
+    intro h
+    have : ‖fourier (1 : ℤ) t‖ = 1 := by
+      rw [fourier_apply]
+      exact Circle.norm_coe _
+    rw [h] at this
+    simp at this
+  induction n using Int.induction_on with
+  | zero => simp
+  | succ m ih =>
+    rw [fourier_add, ih, zpow_add_one₀ hne]
+  | pred m ih =>
+    rw [show (-(m : ℤ) - 1) = (-(m : ℤ)) + (-1) by ring, fourier_add, ih,
+      zpow_add₀ hne, zpow_neg_one]
+    congr 1
+    have hnorm : ‖fourier (1 : ℤ) t‖ = 1 := by
+      rw [fourier_apply]; exact Circle.norm_coe _
+    rw [show ((-1 : ℤ)) = -(1 : ℤ) from rfl, fourier_neg, eq_comm, inv_eq_iff_eq_inv,
+      Complex.inv_def, Complex.normSq_eq_norm_sq, RCLike.norm_conj, hnorm]
+    simp
+
 /-- Away from `0`, the Cesàro means of the characters tend to `0`: the geometric sum is
 bounded while the normalisation grows. -/
 theorem tendsto_cesaroChar_of_ne_zero {t : Torus} (ht : t ≠ 0) :
