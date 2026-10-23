@@ -128,6 +128,18 @@ theorem measurePreserving_T_iterate (S : MPS) (n : ℕ) :
   | zero => simpa using MeasurePreserving.id S.m
   | succ n ih => rw [Function.iterate_succ]; exact ih.comp S.measurePreserving
 
+theorem measurePreserving_Tinv_iterate (S : MPS) (n : ℕ) :
+    MeasurePreserving S.Tinv^[n] S.m S.m := by
+  induction n with
+  | zero => simpa using MeasurePreserving.id S.m
+  | succ n ih => rw [Function.iterate_succ]; exact ih.comp S.measurePreserving_Tinv
+
+/-- Every map in the `ℤ`-orbit preserves the measure. -/
+theorem measurePreserving_iter (S : MPS) (n : ℤ) : MeasurePreserving (S.iter n) S.m S.m := by
+  cases n with
+  | ofNat n => exact S.measurePreserving_T_iterate n
+  | negSucc n => exact S.measurePreserving_Tinv_iterate (n + 1)
+
 /-! ### Powers of a system
 
 The development repeatedly replaces `T` by `T^k`: the compact extension argument runs at

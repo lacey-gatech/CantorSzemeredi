@@ -56,6 +56,51 @@ noncomputable def koopman : Lp ℂ 2 S.m ≃ₗᵢ[ℂ] Lp ℂ 2 S.m where
 theorem coeFn_koopman (g : Lp ℂ 2 S.m) : S.koopman g =ᵐ[S.m] fun x => g (S.T x) :=
   Lp.coeFn_compMeasurePreserving g S.measurePreserving
 
+/-- The inverse of the Koopman operator is composition with `T⁻¹`. -/
+theorem coeFn_koopman_symm (g : Lp ℂ 2 S.m) :
+    S.koopman.symm g =ᵐ[S.m] fun x => g (S.Tinv x) :=
+  Lp.coeFn_compMeasurePreserving g S.measurePreserving_Tinv
+
+/-- Powers of the Koopman operator act along the orbit: `Uⁿ g = g ∘ Tⁿ`. -/
+theorem coeFn_koopman_zpow (n : ℤ) : ∀ g : Lp ℂ 2 S.m,
+    (S.koopman ^ n) g =ᵐ[S.m] fun x => g (S.iter n x) := by
+  induction n using Int.induction_on with
+  | zero => intro g; filter_upwards with x using by simp
+  | succ m ih =>
+    intro g
+    rw [zpow_add_one S.koopman m]
+    have hcomp : (S.koopman ^ (m : ℤ) * S.koopman) g = (S.koopman ^ (m : ℤ)) (S.koopman g) := rfl
+    rw [hcomp]
+    have h₁ := ih (S.koopman g)
+    have h₂ : (fun x => (S.koopman g) (S.iter (m : ℤ) x))
+        =ᵐ[S.m] fun x => g (S.T (S.iter (m : ℤ) x)) :=
+      (S.measurePreserving_iter (m : ℤ)).quasiMeasurePreserving.ae_eq_comp (S.coeFn_koopman g)
+    refine h₁.trans (h₂.trans ?_)
+    filter_upwards with x
+    have hiter : S.iter ((m : ℤ) + 1) x = S.T (S.iter (m : ℤ) x) := by
+      rw [show ((m : ℤ) + 1) = ((m + 1 : ℕ) : ℤ) by push_cast; ring]
+      simp only [iter_natCast]
+      rw [Function.iterate_succ_apply']
+    rw [hiter]
+  | pred m ih =>
+    intro g
+    rw [show (-(m : ℤ) - 1) = (-(m : ℤ)) + (-1) by ring, zpow_add S.koopman, zpow_neg_one]
+    have hcomp : (S.koopman ^ (-(m : ℤ)) * S.koopman⁻¹) g
+        = (S.koopman ^ (-(m : ℤ))) (S.koopman.symm g) := rfl
+    rw [hcomp]
+    have h₁ := ih (S.koopman.symm g)
+    have h₂ : (fun x => (S.koopman.symm g) (S.iter (-(m : ℤ)) x))
+        =ᵐ[S.m] fun x => g (S.Tinv (S.iter (-(m : ℤ)) x)) :=
+      (S.measurePreserving_iter (-(m : ℤ))).quasiMeasurePreserving.ae_eq_comp
+        (S.coeFn_koopman_symm g)
+    refine h₁.trans (h₂.trans ?_)
+    filter_upwards with x
+    have hiter : S.iter (-(m : ℤ) + -1) x = S.Tinv (S.iter (-(m : ℤ)) x) := by
+      rw [show (-(m : ℤ) + -1) = -((m + 1 : ℕ) : ℤ) by push_cast; ring,
+        S.iter_neg_natCast, show (-(m : ℤ)) = -((m : ℕ) : ℤ) by push_cast; ring,
+        S.iter_neg_natCast, Function.iterate_succ_apply']
+    rw [hiter]
+
 end MPS
 
 end CantorSzemeredi
