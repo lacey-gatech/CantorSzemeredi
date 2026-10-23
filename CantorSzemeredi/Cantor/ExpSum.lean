@@ -736,6 +736,24 @@ theorem exists_norm_blockAvg_lt {β : ℝ} (hβ : β ∉ C.excSet) {ε : ℝ} (h
       _ = (1 - κ) ^ N := by rw [Finset.prod_const, htcard]
   linarith [hsub, hprod, hN]
 
+/-- The exceptional set is countable: each pair `(c, k)` pins `β` down to the single value
+`k / (b^c * gcd D)`.
+
+This is what makes `E₀` negligible for an atomless measure, which is how `lem:irrational` is
+used in the uniform spectral lemma. -/
+theorem countable_excSet : C.excSet.Countable := by
+  have hb : (0 : ℝ) < (C.base : ℝ) := by
+    have := C.three_le_base
+    exact_mod_cast (by omega : 0 < C.base)
+  have hg : (0 : ℝ) < (C.gcdDigits : ℝ) := by exact_mod_cast C.gcdDigits_pos
+  refine Set.Countable.mono ?_ (Set.countable_range
+    (fun p : ℕ × ℤ => (p.2 : ℝ) / ((C.base : ℝ) ^ p.1 * (C.gcdDigits : ℝ))))
+  rintro β ⟨c, k, hck⟩
+  refine ⟨(c, k), ?_⟩
+  have hne : ((C.base : ℝ) ^ c * (C.gcdDigits : ℝ)) ≠ 0 := by positivity
+  field_simp
+  linarith [hck]
+
 /-- **Lemma `lem:irrational`.**  For `β` outside the countable exceptional set `E₀`, the
 uniform averages `Φ_L β` tend to `0`. -/
 theorem tendsto_Phi_zero {β : ℝ} (hβ : β ∉ C.excSet) :
