@@ -9,6 +9,7 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 \begin{definition}[Measure preserving system]
   \label{def:mps}
   \lean{CantorSzemeredi.MPS}
+  \leanok
   A probability space $(X,\Abb,m)$ together with a measurable $T : X \to X$ with
   $m(T^{-1}A) = m(A)$ for all $A \in \Abb$.  \emph{Invertible} means $T$ is a measurable
   bijection with measurable inverse.  \emph{Ergodic} means every $T$-invariant set has measure
@@ -64,7 +65,8 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{definition}[Factor, extension]
   \label{def:factor}
-  \lean{CantorSzemeredi.MPS.Factor}
+  \lean{CantorSzemeredi.MPS.Factor, CantorSzemeredi.MPS.Factor.trivial}
+  \leanok
   \uses{def:mps}
   A \emph{factor} of $(X,\Abb,m,T)$ is a $T$-invariant sub-$\sigma$-algebra $\Dbb \subset \Abb$,
   factors agreeing up to null sets being identified.  If $\Dbb \subset \Ebb \subset \Abb$ are
@@ -75,7 +77,8 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{definition}[Conditional inner product, Hilbert module]
   \label{def:hilbert-module}
-  \lean{CantorSzemeredi.condInner, CantorSzemeredi.HilbertModule}
+  \lean{CantorSzemeredi.MPS.condInner, CantorSzemeredi.MPS.condNorm}
+  \leanok
   \uses{def:factor}
   For $f,g \in L^2(\Ebb)$ put $\cip{f}{g} \coloneqq \Exp_m(f \bar g \mid \Dbb) \in L^2(\Dbb)$,
   with associated conditional norm $\cnorm{f}$.  The \emph{Hilbert module}
@@ -84,7 +87,9 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{lemma}[Conditional Cauchy--Schwarz and triangle inequalities]
   \label{lem:cond-cs}
-  \lean{CantorSzemeredi.condInner_abs_le, CantorSzemeredi.cnorm_add_le}
+  \lean{CantorSzemeredi.MPS.abs_condInner_le,
+    CantorSzemeredi.MPS.condInner_quadratic_nonneg}
+  \leanok
   \uses{def:hilbert-module}
   $\abs{\cip{f}{g}} \leq \cnorm{f}\,\cnorm{g}$ and $\cnorm{f+g} \leq \cnorm{f} + \cnorm{g}$,
   almost everywhere.
@@ -92,7 +97,8 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{lemma}[Conditional expectation commutes with $T$]
   \label{lem:condexp-commutes}
-  \lean{CantorSzemeredi.condExp_comp_eq}
+  \lean{CantorSzemeredi.MPS.condExp_comp}
+  \leanok
   \uses{def:factor}
   If $\Dbb$ is $T$-invariant then $\Exp(a \circ T \mid \Dbb) = \Exp(a \mid \Dbb) \circ T$.
 \end{lemma}
