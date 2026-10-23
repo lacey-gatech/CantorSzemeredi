@@ -92,7 +92,7 @@ theorem pullback_add (U : H ≃ₗᵢ[ℂ] H) (f g : C(Torus, ℝ)) :
 theorem fourier_specToTorus (U : H ≃ₗᵢ[ℂ] H) (z : spectrum ℂ (op U)) :
     fourier 1 (specToTorus U z) = (z : ℂ) := by
   rw [fourier_one, specToTorus]
-  show ((AddCircle.toCircle
+  change ((AddCircle.toCircle
     ((AddCircle.homeomorphCircle (T := (1 : ℝ)) one_ne_zero).symm (specToCircle U z))) : ℂ)
       = (z : ℂ)
   rw [← AddCircle.homeomorphCircle_apply (T := (1 : ℝ)) one_ne_zero]
@@ -116,7 +116,7 @@ theorem specFun_congr {f g : C(Torus, ℝ)} (h : ∀ α, f α = g α) :
 theorem specFun_add (f g : C(Torus, ℝ)) :
     specFun U v (f + g) = specFun U v f + specFun U v g := by
   rw [specFun, specFun, specFun, pullback_add, map_add]
-  simp [inner_add_left]
+  simp
 
 theorem pullback_smul (c : ℝ) (f : C(Torus, ℝ)) :
     pullback U (c • f) = (c : ℂ) • pullback U f := by
@@ -126,7 +126,7 @@ theorem pullback_smul (c : ℝ) (f : C(Torus, ℝ)) :
 theorem specFun_smul (c : ℝ) (f : C(Torus, ℝ)) :
     specFun U v (c • f) = c * specFun U v f := by
   rw [specFun, specFun, pullback_smul, map_smul]
-  simp [inner_smul_left, RCLike.re_ofReal_mul, Complex.conj_ofReal]
+  simp
 
 /-- **Positivity.**  `cfc_nonneg` is unavailable here (`ℂ` has no order), so a non-negative `f`
 is factored as `conj g * g` with `g = √f`, and `star x * x ≥ 0` in any C⋆-algebra. -/
@@ -192,7 +192,7 @@ theorem integral_specMeasure (f : C(Torus, ℝ)) :
     (CompactlySupportedContinuousMap.continuousMapEquiv f)
   rw [specMeasure]
   refine h.trans ?_
-  show specFun U v ⟨⇑(CompactlySupportedContinuousMap.continuousMapEquiv f), _⟩ = specFun U v f
+  change specFun U v ⟨⇑(CompactlySupportedContinuousMap.continuousMapEquiv f), _⟩ = specFun U v f
   exact specFun_congr U v fun α => rfl
 
 end CantorSzemeredi
