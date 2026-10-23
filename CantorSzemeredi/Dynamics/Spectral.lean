@@ -183,6 +183,10 @@ so that the limit is `(σ × σ)` of the diagonal, which is `∑_θ σ({θ})²`.
 noncomputable def cesaroChar (N : ℕ) (t : Torus) : ℂ :=
   (N : ℂ)⁻¹ * ∑ n ∈ Finset.Icc 1 N, fourier (n : ℤ) t
 
+theorem continuous_cesaroChar (N : ℕ) : Continuous (cesaroChar N) := by
+  refine continuous_const.mul ?_
+  exact continuous_finsetSum _ fun n _ => (fourier (n : ℤ)).continuous
+
 theorem norm_cesaroChar_le_one {N : ℕ} (hN : 0 < N) (t : Torus) : ‖cesaroChar N t‖ ≤ 1 := by
   rw [cesaroChar, norm_mul, norm_inv]
   have hsum : ‖∑ n ∈ Finset.Icc 1 N, fourier (n : ℤ) t‖ ≤ (N : ℝ) := by
@@ -199,6 +203,12 @@ theorem norm_cesaroChar_le_one {N : ℕ} (hN : 0 < N) (t : Torus) : ‖cesaroCha
   rw [Complex.norm_natCast]
   rw [inv_mul_le_iff₀ hNR]
   simpa using hsum
+
+/-- The bound holds for every `N`, including `N = 0`, where the mean is `0`. -/
+theorem norm_cesaroChar_le_one' (N : ℕ) (t : Torus) : ‖cesaroChar N t‖ ≤ 1 := by
+  rcases Nat.eq_zero_or_pos N with rfl | hN
+  · simp [cesaroChar]
+  · exact norm_cesaroChar_le_one hN t
 
 /-- At `t = 0` every character is `1`, so the Cesàro mean is `1`. -/
 @[simp] theorem cesaroChar_zero {N : ℕ} (hN : 0 < N) : cesaroChar N (0 : Torus) = 1 := by
@@ -294,5 +304,153 @@ theorem tendsto_cesaroChar_of_ne_zero {t : Torus} (ht : t ≠ 0) :
   refine squeeze_zero_norm' (a := fun N : ℕ => (2 / ‖z - 1‖) / N)
     (by filter_upwards [Filter.eventually_gt_atTop 0] with N hN using hbound N hN)
     (tendsto_const_div_atTop_nhds_zero_nat _)
+
+/-! ### Wiener's lemma proper
+
+`|σ̂(n)|²` is a double integral against `σ × σ`; averaging in `n` turns the integrand into the
+Cesàro kernel at `α - β`, which tends to the indicator of the diagonal.
+-/
+
+/-- The Fourier coefficient of a measure on the torus. -/
+noncomputable def sigmaHat (σ : Measure Torus) (n : ℤ) : ℂ := ∫ α, fourier n α ∂σ
+
+variable {σ : Measure Torus} [IsFiniteMeasure σ]
+
+theorem integrable_fourier (n : ℤ) : Integrable (fun α : Torus => fourier n α) σ := by
+  refine MemLp.integrable (q := ⊤) le_top ?_
+  refine memLp_top_of_bound (fourier n).continuous.aestronglyMeasurable 1 ?_
+  filter_upwards with α
+  rw [fourier_apply]
+  exact le_of_eq (Circle.norm_coe _)
+
+/-- `|σ̂(n)|²` as a double integral: the integrand is `e(n(α-β))`. -/
+theorem sq_norm_sigmaHat (n : ℤ) :
+    ((‖sigmaHat σ n‖ ^ 2 : ℝ) : ℂ)
+      = ∫ p : Torus × Torus, fourier n (p.1 - p.2) ∂(σ.prod σ) := by
+  have hmul : ∀ p : Torus × Torus,
+      fourier n (p.1 - p.2) = fourier n p.1 * (starRingEnd ℂ) (fourier n p.2) := by
+    intro p
+    have hneg : (AddCircle.toCircle (-(n • p.2)) : ℂ)
+        = (starRingEnd ℂ) (fourier n p.2) := by
+      rw [fourier_apply]
+      exact fourier_neg' (T := (1 : ℝ))
+    rw [fourier_apply, fourier_apply, smul_sub, sub_eq_add_neg, AddCircle.toCircle_add]
+    push_cast
+    rw [hneg, fourier_apply]
+  rw [integral_congr_ae (Filter.Eventually.of_forall hmul)]
+  rw [integral_prod_mul (f := fun α => fourier n α)
+    (g := fun β => (starRingEnd ℂ) (fourier n β))]
+  rw [integral_conj]
+  change _ = sigmaHat σ n * (starRingEnd ℂ) (sigmaHat σ n)
+  rw [mul_comm]
+  have := Complex.mul_conj (sigmaHat σ n)
+  rw [mul_comm] at this
+  rw [this, Complex.normSq_eq_norm_sq]
+
+/-- Averaging the double integrals turns the integrand into the Cesàro kernel. -/
+theorem cesaro_sq_norm_sigmaHat {N : ℕ} (_hN : 0 < N) :
+    (((N : ℝ)⁻¹ * ∑ n ∈ Finset.Icc 1 N, ‖sigmaHat σ (n : ℤ)‖ ^ 2 : ℝ) : ℂ)
+      = ∫ p : Torus × Torus, cesaroChar N (p.1 - p.2) ∂(σ.prod σ) := by
+  have hint : ∀ n : ℤ, Integrable
+      (fun p : Torus × Torus => fourier n (p.1 - p.2)) (σ.prod σ) := by
+    intro n
+    refine MemLp.integrable (q := ⊤) le_top ?_
+    refine memLp_top_of_bound ?_ 1 ?_
+    · exact ((fourier n).continuous.comp (continuous_fst.sub continuous_snd)).aestronglyMeasurable
+    · filter_upwards with p
+      rw [fourier_apply]
+      exact le_of_eq (Circle.norm_coe _)
+  have hswap : (N : ℂ)⁻¹ * ∑ n ∈ Finset.Icc 1 N,
+        (∫ p : Torus × Torus, fourier (n : ℤ) (p.1 - p.2) ∂(σ.prod σ))
+      = ∫ p : Torus × Torus, cesaroChar N (p.1 - p.2) ∂(σ.prod σ) := by
+    rw [← integral_finsetSum (Finset.Icc 1 N) fun n _ => hint (n : ℤ), ← integral_const_mul]
+    rfl
+  rw [← hswap, Complex.ofReal_mul, Complex.ofReal_sum]
+  congr 1
+  · norm_num
+  · exact Finset.sum_congr rfl fun n _ => sq_norm_sigmaHat (σ := σ) (n : ℤ)
+
+/-- The Cesàro kernel at `p.1 - p.2` tends to the indicator of the diagonal. -/
+theorem tendsto_cesaroChar_sub (p : Torus × Torus) :
+    Filter.Tendsto (fun N => cesaroChar N (p.1 - p.2)) Filter.atTop
+      (nhds (Set.indicator {q : Torus × Torus | q.1 = q.2} (fun _ => (1 : ℂ)) p)) := by
+  by_cases h : p.1 = p.2
+  · have hz : p.1 - p.2 = 0 := by rw [h]; simp
+    rw [hz, Set.indicator_of_mem (show p ∈ {q : Torus × Torus | q.1 = q.2} from h)]
+    refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+    filter_upwards [Filter.eventually_gt_atTop 0] with N hN
+    exact (cesaroChar_zero hN).symm
+  · have hz : p.1 - p.2 ≠ 0 := sub_ne_zero.2 h
+    rw [Set.indicator_of_notMem (show p ∉ {q : Torus × Torus | q.1 = q.2} from h)]
+    exact tendsto_cesaroChar_of_ne_zero hz
+
+/-- **Wiener's lemma (`lem:wiener`).**  The Cesàro means of `|σ̂(n)|²` converge to the measure
+of the diagonal under `σ × σ`. -/
+theorem tendsto_cesaro_sq_norm_sigmaHat :
+    Filter.Tendsto
+      (fun N : ℕ => ((N : ℝ)⁻¹ * ∑ n ∈ Finset.Icc 1 N, ‖sigmaHat σ (n : ℤ)‖ ^ 2 : ℝ))
+      Filter.atTop
+      (nhds ((σ.prod σ) {q : Torus × Torus | q.1 = q.2}).toReal) := by
+  -- Dominated convergence for the complex integrals.
+  have hcont : ∀ N : ℕ, Continuous (fun p : Torus × Torus => cesaroChar N (p.1 - p.2)) :=
+    fun N => (continuous_cesaroChar N).comp (continuous_fst.sub continuous_snd)
+  have hmeas : ∀ N : ℕ, AEStronglyMeasurable
+      (fun p : Torus × Torus => cesaroChar N (p.1 - p.2)) (σ.prod σ) :=
+    fun N => (hcont N).aestronglyMeasurable
+  have hdiag : MeasurableSet {q : Torus × Torus | q.1 = q.2} :=
+    measurableSet_eq_fun measurable_fst measurable_snd
+  have hdct := MeasureTheory.tendsto_integral_of_dominated_convergence
+    (F := fun (N : ℕ) (p : Torus × Torus) => cesaroChar N (p.1 - p.2))
+    (f := Set.indicator {q : Torus × Torus | q.1 = q.2} (fun _ => (1 : ℂ)))
+    (bound := fun _ => (1 : ℝ)) hmeas
+    (integrable_const 1)
+    (fun N => Filter.Eventually.of_forall fun p => norm_cesaroChar_le_one' N _)
+    (Filter.Eventually.of_forall fun p => tendsto_cesaroChar_sub p)
+  -- The limit is the measure of the diagonal.
+  have hlim : (∫ p : Torus × Torus,
+        Set.indicator {q : Torus × Torus | q.1 = q.2} (fun _ => (1 : ℂ)) p ∂(σ.prod σ))
+      = ((((σ.prod σ) {q : Torus × Torus | q.1 = q.2}).toReal : ℝ) : ℂ) := by
+    rw [integral_indicator_const _ hdiag]
+    simp [Measure.real]
+  rw [hlim] at hdct
+  -- Take real parts: the integrals are the (real) Cesàro means.
+  have hre := (Complex.continuous_re.tendsto _).comp hdct
+  simp only [Function.comp_def, Complex.ofReal_re] at hre
+  refine hre.congr' ?_
+  filter_upwards [Filter.eventually_gt_atTop 0] with N hN
+  rw [← cesaro_sq_norm_sigmaHat hN, Complex.ofReal_re]
+
+/-- A single atom contributes `σ({θ})²` to the diagonal. -/
+theorem sq_measure_singleton_le_diagonal (θ : Torus) :
+    (σ {θ}).toReal ^ 2 ≤ ((σ.prod σ) {q : Torus × Torus | q.1 = q.2}).toReal := by
+  have hsub : ({θ} : Set Torus) ×ˢ ({θ} : Set Torus)
+      ⊆ {q : Torus × Torus | q.1 = q.2} := by
+    rintro ⟨a, b⟩ ⟨ha, hb⟩
+    simp only [Set.mem_singleton_iff] at ha hb
+    simp [ha, hb]
+  have hprod : (σ.prod σ) (({θ} : Set Torus) ×ˢ ({θ} : Set Torus)) = σ {θ} * σ {θ} :=
+    Measure.prod_prod _ _
+  have hle := measure_mono (μ := σ.prod σ) hsub
+  rw [hprod] at hle
+  have hfin : σ {θ} ≠ ⊤ := measure_ne_top _ _
+  calc (σ {θ}).toReal ^ 2 = ((σ {θ} * σ {θ}).toReal) := by
+        rw [ENNReal.toReal_mul]; ring
+    _ ≤ ((σ.prod σ) {q : Torus × Torus | q.1 = q.2}).toReal := by
+        refine ENNReal.toReal_mono (measure_ne_top _ _) hle
+
+/-- **Wiener's lemma, the form used in `lem:atomless`.**  If the Cesàro means of `|σ̂(n)|²`
+vanish then `σ` has no atoms. -/
+theorem noAtoms_of_tendsto_cesaro_zero
+    (h : Filter.Tendsto
+      (fun N : ℕ => ((N : ℝ)⁻¹ * ∑ n ∈ Finset.Icc 1 N, ‖sigmaHat σ (n : ℤ)‖ ^ 2 : ℝ))
+      Filter.atTop (nhds 0)) :
+    ∀ θ : Torus, σ {θ} = 0 := by
+  intro θ
+  have hdiag : ((σ.prod σ) {q : Torus × Torus | q.1 = q.2}).toReal = 0 :=
+    tendsto_nhds_unique tendsto_cesaro_sq_norm_sigmaHat h
+  have hle := sq_measure_singleton_le_diagonal (σ := σ) θ
+  rw [hdiag] at hle
+  have hzero : (σ {θ}).toReal = 0 := by nlinarith [sq_nonneg ((σ {θ}).toReal)]
+  exact (ENNReal.toReal_eq_zero_iff _).1 hzero |>.resolve_right (measure_ne_top _ _)
 
 end CantorSzemeredi
