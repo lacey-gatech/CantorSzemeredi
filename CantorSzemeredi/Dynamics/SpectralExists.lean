@@ -27,7 +27,9 @@ Riesz–Markov–Kakutani theorem represents it by a measure.
 
 namespace CantorSzemeredi
 
-open MeasureTheory Complex ContinuousLinearMap
+open MeasureTheory Complex ContinuousLinearMap CompactlySupportedContinuousMap
+
+open scoped CompactlySupported
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
@@ -85,5 +87,112 @@ theorem pullback_add (U : H ≃ₗᵢ[ℂ] H) (f g : C(Torus, ℝ)) :
     pullback U (f + g) = pullback U f + pullback U g := by
   ext z
   simp [pullback]
+
+/-- The torus coordinate of a spectral point recovers that point: `e(α) = z`. -/
+theorem fourier_specToTorus (U : H ≃ₗᵢ[ℂ] H) (z : spectrum ℂ (op U)) :
+    fourier 1 (specToTorus U z) = (z : ℂ) := by
+  rw [fourier_one, specToTorus]
+  show ((AddCircle.toCircle
+    ((AddCircle.homeomorphCircle (T := (1 : ℝ)) one_ne_zero).symm (specToCircle U z))) : ℂ)
+      = (z : ℂ)
+  rw [← AddCircle.homeomorphCircle_apply (T := (1 : ℝ)) one_ne_zero]
+  rw [Homeomorph.apply_symm_apply]
+  rfl
+
+/-! ### The positive linear functional -/
+
+variable (U : H ≃ₗᵢ[ℂ] H) (v : H)
+
+/-- The functional `f ↦ Re ⟪f(U) v, v⟫` on `C(𝕋, ℝ)`, built through the continuous functional
+calculus. -/
+noncomputable def specFun (f : C(Torus, ℝ)) : ℝ :=
+  RCLike.re (inner ℂ ((cfcHom (isStarNormal_op U) (pullback U f)) v) v)
+
+theorem specFun_congr {f g : C(Torus, ℝ)} (h : ∀ α, f α = g α) :
+    specFun U v f = specFun U v g := by
+  have hfg : f = g := by ext α; exact h α
+  rw [hfg]
+
+theorem specFun_add (f g : C(Torus, ℝ)) :
+    specFun U v (f + g) = specFun U v f + specFun U v g := by
+  rw [specFun, specFun, specFun, pullback_add, map_add]
+  simp [inner_add_left]
+
+theorem pullback_smul (c : ℝ) (f : C(Torus, ℝ)) :
+    pullback U (c • f) = (c : ℂ) • pullback U f := by
+  ext z
+  simp [pullback]
+
+theorem specFun_smul (c : ℝ) (f : C(Torus, ℝ)) :
+    specFun U v (c • f) = c * specFun U v f := by
+  rw [specFun, specFun, pullback_smul, map_smul]
+  simp [inner_smul_left, RCLike.re_ofReal_mul, Complex.conj_ofReal]
+
+/-- **Positivity.**  `cfc_nonneg` is unavailable here (`ℂ` has no order), so a non-negative `f`
+is factored as `conj g * g` with `g = √f`, and `star x * x ≥ 0` in any C⋆-algebra. -/
+theorem specFun_nonneg {f : C(Torus, ℝ)} (hf : ∀ α, 0 ≤ f α) : 0 ≤ specFun U v f := by
+  -- The square root of `f`, pulled back to the spectrum.
+  set g : C(spectrum ℂ (op U), ℂ) :=
+    ⟨fun z => ((Real.sqrt (f (specToTorus U z)) : ℝ) : ℂ),
+      Complex.continuous_ofReal.comp (Real.continuous_sqrt.comp
+        (f.continuous.comp (specToTorus U).continuous))⟩ with hgdef
+  have hfac : pullback U f = star g * g := by
+    ext z
+    simp only [pullback_apply, hgdef, ContinuousMap.mul_apply, ContinuousMap.star_apply,
+      ContinuousMap.coe_mk, RCLike.star_def, Complex.conj_ofReal]
+    rw [← Complex.ofReal_mul, Real.mul_self_sqrt (hf _)]
+  have hnn : 0 ≤ cfcHom (isStarNormal_op U) (pullback U f) := by
+    rw [hfac, map_mul, map_star]
+    exact star_mul_self_nonneg _
+  exact IsPositive.re_inner_nonneg_left
+    (ContinuousLinearMap.nonneg_iff_isPositive.mp hnn) v
+
+/-- The functional as a bundled positive linear map on compactly supported functions, which is
+what the Riesz–Markov–Kakutani theorem consumes.  On the compact space `𝕋` every continuous
+function is compactly supported. -/
+noncomputable def specPLM : C_c(Torus, ℝ) →ₚ[ℝ] ℝ where
+  toFun f := specFun U v ⟨⇑f, map_continuous f⟩
+  map_add' f g := by
+    have h1 : specFun U v ⟨⇑(f + g), map_continuous (f + g)⟩
+        = specFun U v (⟨⇑f, map_continuous f⟩ + ⟨⇑g, map_continuous g⟩) :=
+      specFun_congr U v fun α => by simp
+    rw [h1]
+    exact specFun_add U v _ _
+  map_smul' c f := by
+    have h1 : specFun U v ⟨⇑(c • f), map_continuous (c • f)⟩
+        = specFun U v (c • (⟨⇑f, map_continuous f⟩ : C(Torus, ℝ))) :=
+      specFun_congr U v fun α => by simp
+    rw [h1]
+    simpa using specFun_smul U v c _
+  monotone' := by
+    intro f g hfg
+    have hdiff : 0 ≤ specFun U v
+        ((⟨⇑g, map_continuous g⟩ : C(Torus, ℝ)) - ⟨⇑f, map_continuous f⟩) := by
+      refine specFun_nonneg U v fun α => ?_
+      simpa using hfg α
+    have hsub : specFun U v ((⟨⇑g, map_continuous g⟩ : C(Torus, ℝ)) - ⟨⇑f, map_continuous f⟩)
+        = specFun U v ⟨⇑g, map_continuous g⟩ - specFun U v ⟨⇑f, map_continuous f⟩ := by
+      have h := specFun_add U v
+        ((⟨⇑g, map_continuous g⟩ : C(Torus, ℝ)) - ⟨⇑f, map_continuous f⟩)
+        ⟨⇑f, map_continuous f⟩
+      simp only [sub_add_cancel] at h
+      linarith
+    rw [hsub] at hdiff
+    linarith
+
+/-! ### The measure -/
+
+/-- The measure representing `specFun`, from the Riesz–Markov–Kakutani theorem. -/
+noncomputable def specMeasure : Measure Torus := RealRMK.rieszMeasure (specPLM U v)
+
+/-- **The representation.**  `∫ f dσ = Re ⟪f(U) v, v⟫` for every continuous `f : 𝕋 → ℝ`. -/
+theorem integral_specMeasure (f : C(Torus, ℝ)) :
+    ∫ α, f α ∂(specMeasure U v) = specFun U v f := by
+  have h := RealRMK.integral_rieszMeasure (specPLM U v)
+    (CompactlySupportedContinuousMap.continuousMapEquiv f)
+  rw [specMeasure]
+  refine h.trans ?_
+  show specFun U v ⟨⇑(CompactlySupportedContinuousMap.continuousMapEquiv f), _⟩ = specFun U v f
+  exact specFun_congr U v fun α => rfl
 
 end CantorSzemeredi
