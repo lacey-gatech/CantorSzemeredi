@@ -163,11 +163,18 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
   $\langle f, U^n f\rangle$ are identified with $\int \cip{T^n f}{f} \;dm$
   (\texttt{inner\_toLpC}, \texttt{integral\_eq\_integral\_condInner}).
 
-  Two steps remain.  For (i), converting the \texttt{eLpNorm} in the definition of
-  \texttt{CondWeaklyMixing} into the bound $\avg{N}\int \abs{\cip{T^n f}{f}} \to 0$ and feeding
-  it to Wiener.  For (ii), building the product system $(X\times X, \lambda, T\times T)$ as an
-  \texttt{MPS}; \texttt{joining\_invariant} supplies its invariance and
-  \texttt{integral\_joining} the identity \eqref{eq:psi-identity}.
+  \textbf{Part (i) is proved}, as \texttt{noAtoms\_specMeasure\_of\_condWeaklyMixing}.  The step
+  from the \texttt{eLpNorm} in the definition of \texttt{CondWeaklyMixing} to the bound
+  $\avg{N}\int \abs{\cip{T^n f}{f}} \to 0$ is
+  \texttt{tendsto\_cesaro\_integral\_abs\_condInner}, and uses only that $L^1 \leq L^2$ on a
+  probability space.  The Fourier coefficients are then dominated by those integrals and by
+  $\norm{f}_2 ^2$, so their squares are dominated by a constant times them, and Wiener's lemma
+  applies.
+
+  Part (ii) remains: it needs the product system $(X\times X, \lambda, T\times T)$ built as an
+  \texttt{MPS}.  \texttt{joining\_invariant} supplies its invariance and
+  \texttt{integral\_joining} the identity \eqref{eq:psi-identity}, so what is left there is
+  construction rather than new mathematics.
 \end{remark}
 
 \begin{definition}[Conditionally compact function; compact extension]
@@ -253,7 +260,9 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
   \label{lem:atomless}
   \lean{CantorSzemeredi.MPS.koopman, CantorSzemeredi.MPS.coeFn_koopman_zpow,
     CantorSzemeredi.MPS.inner_koopman_zpow_eq_integral, CantorSzemeredi.MPS.toLpC,
-    CantorSzemeredi.MPS.inner_toLpC, CantorSzemeredi.MPS.integral_eq_integral_condInner}
+    CantorSzemeredi.MPS.inner_toLpC, CantorSzemeredi.MPS.integral_eq_integral_condInner,
+    CantorSzemeredi.MPS.tendsto_cesaro_integral_abs_condInner,
+    CantorSzemeredi.MPS.noAtoms_specMeasure_of_condWeaklyMixing}
   \uses{def:cwm, lem:joining, lem:wiener, def:spectral-measure}
   Let $f \in L^\infty(\Ebb)$ be conditionally weakly mixing and set $G \coloneqq f \otimes \bar f$.
   Then
