@@ -357,13 +357,24 @@ $\theta$ to the nearest integer.
 
 \begin{lemma}[Uniform spectral lemma]
   \label{lem:uniform-spectral}
-  \lean{CantorSzemeredi.tendsto_integral_Phi_zero}
+  \lean{CantorSzemeredi.CantorData.PhiCircle, CantorSzemeredi.CantorData.measurable_Phi,
+    CantorSzemeredi.CantorData.excSetSmul_countable,
+    CantorSzemeredi.CantorData.tendsto_integral_Phi_zero}
+  \leanok
   \uses{lem:irrational, def:Phi}
   Let $\sigma$ be a finite positive Borel measure on $\TT$ without atoms and $s \geq 1$ an
   integer.  Then $\displaystyle \lim_{L \to \infty} \int_{\TT} \Phi_L(s\alpha) \, d\sigma(\alpha) = 0$.
 \end{lemma}
 
+\begin{remark}[Lean design note]
+  $\TT$ is \texttt{AddCircle (1 : \ensuremath{\mathbb{R}})}, and ``without atoms'' is the
+  class \texttt{NullSingletonClass}.  Since the $k_n$ are integers, $\Phi_L$ is $1$-periodic
+  and descends to $\TT$ as \texttt{CantorData.PhiCircle}; the dilation $\alpha \mapsto s\alpha$
+  is the $\NNz$-scalar multiple $s \cdot \alpha$ on $\TT$.
+\end{remark}
+
 \begin{proof}
+  \leanok
   \uses{lem:irrational}
   Each $\Phi_L$ is a countable supremum of continuous functions, hence Borel, and
   $0 \leq \Phi_L \leq 1$.  By Lemma~\ref{lem:irrational}, $\Phi_L(s\alpha) \to 0$ unless
