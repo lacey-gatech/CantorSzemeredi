@@ -25,22 +25,45 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{definition}[Spectral measure]
   \label{def:spectral-measure}
-  \lean{CantorSzemeredi.spectralMeasure}
+  \lean{CantorSzemeredi.HasSpectralMeasure, CantorSzemeredi.Torus,
+    CantorSzemeredi.HasSpectralMeasure.norm_sum_sq,
+    CantorSzemeredi.HasSpectralMeasure.inner_zpow,
+    CantorSzemeredi.HasSpectralMeasure.measure_univ_eq}
   For a unitary $U$ on a Hilbert space and a vector $v$, $\sigma_v$ is the finite positive Borel
   measure on $\TT = \RR/\ZZ$ with $\langle U^n v, v \rangle = \int_{\TT} e(n\alpha) \, d\sigma_v(\alpha)$
   for all $n \in \ZZ$.  When no operator is named, $U$ is the Koopman operator $f \mapsto f \circ T$.
 \end{definition}
 
-\begin{remark}[Mathlib gap]
+\begin{remark}[Mathlib gap, and how the formalization is arranged]
   The existence and uniqueness of $\sigma_v$ --- equivalently, Herglotz/Bochner for positive
   definite sequences on $\ZZ$ --- is the main piece of analysis infrastructure this project
-  needs.  It should be isolated in its own file so that the rest of the development uses only
-  Definition~\ref{def:spectral-measure} and Wiener's lemma below.
+  needs.  It is isolated in \texttt{CantorSzemeredi/Dynamics/Spectral.lean} so that the rest of
+  the development uses only Definition~\ref{def:spectral-measure} and Wiener's lemma below.
+
+  Concretely, \texttt{HasSpectralMeasure U v \(\sigma\)} is a \emph{predicate} recording the
+  defining property, and the consequences are proved from it.  Chief among them is
+  \texttt{norm\_sum\_sq},
+  \[
+    \Bigl\lVert \sum_i a_i U ^{k_i} v \Bigr\rVert ^2
+      = \int_{\TT} \Bigl\lvert \sum_i a_i e(k_i \alpha) \Bigr\rvert ^2 \;d \sigma ,
+  \]
+  which is the form in which the spectral measure is used everywhere below: taking $a$ to be
+  the constants of an average and $k_i = s k_n$, the left side is the $L^2$ norm of an ergodic
+  average and the right side is what Lemma~\ref{lem:irrational} estimates.  Supplying existence
+  later will not disturb any of these proofs.
+
+  Mathlib has neither Herglotz nor the weak-$\ast$ compactness of finite measures that the
+  classical Fej\'er kernel proof uses.  It does have the Riesz--Markov--Kakutani theorem
+  (\texttt{RealRMK.integral\_rieszMeasure}) and the continuous functional calculus for
+  star-normal elements of a C$^\ast$-algebra, together with
+  \texttt{Unitary.spectrum\_subset\_circle}; that is the shortest route to existence, via the
+  positive linear functional $f \mapsto \operatorname{Re}\langle f(U)v,v\rangle$ on $C(\TT)$.
 \end{remark}
 
 \begin{lemma}[Wiener's lemma]
   \label{lem:wiener}
-  \lean{CantorSzemeredi.wiener}
+  \lean{CantorSzemeredi.cesaroChar, CantorSzemeredi.tendsto_cesaroChar_of_ne_zero,
+    CantorSzemeredi.norm_cesaroChar_le_one, CantorSzemeredi.cesaroChar_zero}
   For a finite positive measure $\sigma$ on $\TT$,
   $\sum_{\theta} \sigma(\{\theta\})^2 = \lim_N \avg{1 \leq n \leq N} \abs{\widehat\sigma(n)}^2$.
   In particular $\sigma$ is atomless iff $\avg{1 \leq n \leq N} \abs{\widehat\sigma(n)}^2 \to 0$.
