@@ -102,10 +102,12 @@
   $(\sigma\times\sigma)(\Delta) = \int \sigma(\{\alpha\})\,d\sigma$, which is Fubini, and not the
   full identity $\sum_\theta \sigma(\{\theta\}) ^2 = (\sigma\times\sigma)(\Delta)$: an integral of
   a non-negative function is zero as soon as the function vanishes identically, so positivity of
-  the diagonal exhibits an atom directly.  Together with \texttt{integral\_tensorSq\_comp}, which
-  identifies $\widehat{\sigma_G}(n)$ with $\psi(n)$, what is still wanted for that first step is
-  the converse estimate $\avg{N}\psi \to 0 \Rightarrow$ conditional weak mixing, which is the
-  triangle inequality and Cauchy--Schwarz but at the level of \texttt{eLpNorm}.
+  the diagonal exhibits an atom directly.  Together with \texttt{integral\_tensorSq\_comp}, which identifies $\widehat{\sigma_G}(n)$ with
+  $\psi(n)$, and the converse estimate
+  $\avg{N}\psi \to 0 \Rightarrow$ conditional weak mixing
+  (\texttt{condWeaklyMixing\_of\_tendsto\_cesaro\_psi}, the triangle inequality
+  \texttt{eLpNorm\_sum\_le} followed by Cauchy--Schwarz), \textbf{that first step is now
+  proved}, as \texttt{exists\_atom\_of\_not\_condWeaklyMixing}.
 
   The remainder --- passing from an atom of $\sigma_G$ to a non-trivial conditionally compact
   function, and from those to the factor $\Ebb$ --- is untouched, and is the bulk of the work.

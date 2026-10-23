@@ -459,15 +459,237 @@ The measure-theoretic half is done: `exists_atom_of_not_tendsto_cesaro_zero` tur
 non-vanishing Cesàro mean into an atom, and `integral_tensorSq_comp` identifies the Fourier
 coefficients of `σ_G` with `ψ(n) = ‖⟨Tⁿf,f⟩_{E|D}‖²_{L²(D)}`.
 
-What is missing to complete the step is the converse of the estimate used in part (ii): that
-vanishing Cesàro means of `ψ` give conditional weak mixing, i.e.
-`‖E_N u_n‖_{L²} ≤ E_N ‖u_n‖_{L²} ≤ √(E_N ψ n)` by the triangle inequality and
-Cauchy–Schwarz.  In Lean that needs `eLpNorm`-level API (the `L²` norm of a finite sum, and
-`∫ g² = ‖g‖²_{L²}`) that Mathlib does not provide in directly usable form.
+The step is complete: `exists_atom_of_not_condWeaklyMixing`.  The converse estimate
+`condWeaklyMixing_of_tendsto_cesaro_psi` supplies the missing direction, via
+`‖E_N u_n‖_{L²} ≤ E_N ‖u_n‖_{L²} ≤ √(E_N ψ n)` — the triangle inequality (`eLpNorm_sum_le`)
+and then Cauchy–Schwarz (`sq_sum_le_card_mul_sum_sq`), with `integral_sq_eq_eLpNorm_sq`
+identifying `ψ n` as the squared `L²` norm.
 
-Even with that step, the dichotomy itself would remain: see the blueprint's remark on
-`lem:dichotomy`, which scopes it as a project of its own.
+The dichotomy itself remains: passing from an atom of `σ_G` to a non-trivial conditionally
+compact function, and from those to the factor `E`, is untouched and is the bulk of the work.
+See the blueprint's remark on `lem:dichotomy`.
 -/
+
+omit [StandardBorelSpace S.X] in
+/-- `∫ g² = ‖g‖²_{L²}`, in the form needed below. -/
+theorem integral_sq_eq_eLpNorm_sq {g : S.X → ℝ} (hg : MemLp g 2 S.m) :
+    ∫ x, (g x) ^ 2 ∂S.m = ((eLpNorm g 2 S.m).toReal) ^ 2 := by
+  have hnorm : ‖hg.toLp g‖ = (eLpNorm g 2 S.m).toReal := by
+    rw [Lp.norm_def]
+    congr 1
+    exact eLpNorm_congr_ae hg.coeFn_toLp
+  rw [← hnorm, ← real_inner_self_eq_norm_sq, L2.inner_def]
+  refine integral_congr_ae ?_
+  filter_upwards [hg.coeFn_toLp] with x hx
+  rw [hx]
+  simp [sq]
+
+omit [StandardBorelSpace S.X] in
+/-- **The converse estimate.**  If the Cesàro means of
+`ψ n = ‖⟨Tⁿ f, f⟩_{E|D}‖²_{L²(D)}` vanish then `f` is conditionally weakly mixing.
+
+`‖E_N u_n‖_{L²} ≤ E_N ‖u_n‖_{L²} ≤ √(E_N ‖u_n‖²_{L²}) = √(E_N ψ n)` — the triangle
+inequality and then Cauchy–Schwarz for finite averages. -/
+theorem condWeaklyMixing_of_tendsto_cesaro_psi (D : Factor S) {f : S.X → ℝ} {C : ℝ}
+    (hm : Measurable f) (hb : ∀ x, |f x| ≤ C)
+    (hψ : Filter.Tendsto
+      (fun N : ℕ => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N,
+        ∫ x, (condInner D (f ∘ S.T^[n]) f x) ^ 2 ∂S.m)
+      Filter.atTop (nhds 0)) :
+    CondWeaklyMixing D f := by
+  classical
+  set u : ℕ → S.X → ℝ := fun n x => |condInner D (f ∘ S.T^[n]) f x| with hu
+  -- Each `u n` is in `L²`, being bounded.
+  have hboundptw : ∀ n, ∀ᵐ x ∂S.m, |condInner D (f ∘ S.T^[n]) f x| ≤ C * C := by
+    intro n
+    refine abs_condExp_le D ?_ ?_
+    · refine MemLp.integrable (q := ⊤) le_top ?_
+      refine memLp_top_of_bound
+        (((hm.comp (S.measurable_T.iterate n)).mul hm).aestronglyMeasurable) (C * C) ?_
+      filter_upwards with x
+      have h₀ : (0 : ℝ) ≤ C := le_trans (abs_nonneg _) (hb x)
+      simp only [Pi.mul_apply, Function.comp_apply, Real.norm_eq_abs, abs_mul]
+      exact mul_le_mul (hb _) (hb _) (abs_nonneg _) h₀
+    · intro x
+      have h₀ : (0 : ℝ) ≤ C := le_trans (abs_nonneg _) (hb x)
+      simp only [Pi.mul_apply, Function.comp_apply, abs_mul]
+      exact mul_le_mul (hb _) (hb _) (abs_nonneg _) h₀
+  have hmemu : ∀ n, MemLp (u n) 2 S.m := by
+    intro n
+    have hsm : StronglyMeasurable (u n) := by
+      have hc : StronglyMeasurable (condInner D (f ∘ S.T^[n]) f) :=
+        stronglyMeasurable_condExp.mono D.le
+      have habs : StronglyMeasurable fun x => |condInner D (f ∘ S.T^[n]) f x| := by
+        simpa [Real.norm_eq_abs] using hc.norm
+      exact habs
+    refine MemLp.mono_exponent (memLp_top_of_bound hsm.aestronglyMeasurable (C * C) ?_) le_top
+    filter_upwards [hboundptw n] with x hx
+    simpa [hu, Real.norm_eq_abs] using hx
+  -- `ψ n` is the squared `L²` norm of `u n`.
+  have hψeq : ∀ n, ∫ x, (condInner D (f ∘ S.T^[n]) f x) ^ 2 ∂S.m
+      = ((eLpNorm (u n) 2 S.m).toReal) ^ 2 := by
+    intro n
+    rw [← integral_sq_eq_eLpNorm_sq (hmemu n)]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+    rw [hu]
+    simp [sq_abs]
+  -- Triangle inequality: `‖E_N u‖ ≤ E_N ‖u‖`, as an `ℝ≥0∞` bound.
+  have htri : ∀ N : ℕ, eLpNorm (fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, u n x) 2 S.m
+      ≤ ENNReal.ofReal ((N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, (eLpNorm (u n) 2 S.m).toReal) := by
+    intro N
+    rcases Nat.eq_zero_or_pos N with rfl | hN
+    · simp
+    have hNR : (0 : ℝ) < N := by exact_mod_cast hN
+    have hscal : (fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, u n x)
+        = (N : ℝ)⁻¹ • (∑ n ∈ Finset.range N, u n) := by
+      funext x
+      simp [Finset.sum_apply]
+    rw [hscal, eLpNorm_const_smul]
+    have hsum : eLpNorm (∑ n ∈ Finset.range N, u n) 2 S.m
+        ≤ ∑ n ∈ Finset.range N, eLpNorm (u n) 2 S.m := eLpNorm_sum_le (by norm_num)
+    have hfin : ∀ n, eLpNorm (u n) 2 S.m ≠ ⊤ := fun n => (hmemu n).eLpNorm_ne_top
+    calc ‖(N : ℝ)⁻¹‖ₑ * eLpNorm (∑ n ∈ Finset.range N, u n) 2 S.m
+        ≤ ‖(N : ℝ)⁻¹‖ₑ * ∑ n ∈ Finset.range N, eLpNorm (u n) 2 S.m := by
+          exact mul_le_mul' le_rfl hsum
+      _ = ENNReal.ofReal ((N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, (eLpNorm (u n) 2 S.m).toReal) := by
+          rw [ENNReal.ofReal_mul (by positivity)]
+          congr 1
+          · rw [Real.enorm_eq_ofReal (by positivity)]
+          · rw [← ENNReal.toReal_sum (fun n _ => hfin n), ENNReal.ofReal_toReal
+              (by exact ENNReal.sum_ne_top.2 fun n _ => hfin n)]
+  -- Cauchy–Schwarz for finite averages, then the hypothesis.
+  have hcs : ∀ N : ℕ, (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, (eLpNorm (u n) 2 S.m).toReal
+      ≤ Real.sqrt ((N : ℝ)⁻¹ * ∑ n ∈ Finset.range N,
+          ∫ x, (condInner D (f ∘ S.T^[n]) f x) ^ 2 ∂S.m) := by
+    intro N
+    rcases Nat.eq_zero_or_pos N with rfl | hN
+    · simp
+    have hNR : (0 : ℝ) < N := by exact_mod_cast hN
+    set r : ℕ → ℝ := fun n => (eLpNorm (u n) 2 S.m).toReal with hr
+    have hrnn : ∀ n, 0 ≤ r n := fun n => ENNReal.toReal_nonneg
+    have hsq : ∀ n, ∫ x, (condInner D (f ∘ S.T^[n]) f x) ^ 2 ∂S.m = (r n) ^ 2 := hψeq
+    rw [Finset.sum_congr rfl fun n _ => hsq n]
+    rw [Real.le_sqrt (by positivity) (by
+      exact mul_nonneg (by positivity) (Finset.sum_nonneg fun n _ => sq_nonneg _))]
+    have hchev : (∑ n ∈ Finset.range N, r n) ^ 2
+        ≤ (N : ℝ) * ∑ n ∈ Finset.range N, (r n) ^ 2 := by
+      simpa using sq_sum_le_card_mul_sum_sq (s := Finset.range N) (f := r)
+    rw [mul_pow]
+    calc ((N : ℝ)⁻¹) ^ 2 * (∑ n ∈ Finset.range N, r n) ^ 2
+        ≤ ((N : ℝ)⁻¹) ^ 2 * ((N : ℝ) * ∑ n ∈ Finset.range N, (r n) ^ 2) := by
+          exact mul_le_mul_of_nonneg_left hchev (by positivity)
+      _ = (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, (r n) ^ 2 := by
+          field_simp
+  -- Put it together.
+  rw [CondWeaklyMixing]
+  refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds ?_
+    (Filter.Eventually.of_forall fun N => by simp)
+    (Filter.Eventually.of_forall htri)
+  have hsqrt : Filter.Tendsto (fun N : ℕ => Real.sqrt ((N : ℝ)⁻¹ *
+      ∑ n ∈ Finset.range N, ∫ x, (condInner D (f ∘ S.T^[n]) f x) ^ 2 ∂S.m))
+      Filter.atTop (nhds 0) := by
+    have hc := (Real.continuous_sqrt.tendsto 0).comp hψ
+    simp only [Function.comp_def, Real.sqrt_zero] at hc
+    exact hc
+  have hof : Filter.Tendsto (fun N : ℕ => ENNReal.ofReal ((N : ℝ)⁻¹ *
+      ∑ n ∈ Finset.range N, (eLpNorm (u n) 2 S.m).toReal)) Filter.atTop (nhds 0) := by
+    have hreal : Filter.Tendsto (fun N : ℕ => (N : ℝ)⁻¹ *
+        ∑ n ∈ Finset.range N, (eLpNorm (u n) 2 S.m).toReal) Filter.atTop (nhds 0) := by
+      refine squeeze_zero' (Filter.Eventually.of_forall fun N => ?_)
+        (Filter.Eventually.of_forall hcs) hsqrt
+      exact mul_nonneg (by positivity) (Finset.sum_nonneg fun n _ => ENNReal.toReal_nonneg)
+    have hc := (ENNReal.continuous_ofReal.tendsto 0).comp hreal
+    simp only [Function.comp_def, ENNReal.ofReal_zero] at hc
+    exact hc
+  exact hof
+
+/-- **The first step of `lem:dichotomy`.**  If `f` is *not* conditionally weakly mixing, the
+spectral measure of `G = f ⊗ f` on the product system has an atom.
+
+This is the converse of `noAtoms_specMeasure_prod_of_condWeaklyMixing`, and is where the
+compact extension of the dichotomy will come from. -/
+theorem exists_atom_of_not_condWeaklyMixing (D : Factor S) {f : S.X → ℝ} {C : ℝ}
+    (hm : Measurable f) (hb : ∀ x, |f x| ≤ C) (hncwm : ¬ CondWeaklyMixing D f) :
+    ∃ θ : Torus, specMeasure (prodSystem D).koopman
+      (toLpC (prodSystem D) (measurable_tensorSq hm) (abs_tensorSq_le hb)) {θ} ≠ 0 := by
+  classical
+  set P := prodSystem D with hP
+  set G := toLpC P (measurable_tensorSq hm) (abs_tensorSq_le hb) with hG
+  set σ := specMeasure P.koopman G with hσ
+  have hspec := hasSpectralMeasure_specMeasure P.koopman G
+  have : IsFiniteMeasure σ := hspec.isFinite
+  set ψ : ℕ → ℝ := fun n => ∫ x, (condInner D (f ∘ S.T^[n]) f x) ^ 2 ∂S.m with hψdef
+  have hψnn : ∀ n, 0 ≤ ψ n := fun n => integral_nonneg fun x => sq_nonneg _
+  -- The Fourier coefficients of `σ` are the `ψ n`.
+  have hcoeff : ∀ n : ℕ, sigmaHat σ (n : ℤ) = ((ψ n : ℝ) : ℂ) := by
+    intro n
+    rw [sigmaHat, ← hspec.inner_eq (n : ℤ),
+      inner_toLpC (S := P) (measurable_tensorSq hm) (abs_tensorSq_le hb) n, hψdef]
+    congr 1
+    exact integral_tensorSq_comp D hm hb n
+  -- Failure of conditional weak mixing makes the Cesàro means of `ψ` not vanish …
+  have hnotψ : ¬ Filter.Tendsto (fun N : ℕ => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, ψ n)
+      Filter.atTop (nhds 0) := fun hcon =>
+    hncwm (condWeaklyMixing_of_tendsto_cesaro_psi D hm hb hcon)
+  -- … and hence the Cesàro means of `‖σ̂(n)‖²` not vanish either, by Cauchy–Schwarz.
+  have hnotsq : ¬ Filter.Tendsto
+      (fun N : ℕ => ((N : ℝ)⁻¹ * ∑ n ∈ Finset.Icc 1 N, ‖sigmaHat σ (n : ℤ)‖ ^ 2 : ℝ))
+      Filter.atTop (nhds 0) := by
+    intro hcon
+    refine hnotψ ?_
+    -- `E_N ψ ≤ √(E_N ψ²)`, and `ψ n = ‖σ̂(n)‖`.
+    have hnorm : ∀ n : ℕ, ‖sigmaHat σ (n : ℤ)‖ = ψ n := by
+      intro n
+      rw [hcoeff n, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg (hψnn n)]
+    have hcs : ∀ N : ℕ, (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, ψ n
+        ≤ ψ 0 / N + Real.sqrt ((N : ℝ)⁻¹ * ∑ n ∈ Finset.Icc 1 N, ‖sigmaHat σ (n : ℤ)‖ ^ 2) := by
+      intro N
+      rcases Nat.eq_zero_or_pos N with rfl | hN
+      · simp
+      have hNR : (0 : ℝ) < N := by exact_mod_cast hN
+      have hsplit : ∑ n ∈ Finset.range N, ψ n ≤ ψ 0 + ∑ n ∈ Finset.Icc 1 N, ψ n := by
+        have hsub : Finset.range N ⊆ insert 0 (Finset.Icc 1 N) := by
+          intro n hn
+          simp only [Finset.mem_range] at hn
+          simp only [Finset.mem_insert, Finset.mem_Icc]
+          omega
+        calc ∑ n ∈ Finset.range N, ψ n ≤ ∑ n ∈ insert 0 (Finset.Icc 1 N), ψ n :=
+              Finset.sum_le_sum_of_subset_of_nonneg hsub fun n _ _ => hψnn n
+          _ = ψ 0 + ∑ n ∈ Finset.Icc 1 N, ψ n := by
+              rw [Finset.sum_insert (by simp)]
+      have hrw : ∀ n, (ψ n) ^ 2 = ‖sigmaHat σ (n : ℤ)‖ ^ 2 := fun n => by rw [hnorm n]
+      have hfinal : (N : ℝ)⁻¹ * ∑ n ∈ Finset.Icc 1 N, ψ n
+          ≤ Real.sqrt ((N : ℝ)⁻¹ * ∑ n ∈ Finset.Icc 1 N, ‖sigmaHat σ (n : ℤ)‖ ^ 2) := by
+        rw [← Finset.sum_congr rfl fun n (_ : n ∈ Finset.Icc 1 N) => hrw n]
+        rw [Real.le_sqrt
+          (mul_nonneg (by positivity) (Finset.sum_nonneg fun n _ => hψnn n))
+          (mul_nonneg (by positivity) (Finset.sum_nonneg fun n _ => sq_nonneg _))]
+        have hchev : (∑ n ∈ Finset.Icc 1 N, ψ n) ^ 2
+            ≤ (N : ℝ) * ∑ n ∈ Finset.Icc 1 N, (ψ n) ^ 2 := by
+          simpa [Nat.card_Icc] using
+            sq_sum_le_card_mul_sum_sq (s := Finset.Icc 1 N) (f := ψ)
+        rw [mul_pow]
+        calc ((N : ℝ)⁻¹) ^ 2 * (∑ n ∈ Finset.Icc 1 N, ψ n) ^ 2
+            ≤ ((N : ℝ)⁻¹) ^ 2 * ((N : ℝ) * ∑ n ∈ Finset.Icc 1 N, (ψ n) ^ 2) :=
+              mul_le_mul_of_nonneg_left hchev (by positivity)
+          _ = (N : ℝ)⁻¹ * ∑ n ∈ Finset.Icc 1 N, (ψ n) ^ 2 := by field_simp
+      have hmul : (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, ψ n
+          ≤ (N : ℝ)⁻¹ * (ψ 0 + ∑ n ∈ Finset.Icc 1 N, ψ n) :=
+        mul_le_mul_of_nonneg_left hsplit (by positivity)
+      calc (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, ψ n
+          ≤ (N : ℝ)⁻¹ * (ψ 0 + ∑ n ∈ Finset.Icc 1 N, ψ n) := hmul
+        _ = ψ 0 / N + (N : ℝ)⁻¹ * ∑ n ∈ Finset.Icc 1 N, ψ n := by field_simp
+        _ ≤ ψ 0 / N + Real.sqrt ((N : ℝ)⁻¹ *
+              ∑ n ∈ Finset.Icc 1 N, ‖sigmaHat σ (n : ℤ)‖ ^ 2) := by linarith
+    refine squeeze_zero' (Filter.Eventually.of_forall fun N =>
+      mul_nonneg (by positivity) (Finset.sum_nonneg fun n _ => hψnn n))
+      (Filter.Eventually.of_forall hcs) ?_
+    · have h1 : Filter.Tendsto (fun N : ℕ => ψ 0 / N) Filter.atTop (nhds 0) := by
+        simpa using tendsto_const_div_atTop_nhds_zero_nat (ψ 0)
+      have h2 := (Real.continuous_sqrt.tendsto 0).comp hcon
+      simp only [Function.comp_def, Real.sqrt_zero] at h2
+      simpa using h1.add h2
+  exact exists_atom_of_not_tendsto_cesaro_zero hnotsq
 
 end MPS
 
