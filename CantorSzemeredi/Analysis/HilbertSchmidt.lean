@@ -377,4 +377,70 @@ theorem norm_integralKernelL_le {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod 
     ‖integralKernelL hk‖ ≤ (eLpNorm k 2 (μ.prod ν)).toReal :=
   LinearMap.mkContinuous_norm_le _ ENNReal.toReal_nonneg _
 
+
+/-! ### Product kernels give rank-one operators -/
+
+omit [SFinite μ] in
+/-- A tensor product of two `L²` functions is an `L²` kernel. -/
+theorem memLp_prod_mul {g : α → ℂ} {h : β → ℂ} (hg : MemLp g 2 μ) (hh : MemLp h 2 ν) :
+    MemLp (fun p : α × β => g p.1 * h p.2) 2 (μ.prod ν) := by
+  have hmeas : AEStronglyMeasurable (fun p : α × β => g p.1 * h p.2) (μ.prod ν) :=
+    hg.aestronglyMeasurable.comp_fst.mul hh.aestronglyMeasurable.comp_snd
+  rw [memLp_iff, eLpNorm_two_eq_rpow _ _ hmeas]
+  refine ENNReal.rpow_lt_top_of_nonneg (by norm_num) ?_
+  have hsplit : ∀ p : α × β, ‖g p.1 * h p.2‖ₑ ^ (2 : ℝ)
+      = ‖g p.1‖ₑ ^ (2 : ℝ) * ‖h p.2‖ₑ ^ (2 : ℝ) := by
+    intro p
+    rw [enorm_mul, ENNReal.mul_rpow_of_nonneg _ _ (by norm_num)]
+  simp_rw [hsplit]
+  rw [lintegral_prod_mul
+    ((hg.aestronglyMeasurable.enorm.pow_const _))
+    ((hh.aestronglyMeasurable.enorm.pow_const _))]
+  have hgf : (∫⁻ x, ‖g x‖ₑ ^ (2 : ℝ) ∂μ) ≠ ⊤ := by
+    have := memLp_iff.mp hg
+    rw [eLpNorm_two_eq_rpow _ _ hg.aestronglyMeasurable] at this
+    intro hcon
+    rw [hcon] at this
+    simp [ENNReal.top_rpow_of_pos] at this
+  have hhf : (∫⁻ y, ‖h y‖ₑ ^ (2 : ℝ) ∂ν) ≠ ⊤ := by
+    have := memLp_iff.mp hh
+    rw [eLpNorm_two_eq_rpow _ _ hh.aestronglyMeasurable] at this
+    intro hcon
+    rw [hcon] at this
+    simp [ENNReal.top_rpow_of_pos] at this
+  exact (ENNReal.mul_lt_top hgf.lt_top hhf.lt_top).ne
+
+
+/-- The operator attached to a tensor product kernel is rank one: it sends `f` to the
+scalar `∫ h f` times `g`. -/
+theorem integralKernelL_prod_mul {g : α → ℂ} {h : β → ℂ} (hg : MemLp g 2 μ) (hh : MemLp h 2 ν)
+    (f : Lp ℂ 2 ν) :
+    integralKernelL (memLp_prod_mul hg hh) f = (∫ y, h y * f y ∂ν) • hg.toLp g := by
+  refine Lp.ext ?_
+  filter_upwards [(memLp_integralKernel (memLp_prod_mul hg hh) (Lp.memLp f)).coeFn_toLp,
+    Lp.coeFn_smul (∫ y, h y * f y ∂ν) (hg.toLp g), hg.coeFn_toLp] with x hx hxs hxg
+  rw [integralKernelL_apply, hx, hxs, Pi.smul_apply, hxg, integralKernel, smul_eq_mul]
+  simp_rw [mul_assoc]
+  rw [integral_const_mul, mul_comm]
+
+/-- Hence it is a compact operator. -/
+theorem isCompactOperator_integralKernelL_prod_mul {g : α → ℂ} {h : β → ℂ}
+    (hg : MemLp g 2 μ) (hh : MemLp h 2 ν) :
+    IsCompactOperator (integralKernelL (memLp_prod_mul hg hh)) := by
+  have hconj : MemLp (fun y => (starRingEnd ℂ) (h y)) 2 ν := by
+    exact hh.star
+  have key : ⇑(integralKernelL (memLp_prod_mul hg hh))
+      = fun f : Lp ℂ 2 ν => (innerSL ℂ (hconj.toLp _) f) • hg.toLp g := by
+    funext f
+    rw [integralKernelL_prod_mul hg hh f]
+    congr 1
+    rw [show ((innerSL ℂ) (MemLp.toLp (fun y => (starRingEnd ℂ) (h y)) hconj)) f
+      = inner ℂ (MemLp.toLp (fun y => (starRingEnd ℂ) (h y)) hconj) f from rfl, L2.inner_def]
+    refine integral_congr_ae ?_
+    filter_upwards [hconj.coeFn_toLp] with y hy
+    rw [hy]
+    simp [RCLike.inner_apply, mul_comm]
+  rw [key]
+  exact isCompactOperator_rankOne _ _
+
 end HilbertSchmidt
