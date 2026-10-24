@@ -262,6 +262,7 @@ theorem ae_memLp_row (D : Factor S) {H : S.X × S.X → ℝ} (hH : StronglyMeasu
   exact (memLp_two_iff_lintegral
     (hH.comp_measurable (measurable_prodMk_left)).aestronglyMeasurable).mpr hz
 
+
 /-! ### Fibre norms -/
 
 /-- The `L²` norm of `g` over the fibre through `x`. -/
@@ -383,6 +384,7 @@ theorem fibreNorm_condIntegralOp_le (D : Factor S) {H : S.X × S.X → ℝ} {a :
         rw [← hconst]; exact Real.sqrt_le_sqrt hmono
     _ = C * Real.sqrt (∫ z, hsRow D H z ^ 2 ∂(condKernel D x)) := by
         rw [Real.sqrt_mul (sq_nonneg C), Real.sqrt_sq hC]
+
 
 
 /-! ### From a net of kernels to a net of functions -/
@@ -524,6 +526,203 @@ theorem measurable_condIntegralOp (D : Factor S) {H : S.X × S.X → ℝ} {a : S
     hH.mul (ha.comp_measurable measurable_snd)
   exact (h1.integral_kernel_prod_right' (κ := condKernel D)).measurable
 
+/-! ### The orbit identity
+
+The conditional operator intertwines the dynamics: `(Φ_H a) ∘ T = Φ_{H ∘ R} (a ∘ T)`, where
+`R = T × T`.  Both sides integrate row by row against the conditional measures, so by
+`compProd_condKernel_eq_joining` both are integrals against the joining, and the identity
+reduces to the `R`-invariance of `λ`.  No equivariance statement relating `m_{Tx}` to `m_x`
+is needed — just as well, since the set-level `condKernel_comp` does not give one without
+countable generation. -/
+
+/-- The Bochner form of `lintegral_row_eq_joining`. -/
+theorem integral_row_eq_joining (D : Factor S) {F : S.X × S.X → ℝ}
+    (hF : Integrable F (joining D)) :
+    ∫ z, (∫ y, F (z, y) ∂(condKernel D z)) ∂S.m = ∫ p, F p ∂(joining D) := by
+  rw [← compProd_condKernel_eq_joining D] at hF ⊢
+  exact (Measure.integral_compProd hF).symm
+
+/-- `T` is a measurable embedding. -/
+theorem measurableEmbedding_T (S : MPS) : MeasurableEmbedding S.T := by
+  have h := S.measurableEquiv.measurableEmbedding
+  rwa [S.coe_measurableEquiv] at h
+
+/-- `R = T × T` is a measurable embedding. -/
+theorem measurableEmbedding_prodMap (S : MPS) : MeasurableEmbedding (prodMap S) := by
+  have h := (prodEquiv S).measurableEmbedding
+  rwa [coe_prodEquiv] at h
+
+/-- `R = T × T` preserves the joining. -/
+theorem measurePreserving_prodMap (D : Factor S) :
+    MeasurePreserving (prodMap S) (joining D) (joining D) :=
+  ⟨measurable_prodMap S, joining_invariant D⟩
+
+/-- An `L²(λ)` kernel times a bounded factor is integrable against the joining. -/
+private theorem integrable_kernel_mul (D : Factor S) {H b : S.X × S.X → ℝ} {Cb : ℝ}
+    (hH : MemLp H 2 (joining D)) (hbm : StronglyMeasurable b) (hbb : ∀ p, |b p| ≤ Cb) :
+    Integrable (fun p => H p * b p) (joining D) := by
+  have hb : MemLp b 2 (joining D) :=
+    MemLp.of_bound hbm.aestronglyMeasurable Cb
+      (Filter.Eventually.of_forall fun p => by simpa [Real.norm_eq_abs] using hbb p)
+  exact hH.integrable_mul hb
+
+/-- **The orbit identity.**  `(Φ_H a) ∘ T = Φ_{H ∘ R}(a ∘ T)` almost everywhere.
+
+The transformation moves onto the kernel and onto the function together; it cannot be made to
+act on the kernel alone. -/
+theorem condIntegralOp_comp_T (D : Factor S) {H : S.X × S.X → ℝ} {a : S.X → ℝ} {Ca : ℝ}
+    (hHm : StronglyMeasurable H) (hH : MemLp H 2 (joining D))
+    (ham : StronglyMeasurable a) (hab : ∀ y, |a y| ≤ Ca) :
+    (condIntegralOp D H a) ∘ S.T
+      =ᵐ[S.m] condIntegralOp D (fun p => H (prodMap S p)) (fun y => a (S.T y)) := by
+  classical
+  have hTemb : MeasurableEmbedding S.T := measurableEmbedding_T S
+  have hRemb : MeasurableEmbedding (prodMap S) := measurableEmbedding_prodMap S
+  have hRmp : MeasurePreserving (prodMap S) (joining D) (joining D) := measurePreserving_prodMap D
+  have hTcomp : ∀ G : S.X → ℝ, ∫ x, G (S.T x) ∂S.m = ∫ u, G u ∂S.m :=
+    fun G => S.measurePreserving.integral_comp hTemb G
+  have hRcomp : ∀ Θ : S.X × S.X → ℝ,
+      ∫ p, Θ (prodMap S p) ∂(joining D) = ∫ q, Θ q ∂(joining D) :=
+    fun Θ => hRmp.integral_comp hRemb Θ
+  have hHR : MemLp (fun p => H (prodMap S p)) 2 (joining D) := hH.comp_measurePreserving hRmp
+  -- Integrability of the two functions on the base.
+  have hFint : Integrable (fun p : S.X × S.X => H p * a p.2) (joining D) :=
+    integrable_kernel_mul D hH (ham.comp_measurable measurable_snd) (fun p => hab p.2)
+  have hF'int : Integrable
+      (fun p : S.X × S.X => H (prodMap S p) * a (S.T p.2)) (joining D) :=
+    integrable_kernel_mul D hHR
+      ((ham.comp_measurable S.measurable_T).comp_measurable measurable_snd) (fun p => hab _)
+  have hdom : ∀ (K : S.X × S.X → ℝ) (c : S.X → ℝ),
+      Integrable (fun p : S.X × S.X => K p * c p.2) (joining D) →
+      Measurable (condIntegralOp D K c) → Integrable (condIntegralOp D K c) S.m := by
+    intro K c hKc hmK
+    rw [← compProd_condKernel_eq_joining D] at hKc
+    refine Integrable.mono'
+      ((Measure.integrable_compProd_iff hKc.aestronglyMeasurable).mp hKc).2
+      hmK.aestronglyMeasurable (Filter.Eventually.of_forall fun z => ?_)
+    rw [Real.norm_eq_abs, condIntegralOp]
+    exact abs_integral_le_integral_abs
+  have hΨ0 : Integrable (condIntegralOp D H a) S.m :=
+    hdom H a hFint (measurable_condIntegralOp D hHm ham)
+  have hΨ : Integrable ((condIntegralOp D H a) ∘ S.T) S.m :=
+    (S.measurePreserving.integrable_comp hΨ0.aestronglyMeasurable).mpr hΨ0
+  have hΨ' : Integrable
+      (condIntegralOp D (fun p => H (prodMap S p)) (fun y => a (S.T y))) S.m :=
+    hdom _ _ hF'int (measurable_condIntegralOp D (hHm.comp_measurable (measurable_prodMap S))
+      (ham.comp_measurable S.measurable_T))
+  refine Integrable.ae_eq_of_forall_setIntegral_eq _ _ hΨ hΨ' fun s hs _ => ?_
+  -- Transport the test set across `T`.
+  set t : Set S.X := S.measurableEquiv '' s with htdef
+  have ht : MeasurableSet t := S.measurableEquiv.measurableSet_image.mpr hs
+  have hmemt : ∀ x : S.X, (S.T x ∈ t) ↔ x ∈ s := by
+    intro x
+    rw [htdef, ← S.coe_measurableEquiv]
+    exact S.measurableEquiv.toEquiv.injective.mem_set_image
+  have hind : ∀ x : S.X,
+      t.indicator (1 : S.X → ℝ) (S.T x) = s.indicator (1 : S.X → ℝ) x := by
+    intro x
+    by_cases hx : x ∈ s
+    · rw [Set.indicator_of_mem ((hmemt x).mpr hx), Set.indicator_of_mem hx]
+      rfl
+    · rw [Set.indicator_of_notMem (fun hc => hx ((hmemt x).mp hc)),
+        Set.indicator_of_notMem hx]
+  -- The common value, as an integral against the joining.
+  set Θ : S.X × S.X → ℝ :=
+    fun q => H q * (a q.2 * t.indicator (1 : S.X → ℝ) q.1) with hΘ
+  have hΘint : Integrable Θ (joining D) := by
+    refine integrable_kernel_mul D hH
+      ((ham.comp_measurable measurable_snd).mul
+        ((stronglyMeasurable_one.indicator ht).comp_measurable measurable_fst))
+      (Cb := Ca) (fun p => ?_)
+    have h1 : |t.indicator (1 : S.X → ℝ) p.1| ≤ 1 := by
+      by_cases hp : p.1 ∈ t <;> simp [hp]
+    rw [abs_mul]
+    nlinarith [hab p.2, abs_nonneg (a p.2), abs_nonneg (t.indicator (1 : S.X → ℝ) p.1)]
+  have hΘRint : Integrable (fun p => Θ (prodMap S p)) (joining D) :=
+    (hRmp.integrable_comp hΘint.aestronglyMeasurable).mpr hΘint
+  -- Left side.
+  have hleft : ∫ x in s, ((condIntegralOp D H a) ∘ S.T) x ∂S.m = ∫ q, Θ q ∂(joining D) := by
+    rw [← integral_indicator hs]
+    have h1 : ∀ x, s.indicator ((condIntegralOp D H a) ∘ S.T) x
+        = condIntegralOp D H a (S.T x) * t.indicator (1 : S.X → ℝ) (S.T x) := by
+      intro x
+      rw [hind x]
+      by_cases hx : x ∈ s
+      · rw [Set.indicator_of_mem hx, Set.indicator_of_mem hx]
+        simp
+      · rw [Set.indicator_of_notMem hx, Set.indicator_of_notMem hx]
+        simp
+    simp_rw [h1]
+    have h2 : ∫ x, condIntegralOp D H a (S.T x) * t.indicator (1 : S.X → ℝ) (S.T x) ∂S.m
+        = ∫ u, condIntegralOp D H a u * t.indicator (1 : S.X → ℝ) u ∂S.m :=
+      hTcomp (fun u => condIntegralOp D H a u * t.indicator (1 : S.X → ℝ) u)
+    rw [h2, ← integral_row_eq_joining D hΘint]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun u => ?_)
+    simp only []
+    have hu : condIntegralOp D H a u = ∫ y, H (u, y) * a y ∂(condKernel D u) := rfl
+    rw [hu, ← integral_mul_const]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun y => ?_)
+    simp only [hΘ]
+    ring
+  -- Right side.
+  have hright : ∫ x in s,
+      condIntegralOp D (fun p => H (prodMap S p)) (fun y => a (S.T y)) x ∂S.m
+        = ∫ q, Θ q ∂(joining D) := by
+    rw [← integral_indicator hs, ← hRcomp Θ, ← integral_row_eq_joining D hΘRint]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun z => ?_)
+    have hsz : s.indicator
+        (condIntegralOp D (fun p => H (prodMap S p)) (fun y => a (S.T y))) z
+        = condIntegralOp D (fun p => H (prodMap S p)) (fun y => a (S.T y)) z
+          * s.indicator (1 : S.X → ℝ) z := by
+      by_cases hz : z ∈ s
+      · rw [Set.indicator_of_mem hz, Set.indicator_of_mem hz]
+        simp
+      · rw [Set.indicator_of_notMem hz, Set.indicator_of_notMem hz]
+        simp
+    have hz2 : condIntegralOp D (fun p => H (prodMap S p)) (fun y => a (S.T y)) z
+        = ∫ y, H (prodMap S (z, y)) * a (S.T y) ∂(condKernel D z) := rfl
+    rw [hsz, hz2, ← integral_mul_const]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun y => ?_)
+    simp only [hΘ, prodMap, hind z]
+    ring
+  rw [hleft, hright]
+
+/-- **The orbit identity, iterated.**  `(Φ_H a) ∘ Tⁿ = Φ_{H ∘ Rⁿ}(a ∘ Tⁿ)`.
+
+Stated for `n : ℕ`.  Note what it says: along the orbit the transformation acts on the kernel
+*and* on the function.  It cannot be arranged to act on the kernel alone. -/
+theorem condIntegralOp_comp_iterate (D : Factor S) {H : S.X × S.X → ℝ} {a : S.X → ℝ} {Ca : ℝ}
+    (hHm : StronglyMeasurable H) (hH : MemLp H 2 (joining D))
+    (ham : StronglyMeasurable a) (hab : ∀ y, |a y| ≤ Ca) (n : ℕ) :
+    (condIntegralOp D H a) ∘ S.T^[n]
+      =ᵐ[S.m] condIntegralOp D (fun p => H ((prodMap S)^[n] p)) (fun y => a (S.T^[n] y)) := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    -- The `n`-fold twisted data is again admissible.
+    have hRn : MeasurePreserving (prodMap S)^[n] (joining D) (joining D) :=
+      (measurePreserving_prodMap D).iterate n
+    have hHnm : StronglyMeasurable fun p => H ((prodMap S)^[n] p) :=
+      hHm.comp_measurable ((measurable_prodMap S).iterate n)
+    have hHn : MemLp (fun p => H ((prodMap S)^[n] p)) 2 (joining D) :=
+      hH.comp_measurePreserving hRn
+    have hanm : StronglyMeasurable fun y => a (S.T^[n] y) :=
+      ham.comp_measurable (S.measurable_T.iterate n)
+    -- One more step, applied to the twisted data.
+    have hstep := condIntegralOp_comp_T D hHnm hHn hanm (fun y => hab (S.T^[n] y))
+    -- And the inductive hypothesis, transported along `T`.
+    have hih : ((condIntegralOp D H a) ∘ S.T^[n]) ∘ S.T
+        =ᵐ[S.m] (condIntegralOp D (fun p => H ((prodMap S)^[n] p))
+          (fun y => a (S.T^[n] y))) ∘ S.T :=
+      S.measurePreserving.quasiMeasurePreserving.ae_eq_comp ih
+    have hcomp : (condIntegralOp D H a) ∘ S.T^[n + 1]
+        = ((condIntegralOp D H a) ∘ S.T^[n]) ∘ S.T := by
+      funext x
+      simp [Function.comp_apply]
+    rw [hcomp]
+    -- `f^[n] (f p) = f^[n+1] p` definitionally, so the twisted data already matches.
+    exact hih.trans hstep
+
 /-! ### Scaling and the triangle inequality for the fibre norms -/
 
 /-- Fibre regularity: what a kernel needs for the fibre norms to behave. -/
@@ -640,7 +839,7 @@ theorem memLp_hsRow (D : Factor S) {H : S.X × S.X → ℝ} (hH : StronglyMeasur
     have hnn : (0 : ℝ) ≤ ∫ y, H (z, y) ^ 2 ∂(condKernel D z) :=
       integral_nonneg fun _ => sq_nonneg _
     have hsq : hsRow D H z ^ 2 = ∫ y, H (z, y) ^ 2 ∂(condKernel D z) := by
-      show Real.sqrt (∫ y, H (z, y) ^ 2 ∂(condKernel D z)) ^ 2 = _
+      change Real.sqrt (∫ y, H (z, y) ^ 2 ∂(condKernel D z)) ^ 2 = _
       exact Real.sq_sqrt hnn
     rw [Real.enorm_eq_ofReal (hsRow_nonneg D H z), ← ENNReal.ofReal_pow (hsRow_nonneg D H z),
       hsq,
@@ -743,7 +942,12 @@ theorem exists_kernel_net (D : Factor S) {H₀ H₁ : S.X × S.X → ℝ} {M : �
 /-- **Conditional compactness for a circle orbit.**
 
 If the orbit of `f` is realised by kernels drawn from a bounded two-parameter family acting on
-a single module element, then `f` is conditionally compact.  This is the case the dichotomy
+a single module element, then `f` is conditionally compact.
+
+**Caution.**  The hypothesis `horbit` asks for the orbit to be `Φ_{K n} a` with `a` *fixed*.
+That is not what `condIntegralOp_comp_iterate` supplies: along the orbit the transformation
+acts on the kernel *and* on the function, giving `Φ_{H ∘ Rⁿ}(a ∘ Tⁿ)`.  So this theorem does
+not apply directly to an eigenfunction orbit; see the note at the end of the file.  This is the case the dichotomy
 needs: the eigenfunction `H` of the Koopman operator on the self-joining has
 `H ∘ Rⁿ = e(nθ) H`, so the orbit of kernels is the circle traced by `(cos nθ, sin nθ)`
 through the real span of the real and imaginary parts of `H`.
@@ -770,6 +974,24 @@ theorem condCompact_of_param_orbit (D E : Factor S) {f a : S.X → ℝ}
     fun q => (hreg (w q)).row, fun n => ?_⟩
   obtain ⟨q, hq⟩ := hw n
   exact ⟨q, hHS (u n) (w q), hq⟩
+
+/-! ### What the orbit identity does and does not give
+
+`condIntegralOp_comp_iterate` says `(Φ_H a) ∘ Tⁿ = Φ_{H ∘ Rⁿ}(a ∘ Tⁿ)`.  When `H` is an
+eigenfunction the kernel part is harmless — `H ∘ Rⁿ` runs around a circle, which is what
+`exists_kernel_net` handles — but the function part `a ∘ Tⁿ` moves as well, and
+`CondCompact` asks for a finite net covering the whole orbit.
+
+So the remaining step is *not* a statement about kernels.  It is that `Φ_H` carries the
+bounded set `{a ∘ Tⁿ : n}` of the module (bounded because `T` preserves `m`, so the
+conditional norms are constant along the orbit) to a conditionally totally bounded set.  That
+is the conditional analogue of "a Hilbert–Schmidt operator is compact", and it does not follow
+from the fibrewise compactness of `Fibre.lean`: approximating `H` by finite-rank kernels
+produces coefficients `⟨h_i, a ∘ Tⁿ⟩_D` that are *functions* on the base, so a finite net for
+them is a statement in `L^∞(D)`, not a consequence of compactness fibre by fibre.
+
+`condCompact_of_param_orbit` is therefore stated for a fixed `a`, which covers the case where
+the orbit's dependence is only through the kernel. -/
 
 end MPS
 
