@@ -235,6 +235,8 @@ also in $\Dbb$, the union being countable because $\Cantor$ is countable.
 
 \begin{lemma}[Almost every point has a maximal unfortunate set]
   \label{lem:maximal-unfortunate}
+  \lean{CantorSzemeredi.MPS.exists_maximal_unfortunate, CantorSzemeredi.MPS.CondUnfortunate}
+  \leanok
   \uses{lem:unfortunate}
   Let $Y' \coloneqq Y \setminus \bigcup\{ S(G) : \abs{G} \geq M \}$.  Then $Y'$ has full
   measure, and every $x \in Y'$ lies in $Q(F)$ for some finite $F \subset \Cantor$ with

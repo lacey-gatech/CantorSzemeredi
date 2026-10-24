@@ -79,6 +79,54 @@ theorem not_unfortunate_of_card_le (D : Factor S) {f : S.X → ℝ} (hf : MemLp 
   have h3 := htx s a a' (q (s * a))
   linarith
 
+/-- `F` is *unfortunate at `x`*: no pair of distinct elements of `F` is good at `x`, where a
+pair is good when `cnorm(T^{sa} f - T^{sa'} f)(x) < ε` for every `0 ≤ s ≤ t`. -/
+def CondUnfortunate (D : Factor S) (f : S.X → ℝ) (t : ℕ) (ε : ℝ) (F : Finset ℕ)
+    (x : S.X) : Prop :=
+  ∀ a ∈ F, ∀ a' ∈ F, a ≠ a' → ∃ s ≤ t, ε ≤ condNorm D (f ∘ S.T^[s * a] - f ∘ S.T^[s * a']) x
+
+/-- **Lemma `lem:maximal-unfortunate`.**  Almost every point is maximally unfortunate for some
+finite set of indices of size below `M = r^(t+1) + 1`: `x ∈ Q(F)`. -/
+theorem exists_maximal_unfortunate (D : Factor S) {f : S.X → ℝ} (hf : MemLp f 2 S.m)
+    {t r : ℕ} {g : Fin r → S.X → ℝ} (hg : ∀ q, MemLp (g q) 2 S.m) {ε : ℝ}
+    (hnet : ∀ n : ℕ, ∀ᵐ x ∂S.m, ∃ q : Fin r, condNorm D (f ∘ S.T^[n] - g q) x < ε / 2) :
+    ∀ᵐ x ∂S.m, ∃ F : Finset ℕ, 1 ≤ F.card ∧ F.card < r ^ (t + 1) + 1 ∧
+      CondUnfortunate D f t ε F x ∧
+      ∀ G : Finset ℕ, F.card < G.card → ¬ CondUnfortunate D f t ε G x := by
+  -- Almost surely no set of size at least `M` is unfortunate.
+  have hpig : ∀ᵐ x ∂S.m, ∀ G : Finset ℕ, r ^ (t + 1) + 1 ≤ G.card →
+      ∃ a ∈ G, ∃ a' ∈ G, a ≠ a' ∧ ∀ s ≤ t,
+        condNorm D (f ∘ S.T^[s * a] - f ∘ S.T^[s * a']) x < ε := by
+    refine ae_all_iff.2 fun G => ?_
+    by_cases h : r ^ (t + 1) + 1 ≤ G.card
+    · filter_upwards [not_unfortunate_of_card_le D hf hg hnet h] with x hx
+      exact fun _ => hx
+    · exact Filter.Eventually.of_forall fun x hG => absurd hG h
+  filter_upwards [hpig] with x hx
+  have hbound : ∀ G : Finset ℕ, CondUnfortunate D f t ε G x → G.card < r ^ (t + 1) + 1 := by
+    intro G hG
+    by_contra hcon
+    obtain ⟨a, ha, a', ha', hne, hgood⟩ := hx G (by omega)
+    obtain ⟨s, hs, hle⟩ := hG a ha a' ha' hne
+    exact absurd (hgood s hs) (not_lt.2 hle)
+  -- The set of sizes of unfortunate sets is non-empty and bounded; its maximum is attained.
+  set U : Set ℕ := {k | ∃ G : Finset ℕ, G.card = k ∧ CondUnfortunate D f t ε G x} with hU
+  have h1 : 1 ∈ U := ⟨{0}, by simp, fun a ha a' ha' hne => by
+    simp only [Finset.mem_singleton] at ha ha'
+    exact absurd (ha.trans ha'.symm) hne⟩
+  have hUbdd : BddAbove U := ⟨r ^ (t + 1), fun k ⟨G, hk, hG⟩ => by
+    rw [← hk]; exact Nat.lt_succ_iff.1 (hbound G hG)⟩
+  obtain ⟨F, hFcard, hF⟩ := Nat.sSup_mem ⟨1, h1⟩ hUbdd
+  refine ⟨F, ?_, ?_, hF, ?_⟩
+  · have := le_csSup hUbdd h1
+    omega
+  · have := hbound F hF
+    omega
+  · intro G hG hcon
+    have hmem : G.card ∈ U := ⟨G, rfl, hcon⟩
+    have := le_csSup hUbdd hmem
+    omega
+
 end MPS
 
 end CantorSzemeredi
