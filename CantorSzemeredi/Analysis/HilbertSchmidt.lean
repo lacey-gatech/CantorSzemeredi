@@ -197,6 +197,7 @@ theorem memLp_slice {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν)) :
   rw [memLp_iff, eLpNorm_two_eq_rpow _ _ hx]
   exact ENNReal.rpow_lt_top_of_nonneg (by norm_num) hx'
 
+omit [SFinite μ] in
 /-- For a.e. `x`, the integrand of the operator is integrable. -/
 theorem integrable_slice_mul {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν))
     {f : β → ℂ} (hf : MemLp f 2 ν) :
