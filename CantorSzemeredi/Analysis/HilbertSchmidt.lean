@@ -569,4 +569,108 @@ noncomputable def integralKernelCLM :
 @[simp] theorem integralKernelCLM_apply (u : Lp ℂ 2 (μ.prod ν)) :
     integralKernelCLM u = integralKernelL (Lp.memLp u) := rfl
 
+
+/-! ### Kernels orthogonal to every rectangle vanish -/
+
+omit [SFinite ν] [SFinite μ] in
+theorem isPiSystem_measurableRectangles (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] :
+    IsPiSystem (measurableRectangles α β) := by
+  rintro _ ⟨a, b, ha, hb, rfl⟩ _ ⟨a', b', ha', hb', rfl⟩ _
+  exact ⟨a ∩ a', b ∩ b', ha.inter ha', hb.inter hb', Set.prod_inter_prod⟩
+
+/-- A function whose integral over every measurable rectangle vanishes is a.e. zero.
+The rectangles form a π-system generating the product σ-algebra, so this is Dynkin's lemma. -/
+theorem ae_eq_zero_of_forall_setIntegral_rectangle_eq_zero
+    [IsFiniteMeasure μ] [IsFiniteMeasure ν] {u : α × β → ℂ} (hu : Integrable u (μ.prod ν))
+    (h : ∀ a b, MeasurableSet a → MeasurableSet b →
+      ∫ p in a ×ˢ b, u p ∂(μ.prod ν) = 0) :
+    u =ᵐ[μ.prod ν] 0 := by
+  have huniv : ∫ p in (Set.univ : Set (α × β)), u p ∂(μ.prod ν) = 0 := by
+    have := h Set.univ Set.univ MeasurableSet.univ MeasurableSet.univ
+    simpa using this
+  have key : ∀ t (_ : MeasurableSet t), ∫ p in t, u p ∂(μ.prod ν) = 0 := by
+    refine MeasurableSpace.induction_on_inter
+      (C := fun t _ => ∫ p in t, u p ∂(μ.prod ν) = 0)
+      (generateFrom_measurableRectangles α β).symm (isPiSystem_measurableRectangles α β)
+      (by simp) ?_ ?_ ?_
+    · rintro _ ⟨a, b, ha, hb, rfl⟩
+      exact h a b ha hb
+    · intro t htm ht
+      have := integral_add_compl htm hu
+      rw [ht, zero_add] at this
+      rw [this, ← Measure.restrict_univ (μ := μ.prod ν)] at *
+      simpa using huniv
+    · intro f hdisj hfm hf
+      rw [integral_iUnion hfm hdisj hu.integrableOn]
+      simp [hf]
+  exact hu.ae_eq_zero_of_forall_setIntegral_eq_zero fun t htm _ => key t htm
+
+
+/-! ### Tensor products span a dense subspace, and compactness follows -/
+
+/-- The tensor product kernels, as a subset of `L²(μ ⊗ ν)`. -/
+def prodKernels (μ : Measure α) (ν : Measure β) [SFinite ν] : Set (Lp ℂ 2 (μ.prod ν)) :=
+  {v | ∃ (g : α → ℂ) (h : β → ℂ) (hg : MemLp g 2 μ) (hh : MemLp h 2 ν),
+    v = (memLp_prod_mul hg hh).toLp _}
+
+/-- **Tensor products are total in `L²(μ ⊗ ν)`.**  Nothing but `0` is orthogonal to all of
+them: testing against indicators of rectangles and applying Dynkin's lemma. -/
+theorem topologicalClosure_span_prodKernels [IsFiniteMeasure μ] [IsFiniteMeasure ν] :
+    (Submodule.span ℂ (prodKernels μ ν)).topologicalClosure = ⊤ := by
+  rw [Submodule.topologicalClosure_eq_top_iff, Submodule.eq_bot_iff]
+  intro u hu
+  have hrect : ∀ a b, MeasurableSet a → MeasurableSet b →
+      ∫ p in a ×ˢ b, (u : α × β → ℂ) p ∂(μ.prod ν) = 0 := by
+    intro a b ha hb
+    have hg : MemLp (Set.indicator a (fun _ => (1 : ℂ))) 2 μ :=
+      memLp_indicator_const 2 ha.nullMeasurableSet 1 (Or.inr (measure_ne_top μ a))
+    have hh : MemLp (Set.indicator b (fun _ => (1 : ℂ))) 2 ν :=
+      memLp_indicator_const 2 hb.nullMeasurableSet 1 (Or.inr (measure_ne_top ν b))
+    have hmem : (memLp_prod_mul hg hh).toLp _ ∈ prodKernels μ ν := ⟨_, _, hg, hh, rfl⟩
+    have hinner : inner ℂ ((memLp_prod_mul hg hh).toLp _) u = 0 :=
+      hu _ (Submodule.subset_span hmem)
+    rw [L2.inner_def] at hinner
+    rw [← hinner, ← integral_indicator (ha.prod hb)]
+    refine integral_congr_ae ?_
+    filter_upwards [(memLp_prod_mul hg hh).coeFn_toLp] with p hp
+    rw [hp]
+    by_cases hpa : p.1 ∈ a <;> by_cases hpb : p.2 ∈ b <;>
+      simp [hpa, hpb, Set.mem_prod, RCLike.inner_apply]
+  have hae : (u : α × β → ℂ) =ᵐ[μ.prod ν] 0 :=
+    ae_eq_zero_of_forall_setIntegral_rectangle_eq_zero
+      ((Lp.memLp u).integrable (by norm_num)) hrect
+  exact Submodule.mem_bot ℂ |>.mpr (Lp.eq_zero_iff_ae_eq_zero.mpr hae)
+
+
+/-- **Integral operators with an `L²` kernel are compact.**
+
+On a finite measure space, every `k ∈ L²(μ ⊗ ν)` gives a compact operator
+`L²(ν) → L²(μ)`.  Tensor products give rank-one operators and span a dense subspace,
+the Hilbert–Schmidt bound makes `k ↦ T_k` continuous, and compactness is closed under
+operator-norm limits. -/
+theorem isCompactOperator_integralKernelL [IsFiniteMeasure μ] [IsFiniteMeasure ν]
+    {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν)) :
+    IsCompactOperator (integralKernelL hk) := by
+  have hK : (Submodule.span ℂ (prodKernels μ ν)).topologicalClosure ≤
+      (compactOperator (RingHom.id ℂ) (Lp ℂ 2 ν) (Lp ℂ 2 μ)).comap
+        (integralKernelCLM (μ := μ) (ν := ν)).toLinearMap := by
+    refine Submodule.topologicalClosure_minimal _ ?_ ?_
+    · rw [Submodule.span_le]
+      rintro v ⟨g, h, hg, hh, rfl⟩
+      show IsCompactOperator (integralKernelCLM _)
+      rw [integralKernelCLM_apply,
+        integralKernelL_congr _ (memLp_prod_mul hg hh) (memLp_prod_mul hg hh).coeFn_toLp]
+      exact isCompactOperator_integralKernelL_prod_mul hg hh
+    · exact isClosed_setOfPred_isCompactOperator.preimage
+        (integralKernelCLM (μ := μ) (ν := ν)).continuous
+  have hmem : hk.toLp k ∈ (Submodule.span ℂ (prodKernels μ ν)).topologicalClosure := by
+    rw [topologicalClosure_span_prodKernels]
+    trivial
+  have := hK hmem
+  rw [Submodule.mem_comap] at this
+  have heq : integralKernelCLM (hk.toLp k) = integralKernelL hk := by
+    rw [integralKernelCLM_apply]
+    exact integralKernelL_congr _ hk hk.coeFn_toLp
+  rwa [show (integralKernelCLM.toLinearMap (hk.toLp k)) = integralKernelL hk from heq] at this
+
 end HilbertSchmidt
