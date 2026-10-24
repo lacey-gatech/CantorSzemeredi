@@ -443,7 +443,7 @@ theorem integralKernelL_sub {k k' : α × β → ℂ} (hk : MemLp k 2 (μ.prod �
     (hk' : MemLp k' 2 (μ.prod ν)) :
     integralKernelL (hk.sub hk') = integralKernelL hk - integralKernelL hk' := by
   refine ContinuousLinearMap.ext fun f => ?_
-  simp only [ContinuousLinearMap.sub_apply]
+  simp only [sub_apply]
   refine Lp.ext ?_
   filter_upwards [(memLp_integralKernel (hk.sub hk') (Lp.memLp f)).coeFn_toLp,
     Lp.coeFn_sub ((memLp_integralKernel hk (Lp.memLp f)).toLp _)
@@ -508,7 +508,7 @@ theorem integralKernelL_add {k k' : α × β → ℂ} (hk : MemLp k 2 (μ.prod �
     (hk' : MemLp k' 2 (μ.prod ν)) :
     integralKernelL (hk.add hk') = integralKernelL hk + integralKernelL hk' := by
   refine ContinuousLinearMap.ext fun f => ?_
-  simp only [ContinuousLinearMap.add_apply]
+  simp only [add_apply]
   refine Lp.ext ?_
   filter_upwards [(memLp_integralKernel (hk.add hk') (Lp.memLp f)).coeFn_toLp,
     Lp.coeFn_add ((memLp_integralKernel hk (Lp.memLp f)).toLp _)
@@ -526,7 +526,7 @@ theorem integralKernelL_add {k k' : α × β → ℂ} (hk : MemLp k 2 (μ.prod �
 theorem integralKernelL_smul (c : ℂ) {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν)) :
     integralKernelL (hk.const_mul c) = c • integralKernelL hk := by
   refine ContinuousLinearMap.ext fun f => ?_
-  simp only [ContinuousLinearMap.smul_apply]
+  simp only [smul_apply]
   refine Lp.ext ?_
   filter_upwards [(memLp_integralKernel (hk.const_mul c) (Lp.memLp f)).coeFn_toLp,
     Lp.coeFn_smul c ((memLp_integralKernel hk (Lp.memLp f)).toLp _),
@@ -650,7 +650,7 @@ theorem isCompactOperator_integralKernelL [IsFiniteMeasure μ] [IsFiniteMeasure 
     refine Submodule.topologicalClosure_minimal _ ?_ ?_
     · rw [Submodule.span_le]
       rintro v ⟨g, h, hg, hh, rfl⟩
-      show IsCompactOperator (integralKernelCLM _)
+      change IsCompactOperator (integralKernelCLM _)
       rw [integralKernelCLM_apply,
         integralKernelL_congr _ (memLp_prod_mul hg hh) (memLp_prod_mul hg hh).coeFn_toLp]
       exact isCompactOperator_integralKernelL_prod_mul hg hh

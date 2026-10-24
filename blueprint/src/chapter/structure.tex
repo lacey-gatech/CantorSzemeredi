@@ -279,24 +279,20 @@
   the base, which is weaker; upgrading needs an exhaustion, and the exceptional set has to be
   cut off somewhere.
 
-  \emph{(ii)} It asks for a finite net of module elements covering the finite-rank images
-  $\sum_i c_i^n g_i$, where $c_i^n = \cip{h_i}{a \circ T^n}_{\Dbb}$ are bounded
-  $\Dbb$-measurable \emph{functions}.  Under Definition~\ref{def:compact-extension} as
-  currently stated this amounts to a finite net for $\{c^n\}$ in the $L^\infty(\Dbb)$ ball,
-  and a bounded subset of $L^\infty$ is not totally bounded.
+  \emph{(ii)} It asks for a finite net covering the finite-rank images $\sum_i c_i^n g_i$,
+  where $c_i^n = \cip{h_i}{a \circ T^n}_{\Dbb}$ are bounded $\Dbb$-measurable \emph{functions}.
+  Under the \emph{old} form of Definition~\ref{def:compact-extension} this meant a finite net
+  for $\{c^n\}$ in the $L^\infty(\Dbb)$ ball, which does not exist.  With the definition
+  corrected to Moreira's it dissolves: the index may depend on the fibre, and rounding
+  $c^n(x)$ to a fixed finite grid pointwise is exactly such a choice, the finitely many grid
+  points giving the finitely many approximants $\sum_i v_i g_i$.  See
+  Remark~\ref{rem:compact-mismatch}.
 
   \smallskip
-  \emph{But (ii) is an artefact of our definition, not of the mathematics.}  Moreira's
-  Definition 6.11 allows the index of the approximant to depend on the fibre, and with that
-  order (ii) dissolves: rounding the coefficient vector $c^n(x)$ to a fixed finite grid
-  pointwise is exactly a fibre-dependent choice of index, and the finitely many grid points
-  give the finitely many module elements $\sum_i v_i g_i$.  See
-  Remark~\ref{rem:compact-mismatch}, which records the discrepancy and why weakening our
-  definition costs nothing downstream.  Obstruction \emph{(i)} survives the change and is the
-  genuine remaining content; it is where the cutoff to a base set of large measure enters,
-  absorbed by the density required in \emph{compact extension} rather than by
-  \texttt{CondCompact}.  After that, the factor $\Ebb$ must still be assembled from the
-  conditionally compact functions.
+  So \emph{(i)} is the genuine remaining content.  It is where the cutoff to a base set of
+  large measure enters, absorbed by the density required in \emph{compact extension} rather
+  than by \texttt{CondCompact}.  After that, the factor $\Ebb$ must still be assembled from
+  the conditionally compact functions.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}

@@ -184,13 +184,15 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 \begin{definition}[Conditionally compact function; compact extension]
   \label{def:compact-extension}
   \lean{CantorSzemeredi.MPS.CondCompact, CantorSzemeredi.MPS.CompactExtension,
-    CantorSzemeredi.MPS.MemModule}
+    CantorSzemeredi.MPS.MemL2}
   \leanok
   \uses{def:hilbert-module}
-  $f \in L^2(\Ebb \mid \Dbb)$ is \emph{conditionally compact} if for every $\epsilon > 0$ there
-  are finitely many $g_1,\dots,g_r \in L^2(\Ebb \mid \Dbb)$ with
+  $f \in L^2(\Ebb)$ is \emph{conditionally compact} if for every $\epsilon > 0$ there are
+  finitely many $g_1,\dots,g_r \in L^2(\Ebb)$ with
   \[
-    \sup_{n \in \ZZ} \ \min_{1 \leq q \leq r} \ \bigl\lVert \cnorm{T^n f - g_q} \bigr\rVert_{L^\infty(\Dbb)} < \epsilon .
+    \forall n \in \NN \qquad
+    \min_{1 \leq q \leq r} \ \cnorm{T^n f - g_q}(x) < \epsilon
+    \quad \text{for a.e.\ } x .
   \]
   The extension $\Ebb \mid \Dbb$ is \emph{compact} if the conditionally compact functions are
   dense in $L^2(\Ebb)$.
@@ -204,43 +206,36 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
   Lean or the dichotomy will not typecheck against the extension principles.
 \end{remark}
 
-\begin{remark}[Definition~\ref{def:compact-extension} is stronger than Moreira's]
+\begin{remark}[Why the minimum is inside the almost-everywhere quantifier]
   \label{rem:compact-mismatch}
-  Definition~\ref{def:compact-extension} as stated above is \textbf{not} Moreira's, and the
-  difference goes in the dangerous direction.  His Definition 6.11 reads
-  \[
-    \forall n \in \NN \quad \min_{1 \leq i \leq r} \norm{T^n f - g_i}_{L^2(\mu_y)} < \epsilon
-    \qquad \text{for } \sigma\text{-a.e.\ } y ,
-  \]
-  with the minimum \emph{inside} the almost-everywhere quantifier: the index $i$ may depend on
-  the fibre.  Our $\sup_n \min_q \norm{\cdot}_{L^\infty(\Dbb)}$ puts the minimum outside, so a
-  single $q$ must serve almost every $x$ at once.  Three discrepancies, all making our
-  condition stronger:
-  \begin{enumerate}
-    \item the quantifier order just described;
-    \item Moreira's approximants are arbitrary elements of $L^2(X)$, ours are required to lie
-      in the Hilbert module;
-    \item Moreira indexes the orbit by $n \in \NN$, we by $n \in \ZZ$.
-  \end{enumerate}
-  This matters because \emph{compact extension} occurs in the \textbf{conclusion} of
-  Lemma~\ref{lem:dichotomy}: a stronger notion means Moreira's proposition does not give what
-  we state.  (Contrast the conditional weak mixing asymmetry above, which was deliberately
-  arranged in the safe direction.)
+  This is Moreira's Definition 6.11 verbatim, and the quantifier order is the point: the
+  index $q$ is chosen \emph{inside} the almost-everywhere quantifier, so it may depend on the
+  fibre.  An earlier version of this blueprint wrote
+  $\sup_n \min_q \lVert \cnorm{T^nf - g_q} \rVert_{L^\infty(\Dbb)} < \epsilon$, which puts the
+  minimum outside and so demands a single $q$ serving almost every $x$ at once.  That is
+  strictly stronger, and strictly stronger in the \textbf{dangerous} direction: a compact
+  extension is what Lemma~\ref{lem:dichotomy} \emph{produces}, so strengthening the notion
+  puts the dichotomy out of reach of the source it is quoted from.  (Contrast the conditional
+  weak mixing asymmetry above, which is deliberately arranged in the safe direction.)
 
-  The fix is to weaken Definition~\ref{def:compact-extension} to Moreira's form, and nothing
-  is lost by doing so: the only place the definition is \emph{consumed},
+  Two further points of the same kind, also corrected: Moreira's approximants are arbitrary
+  elements of $L^2$ of the larger system, not of the Hilbert module --- hence
+  \texttt{MemL2} rather than \texttt{MemModule} --- and he indexes the orbit by $\NN$, not
+  $\ZZ$.
+
+  Nothing downstream is lost.  The only place the definition is \emph{consumed},
   equation~\eqref{eq:net} in the proof of Theorem~\ref{thm:compact-extension}, already uses
-  exactly his form --- ``for a.e.\ $x$ and all $n \in \NNz$, $\min_\ell \cnorm{T^nf-f_\ell}(x)
+  exactly this form --- ``for a.e.\ $x$ and all $n \in \NNz$, $\min_\ell \cnorm{T^nf-f_\ell}(x)
   < \epsilon/2$'' --- and the pigeonhole of Lemma~\ref{lem:unfortunate} explicitly chooses
-  $\ell_s$ \emph{depending on $x$}.  It also indexes by $\NN$, not $\ZZ$.  So the weaker
-  definition suffices downstream and is what the dichotomy supplies.
+  $\ell_s$ depending on $x$, uses no bound on the conditional norms of the $f_\ell$, and
+  indexes by $\NN$.
 
   \emph{Caveat on the citation.}  The notes located are the Fall 2021 edition, whose numbering
   is two-level: the dichotomy is Theorem 6.19 and the definition above is 6.11, while
   ``Proposition 8.6'' there is the correspondence principle for van der Waerden.  The
   citation to ``Proposition 8.6.1'' is therefore to a different edition, which we were unable
-  to locate; the definition could in principle differ there, though the quantifier order
-  above is the standard one in Furstenberg, Zimmer and Einsiedler--Ward.
+  to locate; the definition could in principle differ there, though this quantifier order is
+  the standard one in Furstenberg, Zimmer and Einsiedler--Ward.
 \end{remark}
 
 \section{The relatively independent self-joining}

@@ -452,7 +452,7 @@ theorem condCompact_of_kernel_net (D E : Factor S) {f a : S.X → ℝ} {C : ℝ}
     (hamem : ∀ᵐ z ∂S.m, MemLp a 2 (condKernel D z))
     (hbd : ∀ᵐ z ∂S.m, fibreNorm D a z ≤ C)
     {K : ℤ → S.X × S.X → ℝ}
-    (hKrow : ∀ n : ℤ, ∀ᵐ z ∂S.m, MemLp (fun y => K n (z, y)) 2 (condKernel D z))
+    (hKrow : ∀ n : ℕ, ∀ᵐ z ∂S.m, MemLp (fun y => K (n : ℤ) (z, y)) 2 (condKernel D z))
     (horbit : ∀ n : ℤ, f ∘ S.iter n =ᵐ[S.m] condIntegralOp D (K n) a)
     (hnet : ∀ δ : ℝ, 0 < δ → ∃ (r : ℕ) (J : Fin r → S.X × S.X → ℝ),
       (∀ q, MemModule D E (condIntegralOp D (J q) a)) ∧
@@ -464,19 +464,21 @@ theorem condCompact_of_kernel_net (D E : Factor S) {f a : S.X → ℝ} {C : ℝ}
   -- Scale the kernel accuracy by the bound on `a`.
   have hCpos : 0 < C + 1 := by linarith
   obtain ⟨r, J, hJmod, hJrow, hJnet⟩ := hnet (ε / (C + 1)) (by positivity)
-  refine ⟨r, fun q => condIntegralOp D (J q) a, hJmod, fun n => ?_⟩
-  obtain ⟨q, hHS, hsmall⟩ := hJnet n
-  refine ⟨q, ?_⟩
+  refine ⟨r, fun q => condIntegralOp D (J q) a, fun q => (hJmod q).toMemL2, fun n => ?_⟩
+  obtain ⟨q, hHS, hsmall⟩ := hJnet (n : ℤ)
   -- Rewrite the difference of functions as the operator of the difference of kernels.
-  have hdiff : (f ∘ S.iter n) - condIntegralOp D (J q) a
-      =ᵐ[S.m] condIntegralOp D (K n - J q) a := by
-    filter_upwards [horbit n, condIntegralOp_sub_ae D (hKrow n) (hJrow q) hamem]
+  have hdiff : (f ∘ S.T^[n]) - condIntegralOp D (J q) a
+      =ᵐ[S.m] condIntegralOp D (K (n : ℤ) - J q) a := by
+    filter_upwards [horbit (n : ℤ), condIntegralOp_sub_ae D (hKrow n) (hJrow q) hamem]
       with x hx hsub
-    rw [Pi.sub_apply, hx, hsub]
+    have hx' : (f ∘ S.T^[n]) x = condIntegralOp D (K (n : ℤ)) a x := hx
+    rw [Pi.sub_apply, hx', hsub]
   filter_upwards [condNorm_congr_ae D hdiff,
     condNorm_condIntegralOp_le D hC hHS hamem hbd, hsmall] with x hcongr hle hlt
+  refine ⟨q, ?_⟩
   rw [hcongr]
-  calc condNorm D (condIntegralOp D (K n - J q) a) x ≤ C * hsFibre D (K n - J q) x := hle
+  calc condNorm D (condIntegralOp D (K (n : ℤ) - J q) a) x
+      ≤ C * hsFibre D (K (n : ℤ) - J q) x := hle
     _ ≤ C * (ε / (C + 1)) := by
         rcases eq_or_lt_of_le hC with h | h
         · simp [← h]
@@ -1067,9 +1069,9 @@ theorem condCompact_of_kernel_approx (D E : Factor S) {f : S.X → ℝ} {b : ℤ
       (∀ n : ℤ, MemLp (condIntegralOp D K (b n)) 2 S.m) ∧
       (∀ n : ℤ, IsFibreHS D (b n) (fun p => H p - K p)) ∧
       (∀ᵐ x ∂S.m, hsFibre D (fun p => H p - K p) x ≤ δ) ∧
-      (∃ (r : ℕ) (g : Fin r → S.X → ℝ), (∀ q, MemModule D E (g q)) ∧
-        ∀ n : ℤ, ∃ q : Fin r,
-          ∀ᵐ x ∂S.m, condNorm D (condIntegralOp D K (b n) - g q) x < δ)) :
+      (∃ (r : ℕ) (g : Fin r → S.X → ℝ), (∀ q, MemL2 E (g q)) ∧
+        ∀ n : ℤ, ∀ᵐ x ∂S.m, ∃ q : Fin r,
+          condNorm D (condIntegralOp D K (b n) - g q) x < δ)) :
     CondCompact D E f := by
   intro ε hε
   have hCpos : (0 : ℝ) < 2 * (C + 1) := by linarith
@@ -1077,34 +1079,46 @@ theorem condCompact_of_kernel_approx (D E : Factor S) {f : S.X → ℝ} {b : ℤ
   have hδ : 0 < δ := by rw [hδdef]; positivity
   obtain ⟨K, hrowK, hKL2, hHS, hsmall, r, g, hgmod, hgnet⟩ := happrox δ hδ
   refine ⟨r, g, hgmod, fun n => ?_⟩
-  obtain ⟨q, hq⟩ := hgnet n
-  refine ⟨q, ?_⟩
   -- Error one: replacing `H` by `K`.
   have hmid : ∀ᵐ x ∂S.m,
-      condNorm D (f ∘ S.iter n - condIntegralOp D K (b n)) x ≤ C * δ := by
-    have hsub : f ∘ S.iter n - condIntegralOp D K (b n)
-        =ᵐ[S.m] condIntegralOp D (fun p => H p - K p) (b n) := by
-      filter_upwards [horbit n, condIntegralOp_sub_ae D hrowH hrowK (hbmem n)] with x h1 h2
-      rw [Pi.sub_apply, h1]
+      condNorm D (f ∘ S.T^[n] - condIntegralOp D K (b (n : ℤ))) x ≤ C * δ := by
+    have hsub : f ∘ S.T^[n] - condIntegralOp D K (b (n : ℤ))
+        =ᵐ[S.m] condIntegralOp D (fun p => H p - K p) (b (n : ℤ)) := by
+      filter_upwards [horbit (n : ℤ), condIntegralOp_sub_ae D hrowH hrowK (hbmem (n : ℤ))]
+        with x h1 h2
+      have h1' : (f ∘ S.T^[n]) x = condIntegralOp D H (b (n : ℤ)) x := h1
+      rw [Pi.sub_apply, h1']
       exact h2.symm
     filter_upwards [condNorm_congr_ae D hsub,
-      condNorm_condIntegralOp_le D hC (hHS n) (hbmem n) (hbC n), hsmall] with x h1 h2 h3
+      condNorm_condIntegralOp_le D hC (hHS (n : ℤ)) (hbmem (n : ℤ)) (hbC (n : ℤ)),
+      hsmall] with x h1 h2 h3
     rw [h1]
     exact h2.trans (mul_le_mul_of_nonneg_left h3 hC)
-  -- The two errors add.
-  have hfL2 : MemLp (f ∘ S.iter n) 2 S.m := hf.comp_measurePreserving (S.measurePreserving_iter n)
-  have hu : MemLp (f ∘ S.iter n - condIntegralOp D K (b n)) 2 S.m := hfL2.sub (hKL2 n)
-  have hv : MemLp (condIntegralOp D K (b n) - g q) 2 S.m := (hKL2 n).sub (hgmod q).memLp
-  have hsum : (f ∘ S.iter n - condIntegralOp D K (b n))
-      + (condIntegralOp D K (b n) - g q) = f ∘ S.iter n - g q := by
-    funext x
-    simp only [Pi.add_apply, Pi.sub_apply]
-    ring
-  filter_upwards [condNorm_add_le D hu hv, hmid, hq] with x h1 h2 h3
-  rw [hsum] at h1
-  calc condNorm D (f ∘ S.iter n - g q) x
-      ≤ condNorm D (f ∘ S.iter n - condIntegralOp D K (b n)) x
-        + condNorm D (condIntegralOp D K (b n) - g q) x := h1
+  -- Error two: the net for `K`.  The two add, for every index at once.
+  have hfL2 : MemLp (f ∘ S.T^[n]) 2 S.m :=
+    hf.comp_measurePreserving (S.measurePreserving_iter (n : ℤ))
+  have hu : MemLp (f ∘ S.T^[n] - condIntegralOp D K (b (n : ℤ))) 2 S.m :=
+    hfL2.sub (hKL2 (n : ℤ))
+  have htri : ∀ᵐ x ∂S.m, ∀ q : Fin r,
+      condNorm D (f ∘ S.T^[n] - g q) x
+        ≤ condNorm D (f ∘ S.T^[n] - condIntegralOp D K (b (n : ℤ))) x
+          + condNorm D (condIntegralOp D K (b (n : ℤ)) - g q) x := by
+    refine ae_all_iff.mpr fun q => ?_
+    have hv : MemLp (condIntegralOp D K (b (n : ℤ)) - g q) 2 S.m :=
+      (hKL2 (n : ℤ)).sub (hgmod q).memLp
+    have hsum : (f ∘ S.T^[n] - condIntegralOp D K (b (n : ℤ)))
+        + (condIntegralOp D K (b (n : ℤ)) - g q) = f ∘ S.T^[n] - g q := by
+      funext x
+      simp only [Pi.add_apply, Pi.sub_apply]
+      ring
+    filter_upwards [condNorm_add_le D hu hv] with x h1
+    rwa [hsum] at h1
+  filter_upwards [htri, hmid, hgnet (n : ℤ)] with x h1 h2 h3
+  obtain ⟨q, hq⟩ := h3
+  refine ⟨q, ?_⟩
+  calc condNorm D (f ∘ S.T^[n] - g q) x
+      ≤ condNorm D (f ∘ S.T^[n] - condIntegralOp D K (b (n : ℤ))) x
+        + condNorm D (condIntegralOp D K (b (n : ℤ)) - g q) x := h1 q
     _ < C * δ + δ := by linarith
     _ ≤ ε := by
         have hid : C * (ε / (2 * (C + 1))) + ε / (2 * (C + 1))
@@ -1130,21 +1144,18 @@ cut off somewhere.
 `CondCompact` as currently stated, covering them means a finite net for `{cⁿ}` in the
 `L^∞(D)` ball — and a bounded subset of `L^∞` is not totally bounded.
 
-**(ii) is an artefact of the definition.**  Moreira's Definition 6.11 reads
+**(ii) dissolved when `CondCompact` was corrected.**  Moreira's Definition 6.11 reads
 
   `∀ n ∈ ℕ, min_{1≤i≤r} ‖Tⁿ f - gᵢ‖_{L²(m_y)} < ε  for a.e. y`,
 
 with the minimum *inside* the almost-everywhere quantifier, so the index may depend on the
-fibre.  `CondCompact` puts `∃ q` before `∀ᵐ x`, which is strictly stronger.  With Moreira's
-order (ii) dissolves: rounding `cⁿ(x)` to a fixed finite grid pointwise is exactly a
-fibre-dependent choice of index, and the finitely many grid points give the finitely many
-module elements.  Only (i) then remains, and that is where a cutoff to a base set of large
-measure enters, absorbed by the density in `CompactExtension`.
+fibre; `CondCompact` now says exactly that.  Rounding `cⁿ(x)` to a fixed finite grid
+pointwise is a fibre-dependent choice of index, and the finitely many grid points give the
+finitely many approximants.  Only (i) remains, and that is where a cutoff to a base set of
+large measure enters, absorbed by the density in `CompactExtension`.
 
-See `rem:compact-mismatch` in `blueprint/src/chapter/mps.tex`: the definition here is
-stronger than Moreira's on three counts, in the direction that breaks the dichotomy, while
-the one place it is consumed — the pigeonhole in the compact-extension lifting — already
-uses only his weaker form. -/
+See `rem:compact-mismatch` in `blueprint/src/chapter/mps.tex` for the record of the
+correction and why nothing downstream was lost. -/
 
 end MPS
 

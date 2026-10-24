@@ -61,11 +61,33 @@ Hilbert module with `E(f|D) = 0` is conditionally weakly mixing. -/
 def WeaklyMixingExtension (D E : Factor S) : Prop :=
   ∀ f : S.X → ℝ, MemModule D E f → (S.m[f|D.σ]) =ᵐ[S.m] 0 → CondWeaklyMixing D f
 
-/-- **Definition `def:compact-extension`.**  `f` is *conditionally compact* if its `ℤ`-orbit is
-covered, to within `ε` in the conditional sup norm, by finitely many module elements. -/
+/-- Membership in `L²(E)`: the class Moreira's definition draws its approximants from.
+Weaker than `MemModule`, which also asks for a bounded conditional norm. -/
+structure MemL2 (E : Factor S) (f : S.X → ℝ) : Prop where
+  /-- `f` is `E`-measurable. -/
+  meas : AEStronglyMeasurable[E.σ] f S.m
+  /-- `f` is square integrable. -/
+  memLp : MemLp f 2 S.m
+
+theorem MemModule.toMemL2 {D E : Factor S} {f : S.X → ℝ} (h : MemModule D E f) : MemL2 E f :=
+  ⟨h.meas, h.memLp⟩
+
+/-- **Definition `def:compact-extension`.**  `f` is *conditionally compact* if its orbit is
+covered, to within `ε` in the conditional norm, by finitely many elements of `L²(E)`.
+
+This is Moreira's Definition 6.11 verbatim, and the quantifier order is the point: the
+approximant index `q` is chosen **inside** the almost-everywhere quantifier, so it may depend
+on the fibre.  Demanding a single `q` for almost every `x` at once would be strictly
+stronger, and in the wrong direction — a compact extension is what `lem:dichotomy`
+*produces*, so strengthening the notion would put the dichotomy out of reach of the source it
+is quoted from.  Nothing downstream needs the stronger form: the pigeonhole in the lifting
+theorem (`thm:compact-extension`) chooses its index depending on `x`.
+
+For the same reason the approximants are only asked to lie in `L²(E)`, not in the Hilbert
+module, and the orbit is indexed by `ℕ`. -/
 def CondCompact (D E : Factor S) (f : S.X → ℝ) : Prop :=
-  ∀ ε : ℝ, 0 < ε → ∃ (r : ℕ) (g : Fin r → S.X → ℝ), (∀ q, MemModule D E (g q)) ∧
-    ∀ n : ℤ, ∃ q : Fin r, ∀ᵐ x ∂S.m, condNorm D (f ∘ S.iter n - g q) x < ε
+  ∀ ε : ℝ, 0 < ε → ∃ (r : ℕ) (g : Fin r → S.X → ℝ), (∀ q, MemL2 E (g q)) ∧
+    ∀ n : ℕ, ∀ᵐ x ∂S.m, ∃ q : Fin r, condNorm D (f ∘ S.T^[n] - g q) x < ε
 
 /-- **Definition `def:compact-extension`.**  `E | D` is a *compact extension* if the
 conditionally compact functions are dense in `L²(E)`. -/
@@ -123,6 +145,10 @@ def Factor.toPow (D : Factor S) (k : ℕ) : Factor (S.pow k) where
 @[simp] theorem condNorm_pow (D : Factor S) (k : ℕ) (f : S.X → ℝ) :
     condNorm (D.toPow k) f = condNorm D f := rfl
 
+theorem MemL2.toPow {E : Factor S} {k : ℕ} {f : S.X → ℝ} (h : MemL2 E f) :
+    MemL2 (E.toPow k) f :=
+  ⟨h.meas, h.memLp⟩
+
 theorem MemModule.toPow {D E : Factor S} {k : ℕ} {f : S.X → ℝ} (h : MemModule D E f) :
     MemModule (D.toPow k) (E.toPow k) f :=
   ⟨h.meas, h.memLp, h.bddCondNorm⟩
@@ -133,10 +159,12 @@ theorem CondCompact.pow {D E : Factor S} {f : S.X → ℝ} (hf : CondCompact D E
   intro ε hε
   obtain ⟨r, g, hg, hcover⟩ := hf ε hε
   refine ⟨r, g, fun q => (hg q).toPow, fun n => ?_⟩
-  obtain ⟨q, hq⟩ := hcover (k * n)
-  refine ⟨q, ?_⟩
-  rw [(S.pow_iter_eq k n)]
-  exact hq
+  have hiter : (S.pow k).T^[n] = S.T^[k * n] := by
+    change (S.T^[k])^[n] = S.T^[k * n]
+    rw [← Function.iterate_mul]
+  filter_upwards [hcover (k * n)] with x hx
+  obtain ⟨q, hq⟩ := hx
+  exact ⟨q, by rwa [hiter]⟩
 
 /-- **Lemma `lem:powers`(1).**  A compact extension for `T` is a compact extension for `T^k`. -/
 theorem CompactExtension.pow {D E : Factor S} (h : CompactExtension D E) (k : ℕ) :
