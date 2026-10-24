@@ -5,6 +5,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Alex Burgin, Anastasios Fragkos, Michael T. Lacey, Dario Mena, Maria Carmen Reguera
 -/
 import CantorSzemeredi.Dynamics.CondHS
+import CantorSzemeredi.Dynamics.Localize
 
 /-!
 # The pigeonhole step for the compact-extension argument
@@ -126,6 +127,70 @@ theorem exists_maximal_unfortunate (D : Factor S) {f : S.X → ℝ} (hf : MemLp 
     have hmem : G.card ∈ U := ⟨G, rfl, hcon⟩
     have := le_csSup hUbdd hmem
     omega
+
+/-- **Lemma `lem:return-time`.**  Let `E` lie in the set `Q(F)` of maximally unfortunate points,
+and let `q` assign to each ordered pair `(a, a')` of `F` an exponent `q a a' ≤ t` at which the
+pair is bad on `E`.  If `n` exceeds every element of `F`, then for almost every `x` with
+`T^{sn} x ∈ E` for `0 ≤ s ≤ t`, some `a ∈ F` makes `T^{s(n+a)} f` close to `f` for all `s ≤ t`. -/
+theorem exists_good_translate (D : Factor S) {f : S.X → ℝ} (hf : MemLp f 2 S.m)
+    {t : ℕ} {ε : ℝ} {F : Finset ℕ} {E : Set S.X} {q : ℕ → ℕ → ℕ}
+    (hqt : ∀ a a', q a a' ≤ t)
+    (hE : ∀ y ∈ E, ∀ a ∈ F, ∀ a' ∈ F, a ≠ a' →
+      ε ≤ condNorm D (f ∘ S.T^[q a a' * a] - f ∘ S.T^[q a a' * a']) y)
+    (hEQ : ∀ y ∈ E, ∀ G : Finset ℕ, F.card < G.card → ¬ CondUnfortunate D f t ε G y)
+    {n : ℕ} (hFn : ∀ a ∈ F, a < n) :
+    ∀ᵐ x ∂S.m, x ∈ E → (∀ s ≤ t, S.T^[s * n] x ∈ E) →
+      ∃ a ∈ F, ∀ s ≤ t, condNorm D (f ∘ S.T^[s * (n + a)] - f) x < ε := by
+  -- Equivariance of the conditional norm under the shift `T^{s0 n}`, for all indices at once.
+  have hcomm : ∀ᵐ x ∂S.m, ∀ s0 a a' : ℕ,
+      condNorm D (f ∘ S.T^[s0 * (n + a)] - f ∘ S.T^[s0 * (n + a')]) x
+        = condNorm D (f ∘ S.T^[s0 * a] - f ∘ S.T^[s0 * a']) (S.T^[s0 * n] x) := by
+    refine ae_all_iff.2 fun s0 => ae_all_iff.2 fun a => ae_all_iff.2 fun a' => ?_
+    have hv : MemLp (f ∘ S.T^[s0 * a] - f ∘ S.T^[s0 * a']) 2 S.m :=
+      ((hf.comp_measurePreserving (S.measurePreserving_T_iterate (s0 * a))).sub
+        (hf.comp_measurePreserving (S.measurePreserving_T_iterate (s0 * a'))))
+    have hfun : f ∘ S.T^[s0 * (n + a)] - f ∘ S.T^[s0 * (n + a')]
+        = (f ∘ S.T^[s0 * a] - f ∘ S.T^[s0 * a']) ∘ S.T^[s0 * n] := by
+      funext y
+      simp only [Pi.sub_apply, Function.comp_apply]
+      rw [show s0 * (n + a) = s0 * a + s0 * n by ring,
+        show s0 * (n + a') = s0 * a' + s0 * n by ring,
+        Function.iterate_add_apply, Function.iterate_add_apply]
+    rw [hfun]
+    filter_upwards [condNorm_comp_iterate D (s0 * n) hv] with x hx
+    exact hx
+  filter_upwards [hcomm] with x hcx hxE hTE
+  -- The finite set `G = {0} ∪ (n + F)`, of size `|F| + 1`, is not unfortunate at `x`.
+  have hzero : (0 : ℕ) ∉ F.image (fun b => n + b) := by
+    intro h
+    obtain ⟨b, hb, hbn⟩ := Finset.mem_image.1 h
+    have := hFn b hb
+    omega
+  have hcardG : (insert 0 (F.image (fun b => n + b))).card = F.card + 1 := by
+    rw [Finset.card_insert_of_notMem hzero, Finset.card_image_of_injective _
+      (add_right_injective n)]
+  have hG := hEQ x hxE (insert 0 (F.image (fun b => n + b))) (by omega)
+  unfold CondUnfortunate at hG
+  push Not at hG
+  obtain ⟨a, ha, a', ha', hne, hlt⟩ := hG
+  simp only [Finset.mem_insert, Finset.mem_image] at ha ha'
+  rcases ha with rfl | ⟨b, hb, rfl⟩ <;> rcases ha' with rfl | ⟨b', hb', rfl⟩
+  · exact absurd rfl hne
+  · refine ⟨b', hb', fun s hs => ?_⟩
+    have := hlt s hs
+    rw [← condNorm_neg] at this
+    convert this using 2
+    simp
+  · refine ⟨b, hb, fun s hs => ?_⟩
+    simpa using hlt s hs
+  · -- Both elements are translates: the pair `(b, b')` is bad on `E`.
+    have hbb : b ≠ b' := fun h => hne (by rw [h])
+    have hs0 := hqt b b'
+    have hy := hTE (q b b') hs0
+    have hgood := hE _ hy b hb b' hb' hbb
+    have hl := hlt (q b b') hs0
+    rw [hcx (q b b') b b'] at hl
+    linarith
 
 end MPS
 
