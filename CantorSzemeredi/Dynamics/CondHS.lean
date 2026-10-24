@@ -1461,6 +1461,128 @@ theorem condIntegralOp_sum_tensor (D : Factor S) {k : ℕ} (g h : Fin k → S.X 
   rw [integral_finsetSum _ fun i _ => (hint i).const_mul _]
   exact Finset.sum_congr rfl fun i _ => integral_const_mul _ _
 
+
+/-- **A finite-rank image, in the form the net consumes.**  The operator of a rectangle-sum
+kernel is a `D`-linear combination of the fixed generators `1_{A i}`, with coefficients
+`c i · ⟨1_{B i}, b⟩_D`. -/
+theorem condIntegralOp_rectSum (D : Factor S) {k : ℕ} (c : Fin k → ℝ) (A B : Fin k → Set S.X)
+    (hB : ∀ i, MeasurableSet (B i)) {b : S.X → ℝ} (hbm : StronglyMeasurable b)
+    (hb : MemLp b 2 S.m) :
+    condIntegralOp D (fun p => ∑ i, c i * (A i).indicator (fun _ => (1 : ℝ)) p.1
+        * (B i).indicator (fun _ => (1 : ℝ)) p.2) b
+      =ᵐ[S.m] ∑ i, fun y => (c i * condInner D ((B i).indicator (fun _ => (1 : ℝ))) b y)
+        * (A i).indicator (fun _ => (1 : ℝ)) y := by
+  classical
+  -- Each `1_{B i}` is bounded, so the fibre products are integrable.
+  have hBmem : ∀ i, MemLp ((B i).indicator (fun _ => (1 : ℝ))) 2 S.m := fun i =>
+    memLp_indicator_const 2 (hB i).nullMeasurableSet 1 (Or.inr (measure_ne_top S.m _))
+  have hBsm : ∀ i, StronglyMeasurable ((B i).indicator (fun _ => (1 : ℝ))) := fun i =>
+    stronglyMeasurable_const.indicator (hB i)
+  have hfib : ∀ i, ∀ᵐ x ∂S.m,
+      Integrable (fun y => (B i).indicator (fun _ => (1 : ℝ)) y * b y) (condKernel D x) := by
+    intro i
+    filter_upwards [ae_memLp_condKernel D (hBsm i) (hBmem i),
+      ae_memLp_condKernel D hbm hb] with x h1 h2
+    exact h1.integrable_mul h2
+  -- The coefficient is a conditional inner product.
+  have hcoef : ∀ i, (fun x => ∫ y, (B i).indicator (fun _ => (1 : ℝ)) y * b y ∂(condKernel D x))
+      =ᵐ[S.m] condInner D ((B i).indicator (fun _ => (1 : ℝ))) b := by
+    intro i
+    exact (condExp_eq_integral_condKernel D ((hBmem i).integrable_mul hb)).symm
+  filter_upwards [ae_all_iff.mpr hfib, ae_all_iff.mpr hcoef] with x hx hc
+  rw [condIntegralOp_sum_tensor D (fun i y => c i * (A i).indicator (fun _ => (1 : ℝ)) y)
+    (fun i => (B i).indicator (fun _ => (1 : ℝ))) b hx]
+  simp only [Finset.sum_apply]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [hc i]
+  ring
+
+
+/-- **The net for finite-rank images.**
+
+For a family of rectangle-sum kernels with bounded coefficients acting on a family of module
+elements with conditional norms bounded by `C`, the images admit a finite net — the net
+hypothesis of `condCompact_of_kernel_approx`.
+
+The rectangles' first factors must lie in `E`, since the net elements are built from their
+indicators and must be in `L²(E)`; in the dichotomy `E` is the factor being constructed, so
+this is no restriction. -/
+theorem exists_net_of_finiteRank (D E : Factor S) {k : ℕ} (A B : Fin k → Set S.X)
+    (hAE : ∀ i, MeasurableSet[E.σ] (A i)) (hB : ∀ i, MeasurableSet (B i))
+    {b : ℤ → S.X → ℝ} {C M : ℝ} (hC : 0 ≤ C) (hM : 0 ≤ M)
+    (hbm : ∀ n, StronglyMeasurable (b n)) (hbmem : ∀ n, MemLp (b n) 2 S.m)
+    (hbC : ∀ n, ∀ᵐ x ∂S.m, condNorm D (b n) x ≤ C)
+    (c : ℤ → Fin k → ℝ) (hc : ∀ n i, |c n i| ≤ M)
+    {ε : ℝ} (hε : 0 < ε) :
+    ∃ (r : ℕ) (g : Fin r → S.X → ℝ), (∀ q, MemL2 E (g q)) ∧
+      ∀ n : ℤ, ∀ᵐ x ∂S.m, ∃ q : Fin r,
+        condNorm D (condIntegralOp D (fun p => ∑ i, c n i *
+          (A i).indicator (fun _ => (1 : ℝ)) p.1 * (B i).indicator (fun _ => (1 : ℝ)) p.2)
+          (b n) - g q) x < ε := by
+  classical
+  set u : Fin k → S.X → ℝ := fun i => (A i).indicator (fun _ => (1 : ℝ)) with hudef
+  have hA : ∀ i, MeasurableSet (A i) := fun i => E.le _ (hAE i)
+  have husm : ∀ i, StronglyMeasurable[E.σ] (u i) := fun i =>
+    stronglyMeasurable_const.indicator (hAE i)
+  have humem : ∀ i, MemLp (u i) 2 S.m := fun i =>
+    memLp_indicator_const 2 (hA i).nullMeasurableSet 1 (Or.inr (measure_ne_top S.m _))
+  have hu : ∀ i, MemL2 E (u i) := fun i => ⟨(husm i).aestronglyMeasurable, humem i⟩
+  have hu1 : ∀ i, ∀ᵐ x ∂S.m, condNorm D (u i) x ≤ 1 := fun i =>
+    condNorm_indicator_le_one D (hA i)
+  obtain ⟨r, v, hnet⟩ := exists_net_of_finite_span D E u hu hu1 (M := M * C)
+    (by positivity) hε
+  refine ⟨r, fun q => ∑ i, fun y => v q i * u i y, fun q => ⟨?_, ?_⟩, fun n => ?_⟩
+  · refine (Finset.stronglyMeasurable_sum _ fun i _ => ?_).aestronglyMeasurable
+    exact (husm i).const_mul (v q i)
+  · exact memLp_finsetSum' _ fun i _ => (humem i).const_mul (v q i)
+  -- The coefficients of the `n`-th image.
+  · set γ : Fin k → S.X → ℝ :=
+      fun i y => c n i * condInner D ((B i).indicator (fun _ => (1 : ℝ))) (b n) y with hγdef
+    have hBmem : ∀ i, MemLp ((B i).indicator (fun _ => (1 : ℝ))) 2 S.m := fun i =>
+      memLp_indicator_const 2 (hB i).nullMeasurableSet 1 (Or.inr (measure_ne_top S.m _))
+    have hγm : ∀ i, StronglyMeasurable[D.σ] (γ i) := fun i =>
+      stronglyMeasurable_condExp.const_mul (c n i)
+    have hγb : ∀ᵐ x ∂S.m, ∀ i, |γ i x| ≤ M * C := by
+      refine ae_all_iff.mpr fun i => ?_
+      filter_upwards [abs_condInner_le D ((hBmem i).integrable_mul (hBmem i))
+        ((hbmem n).integrable_mul (hbmem n)) ((hBmem i).integrable_mul (hbmem n)),
+        hu1 i, condNorm_indicator_le_one D (hB i), hbC n] with x h1 _ h3 h4
+      rw [hγdef, abs_mul]
+      have hnn : 0 ≤ condNorm D ((B i).indicator (fun _ => (1 : ℝ))) x := condNorm_nonneg _ _ _
+      have hbnn : 0 ≤ condNorm D (b n) x := condNorm_nonneg _ _ _
+      calc |c n i| * |condInner D ((B i).indicator (fun _ => (1 : ℝ))) (b n) x|
+          ≤ M * (condNorm D ((B i).indicator (fun _ => (1 : ℝ))) x * condNorm D (b n) x) := by
+            refine mul_le_mul (hc n i) h1 (abs_nonneg _) hM
+        _ ≤ M * (1 * C) := by
+            refine mul_le_mul_of_nonneg_left (mul_le_mul h3 h4 hbnn zero_le_one) hM
+        _ = M * C := by ring
+    have hγu : ∀ i, MemLp (fun y => γ i y * u i y) 2 S.m := by
+      intro i
+      refine MemLp.of_bound (((hγm i).mono D.le).mul ((husm i).mono E.le)).aestronglyMeasurable
+        (M * C) ?_
+      filter_upwards [hγb] with x hx
+      have h1 : |u i x| ≤ 1 := by
+        rw [hudef]
+        by_cases hxA : x ∈ A i <;> simp [hxA]
+      rw [Real.norm_eq_abs, abs_mul]
+      calc |γ i x| * |u i x| ≤ (M * C) * 1 :=
+            mul_le_mul (hx i) h1 (abs_nonneg _) (by positivity)
+        _ = M * C := mul_one _
+    -- Transfer the net across the identification of the image.
+    have hdiff : ∀ q : Fin r, ∀ᵐ x ∂S.m,
+        condNorm D (condIntegralOp D (fun p => ∑ i, c n i *
+            (A i).indicator (fun _ => (1 : ℝ)) p.1 * (B i).indicator (fun _ => (1 : ℝ)) p.2)
+            (b n) - ∑ i, fun y => v q i * u i y) x
+          = condNorm D ((∑ i, fun y => γ i y * u i y)
+            - ∑ i, fun y => v q i * u i y) x := by
+      intro q
+      refine condNorm_congr_ae D ?_
+      filter_upwards [condIntegralOp_rectSum D (c n) A B hB (hbm n) (hbmem n)] with x hx
+      rw [Pi.sub_apply, Pi.sub_apply, hx]
+    filter_upwards [hnet γ hγm hγu hγb, ae_all_iff.mpr hdiff] with x hx heq
+    obtain ⟨q, hq⟩ := hx
+    exact ⟨q, by rw [heq q]; exact hq⟩
+
 /-- **Reduction to finite-rank kernels.**
 
 Suppose the orbit of `f` is `Φ_{H n}(b n)`, with the conditional norms of `b n` bounded by
