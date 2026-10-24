@@ -179,7 +179,7 @@ theorem measurableRectangles_eq (α β : Type*) [MeasurableSpace α] [Measurable
     measurableRectangles α β
       = Set.image2 (· ×ˢ ·) {s : Set α | MeasurableSet s} {t : Set β | MeasurableSet t} := by
   ext s
-  simp only [measurableRectangles, Set.mem_setOf_eq, Set.mem_image2]
+  simp only [measurableRectangles, Set.mem_ofPred_eq, Set.mem_image2]
   constructor
   · rintro ⟨a, b, ha, hb, rfl⟩
     exact ⟨a, ha, b, hb, rfl⟩
