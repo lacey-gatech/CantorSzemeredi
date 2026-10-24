@@ -153,8 +153,44 @@
   representative, which costs nothing, since \texttt{integralKernelL\_congr} says the operator
   depends only on the a.e.\ class of its kernel.
 
-  What remains for Lemma~\ref{lem:dichotomy} is to pass from these fibrewise compact operators
-  to the conditionally compact functions they generate, and to assemble the factor $\Ebb$.
+  \smallskip
+  \emph{From fibre operators to the module.}  The fibre operators assemble into a single
+  operator on the Hilbert module,
+  $(\Phi_H a)(x) = \int H(x,y) a(y) \,dm_x(y)$, and
+  \texttt{CantorSzemeredi/Dynamics/CondHS.lean} proves the estimate that governs it.  Two
+  ingredients: \texttt{condKernel\_comp\_measure}, the disintegration $m = \int m_x \,dm(x)$
+  (Mathlib proves this against the \emph{trimmed} measure, and since the kernel is
+  $\Dbb$-measurable, \texttt{lintegral\_trim} removes the trim), whose consequence
+  \texttt{ae\_ae\_condKernel} is what lets an a.e.\ statement about the base be used on almost
+  every fibre; and \texttt{abs\_condIntegralOp\_le}, Cauchy--Schwarz on a single fibre.
+  Together they give
+  \[
+    \norm{\Phi_H a}_{\Ebb|\Dbb} \;\leq\; C \, \norm{H}_{\mathrm{HS}, \text{fibre}}
+    \qquad\text{whenever } \norm{a}_{\Ebb|\Dbb} \leq C
+  \]
+  (\texttt{condNorm\_condIntegralOp\_le}), and hence
+  \texttt{condCompact\_of\_kernel\_net}: if the orbit of $f$ is realised as $\Phi_{K_n} a$ for a
+  family of kernels admitting finite nets in the fibre Hilbert--Schmidt norm, then $f$ is
+  conditionally compact in the sense of Definition~\ref{def:compact-extension}.  Applied to a
+  \emph{difference} of kernels, the estimate is exactly what converts an approximation of
+  kernels into an approximation of functions --- which is the shape \texttt{CondCompact} asks
+  for, since its finite net must consist of module elements and must serve every $n \in \ZZ$
+  at once.
+
+  Note that these estimates carry their integrability hypotheses explicitly, collected in
+  \texttt{IsFibreHS}.  That is not bureaucracy: $H \in L^2(\lambda)$ gives only a.e.\
+  statements about the base, and a $\lambda$-null set can meet every fibre, so nothing
+  fibrewise follows until it is pushed through \texttt{ae\_ae\_condKernel}.
+
+  \smallskip
+  \emph{What is still open.}  \texttt{condCompact\_of\_kernel\_net} is a reduction: it
+  \emph{assumes} the finite net of kernels.  Producing that net from the eigenfunction is the
+  remaining step, and it is the one with genuine content left --- the orbit
+  $\{H \circ R^n\}$ is precompact in $L^2(\lambda)$ because $H$ is an eigenfunction, but
+  \texttt{CondCompact} needs a single finite net of \emph{module elements} valid for all $n$
+  and uniformly over the fibres, which is a measurable-selection argument rather than a
+  consequence of $L^2(\lambda)$ precompactness.  After that, the factor $\Ebb$ must be
+  assembled from the conditionally compact functions.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}
