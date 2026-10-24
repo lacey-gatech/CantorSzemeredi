@@ -328,12 +328,42 @@
   for the density in \emph{compact extension} to absorb.
 
   \smallskip
-  \emph{What is still open.}  Two things, both now assembly rather than new ideas.  First,
-  running \texttt{condCompact\_of\_kernel\_approx} against
-  \texttt{exists\_finiteRank\_cutoff} and \texttt{condIntegralOp\_comp\_iterate}: the finite
-  net for the finite-rank images, which is the grid-rounding described above, and the passage
-  from the cut kernel back to $H$ through the density in \emph{compact extension}.  Second,
-  the factor $\Ebb$ must be assembled from the conditionally compact functions.
+  \emph{The finite net, and the moving kernel.}  Obstruction (ii) is
+  \texttt{exists\_net\_of\_finite\_span}: given finitely many generators $u_i$ of conditional
+  norm at most $1$, the $\Dbb$-linear combinations $\sum_i \gamma_i u_i$ with
+  $\abs{\gamma_i} \leq M$ are covered, to within $\epsilon$, by the finitely many
+  combinations with \emph{constant} coefficients from a grid --- the approximant found by
+  rounding $\gamma(x)$ pointwise, so its index depends on the fibre, which is what Moreira's
+  definition permits.  The ingredients are the pull-out property
+  (\texttt{condNorm\_mul\_left}), subadditivity over a finite sum
+  (\texttt{condNorm\_sum\_le}), and \texttt{condNorm\_indicator\_le\_one}, which makes
+  indicators admissible generators; \texttt{condIntegralOp\_sum\_tensor} puts a finite-rank
+  image in exactly that form, with coefficients $c_i \cip{\one_{B_i}}{b}_{\Dbb}$.
+
+  The moving kernel turns out not to need separate treatment.
+  \texttt{condCompact\_of\_kernel\_approx} is now stated for a kernel \emph{family} $H_n$ ---
+  nothing in its proof required the kernel fixed, since the Hilbert--Schmidt bound is applied
+  at each $n$ --- which is the shape \texttt{condIntegralOp\_comp\_iterate} produces.  And for
+  an eigenfunction $H \circ R^n = \mathrm{ker}(u_n)$ with $u_n$ on the unit circle, so
+  \texttt{condIntegralOp\_kerComb} splits $\Phi_{K_n}(b_n)$ into
+  $u_n^{(1)}\Phi_{K_0}(b_n) + u_n^{(2)}\Phi_{K_1}(b_n)$; expanding each by
+  \texttt{condIntegralOp\_sum\_tensor} gives a combination of the \emph{fixed} generators
+  $\one_{A_i}$ with coefficients $u_n^{(j)} c_i \cip{\one_{B_i}}{b_n}_{\Dbb}$, still
+  $\Dbb$-measurable and still bounded.  So the circle is absorbed into the coefficients that
+  the grid rounds: one net covers the whole orbit, and no two-term net is required.
+  \texttt{kerComb\_sub\_kerComb} and \texttt{hsFibre\_kerComb\_le} supply the matching bound
+  on $H_n - K_n$.
+
+  \smallskip
+  \emph{What is still open.}  Two steps of wiring.  First, instantiating
+  \texttt{condCompact\_of\_kernel\_approx} with \texttt{exists\_finiteRank\_cutoff} and the
+  net: every input now exists, and what is left is bookkeeping over the \texttt{IsFibreHS}
+  fields and the coefficient bounds (conditional Cauchy--Schwarz against
+  \texttt{condNorm\_indicator\_le\_one}).  Second, discharging the exceptional set: the
+  cutoff gives conditional compactness of $\one_B \Phi_H a$, and absolute continuity of the
+  integral makes $\norm{\Phi_H a - \one_B \Phi_H a}_2$ small, which is what the density in
+  \emph{compact extension} absorbs.  Then the factor $\Ebb$ can be assembled from the
+  conditionally compact functions.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}
