@@ -24,7 +24,7 @@ formalization; it is what converts a positive average into a \emph{syndetic} set
   \uses{def:cantor, def:csz, thm:ecsz, prop:reduction}
   Let $\Cantor = \Cantor_{b,D} = \{0 = k_0 < k_1 < \cdots\}$ be a Cantor set with $0 \in D$.
   Then for every integer $\ell \geq 1$, every invertible measure preserving system
-  $(X,\Abb,m,T)$, and every non-negative $f \in L^\infty(X)$ which is not identically zero,
+  $(X,\Abb,m,T)$, and every non-negative $f \in L^{\infty}(X)$ which is not identically zero,
   \[
     \unifliminf \ \unifavg \int_X \prod_{j=0}^{\ell} T^{j k_n} f \, dm > 0 .
   \]
@@ -32,7 +32,8 @@ formalization; it is what converts a positive average into a \emph{syndetic} set
 
 \begin{corollary}[Syndeticity of the good indices]
   \label{cor:syndetic}
-  \lean{CantorSzemeredi.syndetic_of_pos_uniform_liminf}
+  \lean{CantorSzemeredi.syndetic_of_uniformLiminf_pos}
+  \leanok
   \uses{thm:main-ergodic, def:syndetic}
   Under the hypotheses of Theorem~\ref{thm:main-ergodic}, the set
   $\bigl\{ n \in \NNz : \int_X \prod_{j=0}^{\ell} T^{j k_n} f \, dm > 0 \bigr\}$ is syndetic.
@@ -59,15 +60,30 @@ formalization; it is what converts a positive average into a \emph{syndetic} set
 
 \begin{proof}
   \uses{thm:main-ergodic, cor:syndetic, thm:furstenberg-correspondence}
-  Apply the Furstenberg correspondence principle
-  (Theorem~\ref{thm:furstenberg-correspondence}) to obtain an invertible system
-  $(X,\Abb,m,T)$ and $\tilde A$ with $m(\tilde A) = \dstar(A) > 0$ and
-  $\dstar(A \cap (A-r_1) \cap \cdots \cap (A-r_j)) \geq m(\tilde A \cap T^{-r_1}\tilde A \cap \cdots \cap T^{-r_j}\tilde A)$.
-  Use it \emph{for one index $n$ at a time}, with $(r_1,\dots,r_\ell) = (k_n, 2k_n, \dots, \ell k_n)$.
-  Then $B$ contains the set of $n \geq 1$ with
-  $m(\tilde A \cap T^{-k_n}\tilde A \cap \cdots \cap T^{-\ell k_n}\tilde A) > 0$, which is
-  syndetic by Theorem~\ref{thm:main-ergodic} and Corollary~\ref{cor:syndetic} applied to
-  $f = \one_{\tilde A}$.  Dropping $n = 0$ does not affect syndeticity.
+  Apply the Furstenberg correspondence principle (Theorem~\ref{thm:furstenberg-correspondence})
+  to $A$ to obtain an invertible system $(X,\Abb,m,T)$ and $\tilde A \in \Abb$ with
+  $m(\tilde A) = \dstar(A) > 0$ satisfying \eqref{eq:correspondence}.
+
+  \emph{One index at a time.}  Fix $n \geq 1$ and apply \eqref{eq:correspondence} with
+  $(r_1,\dots,r_\ell) = (k_n, 2k_n, \dots, \ell k_n)$:
+  \[
+    \dstar\bigl(A \cap (A-k_n) \cap \cdots \cap (A-\ell k_n)\bigr)
+      \geq m\bigl(\tilde A \cap T^{-k_n}\tilde A \cap \cdots \cap T^{-\ell k_n}\tilde A\bigr)
+      = \int_X \prod_{j=0}^{\ell} T^{jk_n}\one_{\tilde A}\,dm .
+  \]
+  Hence $B \supset B' \coloneqq \{n \geq 1 : \int_X \prod_{j} T^{jk_n}\one_{\tilde A}\,dm > 0\}$.
+
+  \emph{Syndeticity.}  By Theorem~\ref{thm:main-ergodic} applied to $f = \one_{\tilde A}$
+  (non-negative, bounded, not a.e.\ zero), and Corollary~\ref{cor:syndetic}, the set
+  $B'' \coloneqq \{n \in \NNz : \int_X \prod_j T^{jk_n}\one_{\tilde A}\,dm > 0\}$ is syndetic.
+  $B' = B'' \setminus \{0\}$, and removing one element from a syndetic set leaves it syndetic
+  (if gaps are at most $L$, they are at most $2L+1$ afterwards).  A superset of a syndetic set
+  is syndetic, so $B$ is syndetic.
+
+  \emph{The progressions.}  For $n \in B$ the set $A \cap (A-k_n)\cap\cdots\cap(A-\ell k_n)$ has
+  positive upper Banach density, hence is non-empty: any $a$ in it has
+  $a, a+k_n, \dots, a+\ell k_n \in A$, and $k_n \geq 1$ for $n \geq 1$ because the enumeration
+  is strictly increasing from $k_0 = 0$, so the progression is non-degenerate.
 \end{proof}
 
 \begin{remark}

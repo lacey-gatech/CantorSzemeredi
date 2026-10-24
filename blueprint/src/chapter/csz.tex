@@ -15,19 +15,58 @@
   A factor $\Dbb \subset \Abb$ is CSZ if $(X,\Dbb,m,T)$ is.
 \end{definition}
 
+\begin{remark}[Lean form]
+  \leanok
+  In Lean the integral in \eqref{eq:csz} is written as the measure of an intersection,
+  $\texttt{multiCorr A t d} = m\bigl(\bigcap_{s=0}^{t} T^{-sd}A\bigr)$ with $d = b^ik_n$; the two
+  agree because a product of indicators is the indicator of the intersection, and the integral
+  of an indicator is the measure.  \texttt{Factor.CSZ D} quantifies over $\Cantor$ (as a
+  \texttt{CantorData}), over $A$ with \texttt{MeasurableSet[D.\ensuremath{\sigma}] A} and
+  $0 < m(A)$, over $t \geq 1$ and over $i$, and asserts
+  $0 < \texttt{uniformLiminf (fun n => multiCorr A t (base\^{}i * enum n))}$.
+\end{remark}
+
 \begin{lemma}[Sets versus non-negative functions]
   \label{lem:csz-functions}
   \lean{CantorSzemeredi.MPS.CSZ_iff_forall_nonneg}
   \uses{def:csz}
-  \eqref{eq:csz} holds for all such $A$ if and only if it holds with $\one_A$ replaced by an
-  arbitrary non-negative $f \in L^\infty(X)$ which is not identically zero.
+  Let $\Dbb$ be a factor, $\Cantor$ a Cantor set, $t \geq 1$ and $i \geq 0$.  The following
+  are equivalent.
+  \begin{enumerate}
+    \item[(a)] \eqref{eq:csz} holds for every $A \in \Dbb$ with $m(A) > 0$.
+    \item[(b)] For every bounded $\Dbb$-measurable $f \geq 0$ which is not a.e.\ zero,
+      \[
+        \unifliminf \unifavg \int_X \prod_{s=0}^{t} T^{sb^ik_n} f\,dm > 0 .
+      \]
+  \end{enumerate}
 \end{lemma}
 
 \begin{proof}
   \uses{def:csz}
-  One direction is trivial.  For the other, choose $c > 0$ with $m(A) > 0$ for
-  $A \coloneqq \{f > c\}$.  Then $f \geq c\one_A$ and all factors are non-negative, so the
-  average for $f$ is at least $c^{t+1}$ times the average for $\one_A$.
+  (b) $\Rightarrow$ (a): take $f = \one_A$, which is bounded, $\Dbb$-measurable, non-negative,
+  and not a.e.\ zero since $m(A) > 0$.
+
+  (a) $\Rightarrow$ (b): let $f$ be as in (b).
+
+  \emph{A level set of positive measure.}  There is $c > 0$ with $m(\{f > c\}) > 0$: otherwise
+  $m(\{f > 1/k\}) = 0$ for every $k \geq 1$, so $\{f > 0\} = \bigcup_k\{f > 1/k\}$ is null and
+  $f = 0$ a.e.  Fix such $c$ and put $A \coloneqq \{f > c\} \in \Dbb$.
+
+  \emph{Pointwise domination.}  $f \geq c\,\one_A$ pointwise: on $A$, $f > c = c\one_A$; off
+  $A$, $f \geq 0 = c\one_A$.  Composing with $T^{sb^ik_n}$ preserves this, and all factors are
+  non-negative, so for every $n$,
+  \[
+    \prod_{s=0}^{t} T^{sb^ik_n}f \geq \prod_{s=0}^{t} T^{sb^ik_n}(c\one_A) = c^{t+1}\prod_{s=0}^{t} T^{sb^ik_n}\one_A
+    \quad\text{pointwise, hence}\quad
+    \int_X \prod_{s} T^{sb^ik_n}f\,dm \geq c^{t+1} \int_X \prod_s T^{sb^ik_n}\one_A\,dm .
+  \]
+  (Monotonicity of a product of non-negative factors in each factor: induct on the number of
+  factors, or use \texttt{Finset.prod\_le\_prod}.)
+
+  \emph{The uniform liminf.}  Averaging over a window preserves the inequality, and
+  \texttt{uniformLiminf} is monotone and commutes with multiplication by the positive constant
+  $c^{t+1}$.  So the uniform liminf in (b) is at least $c^{t+1}$ times the one in \eqref{eq:csz}
+  for $A$, which is positive by (a).
 \end{proof}
 
 \begin{remark}[On the dilation parameter $i$]
@@ -48,7 +87,7 @@
   Carrying $i$ is not optional: the compact extension argument uses the hypothesis on the factor
   at a dilation determined inside that proof, and returns the conclusion for the extension at the
   dilation it was handed.  It is the self-similarity $b^i \Cantor \subset \Cantor$ that makes
-  this work.
+  this work.  Remark~\ref{rem:compact-organization} spells out the resulting organization.
 \end{remark}
 
 \begin{lemma}[The trivial factor is CSZ]
@@ -78,18 +117,47 @@
 
 \begin{proof}
   \uses{lem:wm-extension, thm:compact-extension}
-  (W) is Lemma~\ref{lem:wm-extension}; (K) is Theorem~\ref{thm:compact-extension}.
+  (W) is Lemma~\ref{lem:wm-extension}; (K) is Theorem~\ref{thm:compact-extension}, in its set
+  form $f = \one_A$, $A \in \Ebb$.
+\end{proof}
+
+\begin{lemma}[Compact systems are compact extensions of the trivial factor]
+  \label{lem:compact-system-extension}
+  \lean{CantorSzemeredi.MPS.compactExtension_of_compactSystem}
+  \uses{def:compact-system, def:compact-extension}
+  If $(X,\Abb,m,T)$ is a compact system then $\Abb$ is a compact extension of the trivial
+  factor.
+\end{lemma}
+
+\begin{proof}
+  \uses{def:compact-system, def:compact-extension}
+  For the trivial factor $\Dbb$, $\cnorm{u}(x) = \norm{u}_{L^2(m)}$ for a.e.\ $x$ (the
+  conditional expectation onto $\Dbb$ is the integral).  Let $f \in L^2(X)$ and $\epsilon > 0$.
+  By Definition~\ref{def:compact-system} there are $r$ and $g_1,\dots,g_r$ with: for every
+  $n \in \ZZ$ there is $q$ with $\norm{f\circ T^n - g_q}_2 \leq \epsilon/2$.  The $g_q$ need not
+  be measurable or square integrable, so replace them by orbit elements: for each $q$ for
+  which some $n$ has $\norm{f\circ T^n - g_q}_2 \leq \epsilon/2$, pick one such $n_q$ and set
+  $h_q \coloneqq f \circ T^{n_q}$; discard the other $q$.  Each $h_q$ is measurable and in $L^2$
+  (as $T^{n_q}$ preserves $m$), so $h_q \in L^2(\Abb)$ (\texttt{MemL2} for the top factor).
+  For every $n \in \NN$ choose $q$ with $\norm{f\circ T^n - g_q}_2 \leq \epsilon/2$; then
+  $\norm{f\circ T^n - h_q}_2 \leq \norm{f\circ T^n - g_q}_2 + \norm{g_q - f\circ T^{n_q}}_2 \leq \epsilon$,
+  and this is $\cnorm{f \circ T^n - h_q}(x) \leq \epsilon$ for a.e.\ $x$ (a constant).  Using
+  $\epsilon/2$ in place of $\epsilon$ gives the strict inequality required by
+  \texttt{CondCompact}.  So every $f \in L^2(X)$ is conditionally compact over the trivial
+  factor, and in particular the conditionally compact functions are dense in $L^2(\Abb)$.
 \end{proof}
 
 \begin{corollary}
   \label{cor:wm-compact-are-csz}
   \lean{CantorSzemeredi.MPS.CSZ_of_weaklyMixing, CantorSzemeredi.MPS.CSZ_of_compactSystem}
-  \uses{lem:extensions, lem:trivial-csz}
+  \uses{lem:extensions, lem:trivial-csz, lem:wm-sets-to-functions, lem:compact-system-extension}
   Weakly mixing systems and compact systems are CSZ.
 \end{corollary}
 
 \begin{proof}
-  \uses{lem:extensions, lem:trivial-csz}
-  A weakly mixing system is a weakly mixing extension of the trivial factor, and a compact
-  system is a compact extension of it; apply Lemmas~\ref{lem:trivial-csz} and \ref{lem:extensions}.
+  \uses{lem:extensions, lem:trivial-csz, lem:wm-sets-to-functions, lem:compact-system-extension}
+  A weakly mixing system is a weakly mixing extension of the trivial factor by
+  Lemma~\ref{lem:wm-sets-to-functions}, and a compact system is a compact extension of it by
+  Lemma~\ref{lem:compact-system-extension}; apply Lemma~\ref{lem:trivial-csz} and
+  Lemma~\ref{lem:extensions}.  Note that CSZ for the top factor $\Abb$ is CSZ for the system.
 \end{proof}

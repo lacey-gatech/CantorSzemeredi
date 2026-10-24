@@ -7,7 +7,33 @@ self-contained formalization target with no measure theory in it at all.
 
 Let $\Cantor = \Cantor_{b,D}$ with $0 \in D$; recall $b^h \Cantor \subset \Cantor$ for $h \geq 0$
 (Corollary~\ref{cor:self-similar}).  A \emph{topological dynamical system} is a pair $(X,T)$ with
-$X$ a compact metric space and $T : X \to X$ continuous (not necessarily invertible).
+$X$ a compact metric space and $T : X \to X$ continuous (not necessarily invertible).  In Lean,
+$X$ is a type with \texttt{[TopologicalSpace X] [CompactSpace X] [T2Space X]}; metrizability is
+never used and may be omitted.
+
+\section{Arithmetic of digit ranges}
+
+The one Cantor-specific input is that sums of elements of $\Cantor$ supported on disjoint
+ranges of base $b$ digits stay in $\Cantor$.  It is Corollary~\ref{cor:absorb} in a
+slightly different dress.
+
+\begin{lemma}[Disjoint digit ranges add]
+  \label{lem:digit-ranges}
+  \lean{CantorSzemeredi.CantorData.pow_mul_add_mem_of_lt_pow}
+  \uses{cor:absorb, cor:self-similar}
+  Let $0 \leq h \leq h'$, let $a \in b^h\Cantor$ with $a < b^{h'}$, and let $c \in b^{h'}\Cantor$.
+  Then $a + c \in b^h\Cantor$.
+\end{lemma}
+
+\begin{proof}
+  \uses{cor:absorb, cor:self-similar}
+  Write $a = b^ha'$ and $c = b^{h'}c' = b^h\bigl(b^{h'-h}c'\bigr)$ with $a', c' \in \Cantor$.
+  Then $a' < b^{h'-h}$, so by Corollary~\ref{cor:absorb} with $i = h' - h$ and $u$ the index
+  of $c'$, $b^{h'-h}c' + a' \in \Cantor$ (Lean: \texttt{pow\_mul\_enum\_add\_mem}).  Multiply by
+  $b^h$ and use Corollary~\ref{cor:self-similar}: $a + c = b^h(b^{h'-h}c' + a') \in b^h\Cantor$.
+\end{proof}
+
+\section{The theorems}
 
 \begin{theorem}[Cantor van der Waerden, dynamical form]
   \label{thm:cvdw}
@@ -21,11 +47,22 @@ $X$ a compact metric space and $T : X \to X$ continuous (not necessarily inverti
 
 \begin{proof}
   \uses{thm:cvdw-minimal}
-  Let $\mathbf F$ be the non-empty closed $T$-invariant subsets of $X$, ordered by inclusion;
-  $X \in \mathbf F$, and the intersection of a decreasing chain is again in $\mathbf F$ by
-  compactness.  By Zorn's lemma applied to reverse inclusion, $\mathbf F$ has a minimal element
-  $F$, and $(F, T|_F)$ is minimal.  Some $U_\alpha \cap F$ is non-empty and relatively open in
-  $F$, so Theorem~\ref{thm:cvdw-minimal} applied to $(F,T|_F)$ gives the progression.
+  \emph{A minimal subsystem.}  Let $\mathbf F$ be the set of non-empty closed $F \subset X$ with
+  $T(F) \subset F$, ordered by reverse inclusion.  $X \in \mathbf F$.  If $\mathbf C \subset \mathbf F$
+  is a non-empty chain then $F_0 \coloneqq \bigcap\mathbf C$ is closed, satisfies
+  $T(F_0) \subset F_0$, and is non-empty: the members of $\mathbf C$ are closed subsets of the
+  compact $X$ with the finite intersection property (any finite subfamily has a smallest
+  member, which is non-empty), so their intersection is non-empty
+  (\texttt{IsCompact.nonempty\_iInter\_of\_directed\_nonempty\_isCompact\_isClosed}).  By Zorn's
+  lemma $\mathbf F$ has a minimal element $F$ with respect to inclusion.  Then $(F,T|_F)$ is a
+  topological dynamical system ($F$ compact, $T|_F$ continuous into $F$) which is \emph{minimal}:
+  any non-empty closed $F' \subset F$ with $T(F') \subset F'$ is in $\mathbf F$, hence equals $F$.
+
+  \emph{Apply the minimal case.}  Since $F \neq \emptyset$ and the $U_\alpha$ cover $X$, some
+  $U_\alpha \cap F$ is non-empty, and it is open in $F$.  Theorem~\ref{thm:cvdw-minimal} for
+  $(F,T|_F)$, the open set $U_\alpha \cap F$, $\ell$ and $h$ gives $y \in F$ and
+  $r \in b^h\Cantor\setminus\{0\}$ with $T^{jr}y \in U_\alpha \cap F \subset U_\alpha$ for
+  $0 \leq j \leq \ell - 1$.
 \end{proof}
 
 \begin{theorem}[Minimal case]
@@ -37,21 +74,59 @@ $X$ a compact metric space and $T : X \to X$ continuous (not necessarily inverti
   with $y, T^r y, \dots, T^{(\ell-1)r}y \in U$.
 \end{theorem}
 
-\begin{remark}
-  Two consequences of minimality are used.  First, $T$ is onto: $T(X)$ is non-empty, closed and
-  invariant.  ($T$ is not assumed invertible; the proof simply chooses a preimage.)  Second, for
-  every $x$ and every non-empty open $U$ there is $n \geq 0$ with $T^n x \in U$.
-\end{remark}
+\begin{lemma}[Two consequences of minimality]
+  \label{lem:minimal-facts}
+  Let $(X,T)$ be minimal.  Then (a) $T$ is onto; (b) for every $x \in X$ and non-empty open
+  $U$ there is $n \geq 0$ with $T^nx \in U$; consequently (c) $X = \bigcup_{n \geq 0}T^{-n}U$,
+  and by compactness there is a finite set $\{n_1,\dots,n_p\}$ with
+  $X = \bigcup_{\alpha=1}^{p} T^{-n_\alpha}U$.
+\end{lemma}
+
+\begin{proof}
+  (a) $T(X)$ is the continuous image of a compact set, hence compact, hence closed; it is
+  non-empty; and $T(T(X)) \subset T(X)$.  By minimality $T(X) = X$.
+  (b) The closure $F$ of $\{T^nx : n \geq 0\}$ is non-empty and closed, and $T(F) \subset F$
+  (by continuity, $T$ maps the closure of the orbit into the closure of $T$(orbit)
+  $\subset F$).  So $F = X \ni$ any point of $U$, and $U$ being open meets the orbit.
+  (c) is (b) restated, plus compactness of $X$ applied to the open cover $(T^{-n}U)_{n\geq0}$.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:cvdw-minimal}]
+  \proves{thm:cvdw-minimal}
+  \uses{lem:color-focusing, lem:minimal-facts}
+  Induct on $\ell$, the statement being: for all minimal $(X,T)$, all non-empty open $U$, and
+  all $h \geq 0$.  (Both $(X,T)$ and $h$ are quantified inside the induction, since the
+  inductive step uses the hypothesis with a larger $h'$.)
+
+  \emph{$\ell = 1$.}  Take any $y \in U$ and $r \coloneqq b^h \cdot k_1 \in b^h\Cantor\setminus\{0\}$
+  ($k_1 \geq 1$ as the enumeration is strictly increasing from $k_0 = 0$).
+
+  \emph{$\ell \geq 2$.}  Assume the theorem for $\ell - 1$.  Fix minimal $(X,T)$, non-empty
+  open $U$, and $h$.  By Lemma~\ref{lem:minimal-facts}(c) fix a finite open cover
+  $U_\alpha = T^{-n_\alpha}U$, $\alpha \in A = \{1,\dots,p\}$.  It suffices to find
+  $\alpha$, $x \in X$ and $r \in b^h\Cantor\setminus\{0\}$ with $T^{jr}x \in U_\alpha$ for
+  $0 \leq j \leq \ell - 1$: then $y \coloneqq T^{n_\alpha}x$ satisfies
+  $T^{jr}y = T^{n_\alpha}(T^{jr}x) \in T^{n_\alpha}(T^{-n_\alpha}U) \subset U$.
+
+  Apply Lemma~\ref{lem:color-focusing} with $J \coloneqq p$ to obtain $x_0,\dots,x_p$,
+  $\alpha_0,\dots,\alpha_p \in A$ and $k_1,\dots,k_p$.  The map $j \mapsto \alpha_j$ from
+  $\{0,\dots,p\}$ ($p+1$ elements) to $A$ ($p$ elements) is not injective: there are
+  $0 \leq j < j' \leq p$ with $\alpha_j = \alpha_{j'}$.  Set $x \coloneqq x_{j'}$ and
+  $r \coloneqq k_{j+1} + \cdots + k_{j'}$.  By (1) of the lemma, $r \in b^h\Cantor\setminus\{0\}$;
+  by (2), $x = x_{j'} \in U_{\alpha_{j'}} = U_{\alpha_j}$ and $T^{ir}x \in U_{\alpha_j}$ for
+  $1 \leq i \leq \ell - 1$.  This is the required progression in $U_{\alpha_j}$.
+\end{proof}
 
 \begin{lemma}[Color focusing]
   \label{lem:color-focusing}
   \lean{CantorSzemeredi.color_focusing}
-  \uses{cor:self-similar}
+  \uses{cor:self-similar, lem:digit-ranges, lem:minimal-facts}
   In the setting of the proof of Theorem~\ref{thm:cvdw-minimal} --- a minimal $(X,T)$, a
-  non-empty open $U$, and a finite open cover $(U_\alpha)_{\alpha \in A}$ with each
-  $U_\alpha = T^{-n_\alpha}U$ --- for every $J \geq 0$ there exist points $x_0,\dots,x_J \in X$,
-  sets $U_{\alpha_0},\dots,U_{\alpha_J}$ from the cover (not necessarily distinct), and integers
-  $k_1,\dots,k_J$ such that
+  non-empty open $U$, $\ell \geq 2$, $h \geq 0$, a finite open cover $(U_\alpha)_{\alpha \in A}$
+  with each $U_\alpha = T^{-n_\alpha}U$, and the theorem known for progressions of length
+  $\ell - 1$ in all minimal systems and all parameters $h'$ --- for every $J \geq 0$ there exist
+  points $x_0,\dots,x_J \in X$, indices $\alpha_0,\dots,\alpha_J \in A$ (not necessarily
+  distinct), and integers $k_1,\dots,k_J \geq 1$ such that
   \begin{enumerate}
     \item[(1)] $k_{j+1} + \cdots + k_{j'} \in b^h\Cantor \setminus \{0\}$ for all $0 \leq j < j' \leq J$;
     \item[(2)] $x_j \in U_{\alpha_j}$ for all $0 \leq j \leq J$, and
@@ -61,59 +136,119 @@ $X$ a compact metric space and $T : X \to X$ continuous (not necessarily inverti
 \end{lemma}
 
 \begin{proof}
-  \uses{cor:self-similar}
-  Induct on $J$.  For $J=0$ take any $x_0$ and any $U_{\alpha_0} \ni x_0$.  Given the data up to
-  $J-1$, consider the finitely many continuous maps
-  $T^{i(k_{j+1}+\cdots+k_{J-1})}$, $0 \leq j < J$, $1 \leq i \leq \ell-1$.  Each carries $x_{J-1}$
-  into $U_{\alpha_j}$: for $j < J-1$ by (2) applied to the pair $j < j' = J-1$, and for $j = J-1$
-  the exponent is the empty sum $0$ and the requirement is $x_{J-1} \in U_{\alpha_{J-1}}$.  By
-  continuity choose a neighbourhood $V$ of $x_{J-1}$ with
+  \uses{cor:self-similar, lem:digit-ranges, lem:minimal-facts}
+  Induct on $J$.  Write $\sigma(j,j') \coloneqq k_{j+1} + \cdots + k_{j'}$ for $j \leq j'$, with
+  $\sigma(j,j) = 0$.
+
+  \emph{$J = 0$.}  Take any $x_0 \in X$ and any $\alpha_0$ with $x_0 \in U_{\alpha_0}$ (the
+  cover is a cover).  Conditions (1) and the second clause of (2) are vacuous.
+
+  \emph{$J \geq 1$.}  Suppose $x_0,\dots,x_{J-1}$, $\alpha_0,\dots,\alpha_{J-1}$,
+  $k_1,\dots,k_{J-1}$ satisfy (1) and (2) with $J - 1$.
+
+  \emph{A neighbourhood $V$ of $x_{J-1}$.}  Consider the finitely many continuous maps
+  $T^{i\sigma(j,J-1)}$, $0 \leq j \leq J-1$, $1 \leq i \leq \ell-1$.  Each carries $x_{J-1}$
+  into $U_{\alpha_j}$: for $j < J-1$ by (2) for the pair $j < j' = J-1$; for $j = J-1$ the
+  exponent is $0$ and the requirement is $x_{J-1} \in U_{\alpha_{J-1}}$, the first clause of
+  (2).  Since each $U_{\alpha_j}$ is open and each map is continuous, the set
   \begin{equation}
     \label{eq:Vsmall}
-    T^{i(k_{j+1}+\cdots+k_{J-1})}(V) \subset U_{\alpha_j} , \qquad 0 \leq j < J,\ 1 \leq i \leq \ell-1 .
+    V \coloneqq \bigcap_{0 \leq j \leq J-1} \ \bigcap_{1 \leq i \leq \ell-1} \bigl(T^{i\sigma(j,J-1)}\bigr)^{-1}(U_{\alpha_j})
   \end{equation}
-  Note \eqref{eq:Vsmall} involves only data from the previous stage, so $V$ is fixed before the
-  next step.
+  is open (a finite intersection of open sets) and contains $x_{J-1}$.  It depends only on data
+  from the previous stage.
 
-  Choose $h' \geq h$ so large that $k_1 + \cdots + k_{J-1} < b^{h'}$.  By
-  Theorem~\ref{thm:cvdw-minimal} for progressions of length $\ell-1$, with parameter $h'$,
-  applied to $V$, there are $y \in X$ and $r \in b^{h'}\Cantor\setminus\{0\}$ with
-  $y, T^r y, \dots, T^{(\ell-2)r}y \in V$.  Set $k_J \coloneqq r$ and choose $x_J$ with
-  $T^r x_J = y$ ($T$ is onto); then pick $U_{\alpha_J} \ni x_J$.  Property (1) for the new sums
-  holds because $r \in b^{h'}\Cantor$ with $b^{h'}$ exceeding all earlier partial sums: the base
-  $b$ digits of $r$ lie strictly above those already used, so the sum again has all its digits in
-  $D$.  Property (2) follows from \eqref{eq:Vsmall}.
+  \emph{A progression of length $\ell - 1$ in $V$ at a high scale.}  Choose $h' \geq h$ with
+  $b^{h'} > \sigma(0,J-1) = k_1 + \cdots + k_{J-1}$.  By the theorem for length $\ell - 1$,
+  applied to $(X,T)$, the non-empty open $V$ and the parameter $h'$, there are $y \in X$ and
+  $r \in b^{h'}\Cantor\setminus\{0\}$ with $T^{ir}y \in V$ for $0 \leq i \leq \ell - 2$.  Set
+  $k_J \coloneqq r \geq 1$.  By Lemma~\ref{lem:minimal-facts}(a) choose $x_J$ with $T^rx_J = y$,
+  and choose $\alpha_J$ with $x_J \in U_{\alpha_J}$.
+
+  \emph{(1) for the new data.}  Pairs $j < j' \leq J-1$ are unchanged.  For $j' = J$ and
+  $0 \leq j < J$: $\sigma(j,J) = \sigma(j,J-1) + k_J$ with $\sigma(j,J-1) \in b^h\Cantor$
+  (by (1) at the previous stage if $j < J-1$; it is $0 = b^h k_0 \in b^h\Cantor$ if $j = J-1$),
+  $\sigma(j,J-1) \leq \sigma(0,J-1) < b^{h'}$, and $k_J \in b^{h'}\Cantor$.  By
+  Lemma~\ref{lem:digit-ranges}, $\sigma(j,J) \in b^h\Cantor$, and it is non-zero since
+  $k_J \geq 1$.
+
+  \emph{(2) for the new data.}  $x_J \in U_{\alpha_J}$ by choice.  For $1 \leq i \leq \ell - 1$,
+  $T^{ik_J}x_J = T^{(i-1)r}(T^rx_J) = T^{(i-1)r}y \in V$, as $0 \leq i - 1 \leq \ell - 2$.  Hence
+  for $0 \leq j < J$ and $1 \leq i \leq \ell-1$,
+  \[
+    T^{i\sigma(j,J)}x_J = T^{i\sigma(j,J-1)}\bigl(T^{ik_J}x_J\bigr) \in T^{i\sigma(j,J-1)}(V) \subset U_{\alpha_j}
+  \]
+  by \eqref{eq:Vsmall}.  Pairs with $j' \leq J-1$ are unchanged.  This completes the induction.
 \end{proof}
 
 \begin{remark}
   The auxiliary parameter $h$ is what makes the induction close: it lets one insist that the
   differences produced at a given stage are supported on base $b$ digits beyond those already
-  used, so that sums of them stay inside $\Cantor$.  Without it the induction fails, since
-  $\Cantor$ is not closed under addition.  This is the one genuinely Cantor-specific ingredient
-  of the chapter; everything else is the classical van der Waerden argument.
+  used, so that sums of them stay inside $\Cantor$ (Lemma~\ref{lem:digit-ranges}).  Without it
+  the induction fails, since $\Cantor$ is not closed under addition.  This is the one genuinely
+  Cantor-specific ingredient of the chapter; everything else is the classical van der Waerden
+  argument.  In Lean, the exponents $i\sigma(j,j')$ are natural numbers and $T^{n}$ is
+  \texttt{T\^{}[n]}; no invertibility is needed, only Lemma~\ref{lem:minimal-facts}(a).
 \end{remark}
+
+\section{The finitary form}
 
 \begin{corollary}[Finitary form]
   \label{cor:vdw-finitary}
   \lean{CantorSzemeredi.vdW_finitary}
-  \uses{thm:cvdw}
+  \uses{thm:cvdw, lem:vdw-infinite}
   For all integers $L, \ell \geq 1$ there is $W = W(L,\ell)$ such that for every
   $\chi : [W] \to \{1,\dots,L\}$ there are $w_0 \in [W]$ and $r \in \Cantor\setminus\{0\}$ with
   $w_0 + (\ell-1)r \leq W$ and $\chi(w_0) = \chi(w_0+r) = \cdots = \chi(w_0+(\ell-1)r)$.
 \end{corollary}
 
+\begin{lemma}[Infinite colourings]
+  \label{lem:vdw-infinite}
+  \lean{CantorSzemeredi.vdW_infinite}
+  \uses{thm:cvdw}
+  Every $\chi : \NN \to \{1,\dots,L\}$ has a monochromatic $\ell$-term progression with common
+  difference in $\Cantor\setminus\{0\}$: there are $w_0 \geq 1$ and $r \in \Cantor\setminus\{0\}$
+  with $\chi(w_0 + ir) = \chi(w_0)$ for $0 \leq i \leq \ell - 1$.
+\end{lemma}
+
 \begin{proof}
   \uses{thm:cvdw}
-  First, every $\chi : \NN \to \{1,\dots,L\}$ has a monochromatic $\ell$-term progression with
-  common difference in $\Cantor\setminus\{0\}$: let $\Omega = \{1,\dots,L\}^{\NN}$ with the product
-  topology, $T$ the \emph{one-sided} shift (used precisely so that the progression lies in
-  $\NN$), and $X$ the closure of the forward orbit of $\chi$.  The clopen sets
-  $U_c = \{\eta \in X : \eta(1) = c\}$ cover $X$; Theorem~\ref{thm:cvdw} with $h=0$ gives $c$,
-  $x \in X$ and $r \in \Cantor\setminus\{0\}$ with $x(1+ir) = c$ for $0 \leq i \leq \ell-1$.
-  These conditions involve only coordinates in $[1, 1+(\ell-1)r]$, and $x$ is a limit of the
-  $T^m\chi$, so $\chi(w_0+ir) = c$ for some $w_0 = m+1$.
+  Let $\Omega \coloneqq \{1,\dots,L\}^{\NN}$ with the product topology, compact and Hausdorff
+  (and metrizable), and let $T$ be the one-sided shift, $(T\eta)(n) = \eta(n+1)$, continuous.
+  Let $X \subset \Omega$ be the closure of the forward orbit $\{T^m\chi : m \geq 0\}$; it is
+  compact, and $T(X) \subset X$ because $T$ maps the orbit into itself and is continuous.  So
+  $(X, T|_X)$ is a topological dynamical system.  For $1 \leq c \leq L$ let
+  $U_c \coloneqq \{\eta \in X : \eta(1) = c\}$; these are open (and closed) in $X$, being
+  preimages of points under the continuous coordinate map $\eta \mapsto \eta(1)$ to a discrete
+  space, and they cover $X$.
 
-  The uniform bound follows by compactness: otherwise for each $W$ there is a bad colouring
-  $\chi_W$ of $[W]$; finitely many colourings of each $[W]$ and K\"onig's lemma produce a bad
-  colouring of $\NN$, contradicting the previous paragraph.
+  Theorem~\ref{thm:cvdw} with $h = 0$ gives $c$, $x \in X$ and $r \in \Cantor\setminus\{0\}$ with
+  $T^{ir}x \in U_c$, i.e.\ $x(1 + ir) = c$, for $0 \leq i \leq \ell - 1$.  The set
+  $O \coloneqq \{\eta \in \Omega : \eta(1+ir) = c \text{ for } 0 \leq i \leq \ell-1\}$ is open
+  in $\Omega$ (it constrains finitely many coordinates) and contains $x$; as $x$ is in the closure
+  of the orbit, some $T^m\chi \in O$, i.e.\ $\chi(m + 1 + ir) = c$ for $0 \leq i \leq \ell - 1$.
+  Take $w_0 \coloneqq m + 1$.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:vdw-finitary}]
+  \proves{cor:vdw-finitary}
+  \uses{lem:vdw-infinite}
+  Suppose no such $W$ exists.  Then for every $W \geq 1$ there is a colouring
+  $\chi_W : [W] \to \{1,\dots,L\}$ with no monochromatic progression of the required type inside
+  $[W]$.  Extend each $\chi_W$ to a map $\NN \to \{1,\dots,L\}$ by the constant $1$ off $[W]$,
+  and regard the extensions as points of the compact metrizable space
+  $\Omega = \{1,\dots,L\}^{\NN}$.  By sequential compactness
+  (\texttt{IsCompact.tendsto\_subseq}) there is a subsequence $\chi_{W_j}$ converging to some
+  $\chi \in \Omega$; convergence in the product topology is coordinatewise, and the coordinates
+  take finitely many values, so for every $W$ there is $j_0$ with
+  $\chi_{W_j}|_{[W]} = \chi|_{[W]}$ for all $j \geq j_0$.
+
+  By Lemma~\ref{lem:vdw-infinite}, $\chi$ has a monochromatic progression
+  $w_0, w_0 + r, \dots, w_0 + (\ell-1)r$ with $r \in \Cantor\setminus\{0\}$.  Let
+  $W \coloneqq w_0 + (\ell-1)r$ and choose $j$ with $W_j \geq W$ and
+  $\chi_{W_j}|_{[W]} = \chi|_{[W]}$.  Then the same progression is monochromatic for
+  $\chi_{W_j}$ and lies in $[W] \subset [W_j]$, contradicting the choice of $\chi_{W_j}$.
+
+  (K\"onig's lemma, as in the paper, is the same argument phrased combinatorially; the
+  sequential compactness of $\Omega$ is the form in which Mathlib provides it.)
 \end{proof}

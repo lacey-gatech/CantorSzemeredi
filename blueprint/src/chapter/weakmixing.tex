@@ -1,13 +1,17 @@
 \label{chap:wm}
 
 Throughout, $\Cantor = \Cantor_{b,D} = \{0=k_0<k_1<\cdots\}$ with $0 \in D$ and $\delta = \abs{D}$.
-Let $\Dbb \subset \Ebb$ be $T$-invariant sub-$\sigma$-algebras of $\Abb$.  The hypothesis used is
+All functions are real-valued, as they are in Lean; $L^{\infty}(\Ebb)$ means the bounded
+$\Ebb$-measurable functions, and ``$\uniflim$'' is a limit along \texttt{uniformFilter}
+(Definition~\ref{def:uniform-liminf}).  Let $\Dbb \subset \Ebb$ be $T$-invariant
+sub-$\sigma$-algebras of $\Abb$.  The hypothesis used is
 \begin{equation}
   \label{eq:WM}
-  \text{every } f \in L^\infty(\Ebb) \text{ with } \Exp(f \mid \Dbb) = 0 \text{ is conditionally weakly mixing for } T .
+  \text{every } f \in L^{\infty}(\Ebb) \text{ with } \Exp(f \mid \Dbb) = 0 \text{ is conditionally weakly mixing for } T .
 \end{equation}
-A weakly mixing extension satisfies \eqref{eq:WM} by definition, and by
-Lemma~\ref{lem:powers}(2) \eqref{eq:WM} for $T$ implies \eqref{eq:WM} for every power $T^k$.
+A weakly mixing extension satisfies \eqref{eq:WM} by definition, since a bounded function lies in
+the Hilbert module, and by Lemma~\ref{lem:powers}(2) \eqref{eq:WM} for $T$ implies \eqref{eq:WM}
+for every power $T^k$, $k \geq 1$.
 
 \begin{remark}[Why increasing tuples]
   The results are stated for an arbitrary increasing tuple $0 < s_1 < \cdots < s_t$ of positive
@@ -15,15 +19,63 @@ Lemma~\ref{lem:powers}(2) \eqref{eq:WM} for $T$ implies \eqref{eq:WM} for every 
   factors passes to a \emph{subset} of the exponents, and the van der Corput step replaces the
   $s_j$ by the differences $s_j - s_1$.  The generality also absorbs the dilation parameter $i$
   of \eqref{eq:csz}, which is the case $s_j = j b^i$.  In Lean, the statement should quantify
-  over a \texttt{StrictMono} tuple from the start.
+  over a \texttt{StrictMono} tuple $s : \mathrm{Fin}\,t \to \NN$ with $s\,0 \geq 1$ from the start.
 \end{remark}
+
+\section{Three elementary facts}
+
+The proof of the main estimate uses the following three facts about conditional expectation,
+each of which is a one-line consequence of the definition, but each of which is used at a
+specific point and should be stated once.
+
+\begin{lemma}[Conditional expectation: bounds, pairing, equivariance]
+  \label{lem:condexp-facts}
+  \lean{CantorSzemeredi.MPS.abs_condExp_le, CantorSzemeredi.MPS.condExp_comp}
+  \uses{def:factor, def:hilbert-module, lem:condexp-commutes}
+  Let $\Dbb$ be a factor and $u, v \in L^{\infty}(\Abb)$.
+  \begin{enumerate}
+    \item[(a)] If $\abs{u} \leq K$ then $\abs{\Exp(u \mid \Dbb)} \leq K$ almost everywhere.
+    \item[(b)] If $v$ is $\Dbb$-measurable then $\int_X u\, v \, dm = \int_X \Exp(u\mid\Dbb)\, v \, dm$.
+    \item[(c)] For $v \geq 0$, $\Exp(u \circ T^v \mid \Dbb) = \Exp(u \mid \Dbb) \circ T^v$
+      almost everywhere; hence $\cnorm{u \circ T^v}(x) = \cnorm{u}(T^v x)$ for almost every $x$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  \uses{lem:condexp-commutes}
+  (a) is monotonicity of conditional expectation against the constants $\pm K$.  (b) is the
+  defining property of conditional expectation, $\int_B u = \int_B \Exp(u\mid\Dbb)$ for
+  $B \in \Dbb$, extended from indicators to bounded $\Dbb$-measurable $v$ by linearity and
+  bounded convergence (in Mathlib, \texttt{integral\_condExp\_mul} or the pull-out
+  property).  (c) is Lemma~\ref{lem:condexp-commutes} iterated $v$ times; the statement about
+  conditional norms is (c) applied to $u^2$, since $(u\circ T^v)^2 = u^2 \circ T^v$.
+\end{proof}
+
+\begin{lemma}[Telescoping]
+  \label{lem:telescoping}
+  For functions $a_1,\dots,a_t$ and $b_1,\dots,b_t$,
+  \[
+    \prod_{j=1}^{t} a_j - \prod_{j=1}^{t} b_j
+      = \sum_{j_0=1}^{t} \Bigl( \prod_{j<j_0} b_j \Bigr)\,(a_{j_0} - b_{j_0})\,\Bigl( \prod_{j>j_0} a_j \Bigr) .
+  \]
+  In particular if all $a_j, b_j$ take values in $[-1,1]$ then
+  $\abs{\prod_j a_j - \prod_j b_j} \leq \sum_j \abs{a_j - b_j}$ pointwise.
+\end{lemma}
+
+\begin{proof}
+  Induct on $t$; the term $j_0 = t$ of the sum is $(\prod_{j<t} b_j)(a_t - b_t)$, and the
+  remaining terms are $a_t$ times the identity for $t-1$.  (In Lean this is
+  \texttt{Finset.prod\_sub\_prod} or a direct induction over \texttt{Fin t}.)
+\end{proof}
+
+\section{The main estimate}
 
 \begin{lemma}[Weakly mixing extensions: main estimate]
   \label{lem:wm-main}
   \lean{CantorSzemeredi.wm_extension_tendsto}
-  \uses{def:cwm, lem:atomless, lem:uniform-spectral, lem:vdc, lem:differences, lem:powers}
+  \uses{def:cwm, lem:atomless, lem:uniform-spectral, lem:vdc, lem:differences, lem:powers, lem:condexp-facts, lem:telescoping}
   Let $\Dbb \subset \Ebb$ satisfy \eqref{eq:WM}, let $0 < s_1 < \cdots < s_t$ be integers, and
-  let $f_1,\dots,f_t \in L^\infty(\Ebb)$.  Then
+  let $f_1,\dots,f_t \in L^{\infty}(\Ebb)$.  Then
   \begin{equation}
     \label{eq:wm-conclusion}
     \uniflim \Bigl\lVert \unifavg \Bigl[ \prod_{j=1}^{t} T^{s_j k_n} f_j
@@ -31,170 +83,468 @@ Lemma~\ref{lem:powers}(2) \eqref{eq:WM} for $T$ implies \eqref{eq:WM} for every 
   \end{equation}
 \end{lemma}
 
-\begin{proof}
-  \uses{def:cwm, lem:atomless, lem:uniform-spectral, lem:vdc, lem:differences, lem:powers, lem:diff}
-  \textbf{Reduction.}  Rescale so $\abs{f_j} \leq 1$.  Telescoping,
-  \[
-    \prod_{j} T^{s_j k_n} f_j - \prod_{j} T^{s_j k_n} \Exp(f_j \mid \Dbb)
-    = \sum_{j_0=1}^{t} \prod_{j<j_0} T^{s_j k_n}\Exp(f_j \mid \Dbb) \cdot
-      T^{s_{j_0}k_n}\bigl(f_{j_0} - \Exp(f_{j_0}\mid \Dbb)\bigr) \cdot \prod_{j>j_0} T^{s_j k_n} f_j ,
-  \]
-  each summand a product of the same shape with the $j_0$-th factor of conditional expectation
-  zero.  So it suffices to prove: if $\abs{f_j} \leq 1$ for all $j$ and $\Exp(f_{j_0}\mid\Dbb)=0$
-  for some $j_0$, then
+The proof occupies the rest of this section.  It is organized as a reduction followed by an
+induction, and the induction is on a statement whose exact quantifier structure matters, so
+we state that first.
+
+\subsection*{The statement proved by induction}
+
+For $t \geq 1$ let $\mathsf P(t)$ be the following assertion.
+\begin{quote}
+  For every invertible measure preserving transformation $T$ of $(X,\Abb,m)$, every pair of
+  $T$-invariant sub-$\sigma$-algebras $\Dbb \subset \Ebb$ satisfying \eqref{eq:WM} for $T$,
+  every increasing tuple $0 < s_1 < \cdots < s_t$, every $f_1,\dots,f_t \in L^{\infty}(\Ebb)$
+  with $\abs{f_j} \leq 1$, and every $j_0 \in [t]$ with $\Exp(f_{j_0} \mid \Dbb) = 0$,
   \begin{equation}
     \label{eq:wm-star}
     \uniflim \Bigl\lVert \unifavg \prod_{j=1}^{t} T^{s_j k_n} f_j \Bigr\rVert_{L^2(X)} = 0 .
   \end{equation}
-  We induct on $t$, \emph{simultaneously over all invertible $T$ for which $\Dbb, \Ebb$ are
-  invariant and \eqref{eq:WM} holds, and over all increasing tuples of positive exponents}.
-  (This simultaneous quantification is essential: the inductive step applies the hypothesis to
-  the transformation $T^{b^\ell}$.  In Lean the induction must therefore be set up over $t$ with
-  $T$ and the tuple universally quantified inside.)
+\end{quote}
+The transformation $T$ and the tuple are quantified \emph{inside} $\mathsf P(t)$.  This is
+essential: the inductive step applies $\mathsf P(t-1)$ to the transformation $T^{b^{\ell}}$ and
+to the tuple $(s_j - s_1)_{j \geq 2}$, neither of which is the one being considered.  In Lean
+the induction is therefore over $t$ with everything else universally quantified in the
+induction hypothesis; the Cantor set $\Cantor$, on the other hand, is fixed throughout.
 
-  \smallskip
-  \textbf{Case $t=1$.}  $f = f_1$ has $\Exp(f\mid\Dbb)=0$, so it is conditionally weakly mixing
-  by \eqref{eq:WM} and $\sigma_f$ is atomless by Lemma~\ref{lem:atomless}(i).  By
-  Corollary~\ref{cor:uniform-ergodic}, $\lVert \unifavg T^{s_1 k_n} f \rVert_2 \to 0$.
+\subsection*{Reduction of Lemma~\ref{lem:wm-main} to $\mathsf P(t)$}
 
-  \smallskip
-  \textbf{Inductive step: parameters.}  Let $t \geq 2$.  Fix $f_1,\dots,f_t$ as above and
-  $0 < \epsilon < 1$.  Write $f \coloneqq f_{j_0}$, $s \coloneqq s_{j_0}$, and for $m \in \ZZ$
-  \begin{equation}
-    \label{eq:phipsi}
-    \phi(m) \coloneqq \bigl\lVert \cip{T^m f}{f} \bigr\rVert_{L^1(\Dbb)} , \qquad
-    \psi(m) \coloneqq \bigl\lVert \cip{T^m f}{f} \bigr\rVert_{L^2(\Dbb)}^2 ,
-  \end{equation}
-  so $\phi(m)^2 \leq \psi(m) \leq 1$.  By Lemma~\ref{lem:atomless}(ii),
-  $\psi(m) = \int e(m\alpha)\,d\sigma(\alpha)$ for a finite positive atomless $\sigma = \sigma_G$.
-  By Lemma~\ref{lem:uniform-spectral} fix $H \geq 1/\epsilon$ with
-  \begin{equation}
-    \label{eq:Hchoice}
-    \int_{\TT} \Phi_H(s\alpha)\, d\sigma(\alpha) < \epsilon ,
-  \end{equation}
-  then fix $\ell$ with $\delta^\ell > H/\epsilon$.  Put $u_n \coloneqq \prod_{j=1}^{t} T^{s_j k_n} f_j$,
-  so $\norm{u_n}_2 \leq 1$.
+Let $K \coloneqq \max_j \norm{f_j}_\infty$; if $K = 0$ there is nothing to prove, and otherwise
+replacing $f_j$ by $f_j/K$ multiplies the expression in \eqref{eq:wm-conclusion} by $K^{-t}$,
+since both products are homogeneous of degree $t$ and conditional expectation is linear.  So
+assume $\abs{f_j} \leq 1$.  Put $g_j \coloneqq \Exp(f_j\mid\Dbb)$, so $\abs{g_j} \leq 1$ by
+Lemma~\ref{lem:condexp-facts}(a), and $g_j$ is $\Dbb$-measurable, hence in $L^{\infty}(\Ebb)$.
+By Lemma~\ref{lem:telescoping} with $a_j = T^{s_jk_n}f_j$ and $b_j = T^{s_jk_n}g_j$, and since
+$T^{s_jk_n}$ commutes with products,
+\[
+  \prod_{j} T^{s_j k_n} f_j - \prod_{j} T^{s_j k_n} g_j
+  = \sum_{j_0=1}^{t} \prod_{j=1}^{t} T^{s_j k_n} f^{(j_0)}_j ,
+  \qquad
+  f^{(j_0)}_j \coloneqq
+  \begin{cases}
+    g_j & j < j_0 , \\
+    f_{j_0} - g_{j_0} & j = j_0 , \\
+    f_j & j > j_0 .
+  \end{cases}
+\]
+Each $f^{(j_0)}_j$ is in $L^{\infty}(\Ebb)$ with $\abs{f^{(j_0)}_j} \leq 2$, and
+$\Exp(f^{(j_0)}_{j_0} \mid \Dbb) = g_{j_0} - g_{j_0} = 0$.  Dividing by $2$ puts the $j_0$-th
+summand into the scope of $\mathsf P(t)$, which gives
+$\uniflim \lVert \unifavg \prod_j T^{s_jk_n} f^{(j_0)}_j \rVert_2 = 0$ for each $j_0$.  The
+triangle inequality in $L^2$ over the $t$ summands gives \eqref{eq:wm-conclusion}.  (Note that
+the average over $n$ and the sum over $j_0$ commute, and that
+$\norm{\cdot}_{L^2}$ of a finite sum is at most the sum of the norms, so the uniform limit of
+the sum is $0$ once each term's is: $t$ applications of the fact that if two sequences indexed
+by windows tend to $0$ along \texttt{uniformFilter} then so does their sum.)
 
-  \smallskip
-  \textbf{Step 1: one shift at a time.}  There is $L_0$ such that for every $1 \leq h \leq H$ and
-  every interval $[M',N')$ of length at least $L_0$,
+\subsection*{The case $t = 1$}
+
+Here $f = f_1$ has $\Exp(f\mid\Dbb) = 0$ and $\abs{f} \leq 1$, so $f$ is in the Hilbert
+module, and by \eqref{eq:WM} it is conditionally weakly mixing.  By
+Lemma~\ref{lem:atomless}(i) its spectral measure $\sigma_f$ for the Koopman operator $U$ of $T$
+on $L^2(X)$ is atomless.  By the spectral identity (\texttt{norm\_sum\_sq}) with the constant
+coefficients $a_n = 1/(N-M)$ and exponents $s_1 k_n$,
+\[
+  \Bigl\lVert \unifavg U^{s_1 k_n} f \Bigr\rVert_2^2
+    = \int_{\TT} \Bigl\lvert \unifavg e(s_1 \alpha k_n) \Bigr\rvert^2 d\sigma_f(\alpha)
+    \leq \int_{\TT} \Phi_{N-M}(s_1\alpha)\, d\sigma_f(\alpha) ,
+\]
+the inequality because $\abs{\unifavg e(\beta k_n)} \leq \Phi_{N-M}(\beta) \leq 1$ for every $M$
+by Definition~\ref{def:Phi}, so the square is at most $\Phi_{N-M}$.  The right side depends on
+the window only through its length $L = N-M$, and tends to $0$ as $L \to \infty$ by
+Lemma~\ref{lem:uniform-spectral} (Lean: \texttt{tendsto\_integral\_Phi\_zero} with $s = s_1$).
+A function of $L$ that tends to $0$ tends to $0$ along \texttt{uniformFilter}: given
+$\epsilon$, choose $L_0$ with the integral below $\epsilon$ for $L \geq L_0$, and then every
+window of length at least $L_0$ qualifies.  This is \eqref{eq:wm-star} for $t = 1$.
+
+\subsection*{The inductive step: parameters}
+
+Let $t \geq 2$ and assume $\mathsf P(t-1)$.  Fix $T$, $\Dbb \subset \Ebb$, the tuple, the
+$f_j$ with $\abs{f_j} \leq 1$, and $j_0$ with $\Exp(f_{j_0}\mid\Dbb) = 0$, and fix
+$0 < \epsilon < 1$.  We will produce $L_1$ such that
+\begin{equation}
+  \label{eq:wm-target}
+  \Bigl\lVert \unifavg u_n \Bigr\rVert_2^2 \leq 20\sqrt{\epsilon}
+  \qquad \text{whenever } N - M \geq L_1 ,
+  \qquad u_n \coloneqq \prod_{j=1}^{t} T^{s_j k_n} f_j .
+\end{equation}
+Since $\epsilon$ is arbitrary this is \eqref{eq:wm-star}.  Note $\abs{u_n} \leq 1$, so
+$\norm{u_n}_2 \leq 1$, as van der Corput requires.
+
+Write $f \coloneqq f_{j_0}$ and $s \coloneqq s_{j_0}$, and for $v \in \NNz$ set
+\begin{equation}
+  \label{eq:phipsi}
+  \phi(v) \coloneqq \int_X \bigl\lvert \cip{T^v f}{f} \bigr\rvert \, dm , \qquad
+  \psi(v) \coloneqq \int_X \cip{T^v f}{f}^2 \, dm .
+\end{equation}
+Both are non-negative.  Since $\abs{T^vf \cdot f} \leq 1$,
+Lemma~\ref{lem:condexp-facts}(a) gives $\abs{\cip{T^vf}{f}} \leq 1$ a.e., hence
+$\psi(v) \leq 1$; and $\phi(v)^2 \leq \psi(v)$ by Cauchy--Schwarz on the probability space
+$(X,m)$.  By Lemma~\ref{lem:atomless}(ii) applied to the product system
+$(X \times X, \lambda, R = T \times T)$ and $G = f \otimes f$, the measure
+$\sigma \coloneqq \sigma_G$ is a finite positive atomless measure on $\TT$ with
+\begin{equation}
+  \label{eq:psi-spectral}
+  \psi(v) = \langle R^v G, G \rangle_{L^2(\lambda)} = \int_{\TT} e(v\alpha)\, d\sigma(\alpha),
+  \qquad v \in \NNz .
+\end{equation}
+By Lemma~\ref{lem:uniform-spectral} applied to $\sigma$ and the integer $s \geq 1$, fix an
+integer $H \geq 1/\epsilon$ with
+\begin{equation}
+  \label{eq:Hchoice}
+  \int_{\TT} \Phi_H(s\alpha)\, d\sigma(\alpha) < \epsilon .
+\end{equation}
+Then fix $\ell \geq 1$ with $\delta^{\ell} > H/\epsilon$; in particular $\delta^{\ell} > H$, so
+Lemma~\ref{lem:differences} applies to every $1 \leq h \leq H$ with this $\ell$.
+
+\subsection*{Step 1: one shift at a time}
+
+\noindent\textbf{Claim.}  There is $L_0 \geq \delta^{\ell}/\epsilon$ such that for every $1 \leq h \leq H$ and every
+  window $[M',N')$ with $N' - M' \geq L_0$,
   \begin{equation}
     \label{eq:per-shift}
     \Bigl\lvert \avg{M' \leq n < N'} \langle u_{n+h}, u_n \rangle \Bigr\rvert
       \leq \avg{M' \leq n < N'} \phi\bigl( s(k_{n+h}-k_n) \bigr) + 3\epsilon .
   \end{equation}
-  Fix $h$.  With $P_c, \Delta_c$ as in Lemma~\ref{lem:differences}, for $n \in P_c$ and
-  $\Delta = \Delta_c$ we have $T^{s_j k_{n+h}} = T^{s_j k_n} T^{s_j \Delta}$, so with
-  $F_j \coloneqq \overline{f_j}\cdot T^{s_j \Delta_c} f_j$ (bounded by $1$),
-  \begin{equation}
-    \label{eq:two-inner}
-    \langle u_{n+h}, u_n \rangle = \int_X \prod_{j=1}^{t} T^{s_j k_n} F_j \, dm
-      = \int_X F_1 \cdot \prod_{j=2}^{t} T^{(s_j - s_1)k_n} F_j \, dm ,
-  \end{equation}
-  applying $T^{-s_1 k_n}$.  Writing $n = \delta^\ell a + c$, Lemma~\ref{lem:diff}(ii) gives
-  $k_n = b^\ell k_a + k_c$ and hence
-  \begin{equation}
-    \label{eq:reindex}
-    \prod_{j=2}^{t} T^{(s_j-s_1)k_n} F_j
-      = \prod_{j=2}^{t} \bigl(T^{b^\ell}\bigr)^{(s_j-s_1)k_a}\bigl( T^{(s_j-s_1)k_c} F_j \bigr) .
-  \end{equation}
-  The transformation $T^{b^\ell}$ satisfies \eqref{eq:WM} (Lemma~\ref{lem:powers}(2)), and the
-  $t-1$ exponents $s_j - s_1$ are positive and increasing, so the induction hypothesis applies to
-  the right side of \eqref{eq:reindex}.  Since $\Dbb$ is $T$-invariant,
-  $\Exp(T^{(s_j-s_1)k_c}F_j \mid \Dbb) = T^{(s_j-s_1)k_c}\Exp(F_j\mid\Dbb)$; undoing
-  \eqref{eq:reindex}, and noting that as $n$ runs over $P_c \cap [M',N')$ the index $a$ runs over
-  an interval of length at least $(N'-M')/\delta^\ell - 1$,
-  \begin{equation}
-    \label{eq:IH}
-    \lim_{N'-M'\to\infty} \Bigl\lVert \avg{n \in P_c \cap [M',N')} \Bigl[
-      \prod_{j=2}^{t} T^{(s_j-s_1)k_n}F_j - \prod_{j=2}^{t} T^{(s_j-s_1)k_n}\Exp(F_j\mid\Dbb)
-      \Bigr] \Bigr\rVert_{L^2(X)} = 0 .
-  \end{equation}
-  Note the shifts remain on the conditional expectations: these are $\Dbb$-measurable functions,
-  not constants.  There are finitely many pairs $(h,c)$, so fix $L_0 \geq \delta^\ell/\epsilon$
-  making the norm in \eqref{eq:IH} less than $\epsilon$ for all of them once $N'-M' \geq L_0$.
 
-  Pair \eqref{eq:IH} with $F_1$; the second product is $\Dbb$-measurable so its integral against
-  $F_1$ equals its integral against $\Exp(F_1 \mid \Dbb)$.  Bounding all factors but the $j_0$-th
-  by $1$ and using that $T$ preserves $m$, the remaining integral is at most
-  $\norm{\Exp(F_{j_0}\mid\Dbb)}_{L^1} = \phi(s\Delta_c) = \phi(s(k_{n+h}-k_n))$, since
-  $\Exp(F_{j_0}\mid\Dbb) = \cip{T^{s\Delta_c}f}{f}$.  Hence
-  \begin{equation}
-    \label{eq:per-class}
-    \Bigl\lvert \avg{n \in P_c \cap [M',N')} \langle u_{n+h},u_n\rangle \Bigr\rvert
-      \leq \epsilon + \avg{n \in P_c \cap [M',N')} \phi\bigl(s(k_{n+h}-k_n)\bigr) .
-  \end{equation}
-  Write the average over $[M',N')$ as a weighted sum of the averages over the $P_c \cap [M',N')$
-  plus the leftover indices.  By Lemma~\ref{lem:differences}(ii) there are at most
-  $h\delta^{-\ell}(N'-M') + \delta^\ell \leq \epsilon(N'-M') + \delta^\ell$ leftovers, each
-  contributing at most $1$.  With $\phi \geq 0$, which allows extending its average to all of
-  $[M',N')$, this gives \eqref{eq:per-shift} since $N'-M' \geq L_0 \geq \delta^\ell/\epsilon$.
+Fix $1 \leq h \leq H$.  For $0 \leq c < \delta^{\ell} - h$ let
+$P_c = \{n : n \equiv c \bmod \delta^{\ell}\}$ and $\Delta_c = k_{c+h} - k_c$ be as in
+Lemma~\ref{lem:differences}, so that $k_{n+h} - k_n = \Delta_c$ for all $n \in P_c$.
 
-  \smallskip
-  \textbf{Step 2: averaging over the shifts.}  Let $N-M \geq L_0 + 2H$.  Applying
-  \eqref{eq:per-shift} on $[M, N-h)$ for each $1 \leq h \leq H$ and averaging over $h$,
-  \begin{equation}
-    \label{eq:shift-average}
-    \avg{1 \leq h \leq H} \Bigl\lvert \avg{M \leq n < N-h} \langle u_{n+h},u_n\rangle \Bigr\rvert
-      \leq \avg{1 \leq h \leq H} \avg{M \leq n < N-h} \phi\bigl(s(k_{n+h}-k_n)\bigr) + 3\epsilon .
-  \end{equation}
-  The left side is exactly the quantity appearing in van der Corput, \eqref{eq:vdc}: the absolute
-  value is \emph{inside} the average over $h$.  This is why each shift was handled separately in
-  Step 1, the shifts being averaged only after the correlation is bounded by the non-negative
-  $\phi$.
+\emph{The correlation on one class.}  Let $n \in P_c$ and write $\Delta = \Delta_c$.  Then
+$T^{s_j k_{n+h}} = T^{s_j k_n} T^{s_j\Delta}$, so with
+\begin{equation}
+  \label{eq:Fj}
+  F_j \coloneqq f_j \cdot T^{s_j\Delta_c} f_j \in L^{\infty}(\Ebb) , \qquad \abs{F_j} \leq 1 ,
+\end{equation}
+we have $u_{n+h} u_n = \prod_j T^{s_jk_n}(f_j \cdot T^{s_j\Delta}f_j) = \prod_j T^{s_jk_n}F_j$,
+and applying the measure preserving map $T^{-s_1k_n}$ inside the integral,
+\begin{equation}
+  \label{eq:two-inner}
+  \langle u_{n+h}, u_n \rangle = \int_X \prod_{j=1}^{t} T^{s_j k_n} F_j \, dm
+    = \int_X F_1 \cdot \prod_{j=2}^{t} T^{(s_j - s_1)k_n} F_j \, dm .
+\end{equation}
+(Here $F_j \in L^{\infty}(\Ebb)$ because $\Ebb$ is $T$-invariant and closed under products.)
 
-  By Cauchy--Schwarz and $\phi^2 \leq \psi$, the right-hand double average is at most
-  $\bigl( \avg{h}\avg{M\leq n<N-h} \psi(s(k_{n+h}-k_n)) \bigr)^{1/2}$.  As $\psi \geq 0$ and
-  $N-M \geq 2H$, enlarging $[M,N-h)$ to $[M,N)$ costs at most a factor $2$.  Then
-  \begin{align*}
-    \avg{1 \leq h \leq H} \avg{M \leq n < N} \psi\bigl(s(k_{n+h}-k_n)\bigr)
-      &= \Bigl\lvert \int_{\TT} \avg{M\leq n<N}\Bigl[ e(-s\alpha k_n) \avg{1\leq h\leq H} e(s\alpha k_{n+h}) \Bigr] d\sigma(\alpha) \Bigr\rvert \\
-      &\leq \int_{\TT} \avg{M\leq n<N} \Bigl\lvert \avg{1\leq h\leq H} e(s\alpha k_{n+h}) \Bigr\rvert d\sigma(\alpha)
-       \leq \int_{\TT} \Phi_H(s\alpha)\, d\sigma(\alpha) < \epsilon ,
-  \end{align*}
-  the first line because the left side is real and non-negative; for the second inequality, for
-  fixed $n$ the average over $h$ is an average of $e(s\alpha k_u)$ over the interval of indices
-  $u \in [n+1,n+H]$, of length $H$, so its modulus is at most $\Phi_H(s\alpha)$ \emph{uniformly in
-  $n$}; the last step is \eqref{eq:Hchoice}.  So the left side of \eqref{eq:shift-average} is at
-  most $\sqrt{2\epsilon} + 3\epsilon$, and van der Corput \eqref{eq:vdc} with this $H \geq 1/\epsilon$
-  gives $\lVert \unifavg u_n \rVert^2 \leq 4(\sqrt{2\epsilon}+3\epsilon) + 2\epsilon$ once
-  $N-M \geq L_0 + 2H$.  As $\epsilon$ was arbitrary, \eqref{eq:wm-star} follows.
-\end{proof}
+\emph{Re-indexing along the class.}  Write $n = \delta^{\ell} a + c$ with $a \in \NNz$.  By
+Lemma~\ref{lem:diff}(ii), $k_n = b^{\ell} k_a + k_c$, hence for $j \geq 2$,
+\[
+  T^{(s_j - s_1)k_n} F_j = \bigl(T^{b^{\ell}}\bigr)^{(s_j - s_1)k_a}\, G_j ,
+  \qquad G_j \coloneqq T^{(s_j - s_1)k_c} F_j \in L^{\infty}(\Ebb) , \quad \abs{G_j} \leq 1 .
+\]
+Set $\widetilde T \coloneqq T^{b^{\ell}}$ and $\tilde s_j \coloneqq s_j - s_1$ for
+$2 \leq j \leq t$: then $0 < \tilde s_2 < \cdots < \tilde s_t$ is an increasing tuple of
+$t - 1$ positive exponents, $\Dbb \subset \Ebb$ are $\widetilde T$-invariant, and \eqref{eq:WM}
+holds for $\widetilde T$ by Lemma~\ref{lem:powers}(2).  Put
+$\tilde g_j \coloneqq \Exp(G_j \mid \Dbb)$.  By Lemma~\ref{lem:telescoping} and the reduction
+above --- which is valid for $\widetilde T$ and the tuple $\tilde s$, with $t-1$ in place of $t$,
+and which uses only $\mathsf P(t-1)$ --- we obtain
+\begin{equation}
+  \label{eq:IH-a}
+  \lim_{A' - A \to \infty} \Bigl\lVert \avg{A \leq a < A'} \Bigl[
+    \prod_{j=2}^{t} \widetilde T^{\tilde s_j k_a} G_j - \prod_{j=2}^{t} \widetilde T^{\tilde s_j k_a} \tilde g_j
+  \Bigr] \Bigr\rVert_{L^2(X)} = 0 ,
+\end{equation}
+the limit along \texttt{uniformFilter} in the window $[A,A')$.  Note that \eqref{eq:IH-a} is
+Lemma~\ref{lem:wm-main} for $\widetilde T$, not $\mathsf P(t-1)$ directly: the reduction from
+the Lemma to $\mathsf P$ is applied a second time, at level $t-1$.  In Lean the cleanest
+arrangement is to prove the reduction as a separate lemma, ``$\mathsf P(t) \Rightarrow$
+Lemma~\ref{lem:wm-main} at $t$'', and to invoke it here.
+
+\emph{Undoing the re-indexing.}  By Lemma~\ref{lem:condexp-facts}(c) (for $T$, iterated
+$(s_j - s_1)k_c$ times), $\tilde g_j = T^{(s_j - s_1)k_c}\Exp(F_j\mid\Dbb)$, so
+$\widetilde T^{\tilde s_j k_a}\tilde g_j = T^{(s_j-s_1)k_n}\Exp(F_j\mid\Dbb)$.  Thus the
+function inside the norm in \eqref{eq:IH-a}, evaluated at $a$, is
+\[
+  W_n \coloneqq \prod_{j=2}^{t} T^{(s_j-s_1)k_n}F_j - \prod_{j=2}^{t} T^{(s_j-s_1)k_n}\Exp(F_j\mid\Dbb) ,
+  \qquad n = \delta^{\ell} a + c .
+\]
+The shifts remain on the conditional expectations: these are $\Dbb$-measurable functions, not
+constants.  As $n$ runs over $P_c \cap [M',N')$, the index $a$ runs over the integer interval
+$[A, A')$ with $A = \lceil (M'-c)/\delta^{\ell} \rceil$ and $A' = \lceil (N'-c)/\delta^{\ell} \rceil$,
+whose length satisfies $A' - A \geq (N'-M')/\delta^{\ell} - 1$.  Hence \eqref{eq:IH-a} gives
+\begin{equation}
+  \label{eq:IH}
+  \lim_{N'-M'\to\infty} \Bigl\lVert \avg{n \in P_c \cap [M',N')} W_n \Bigr\rVert_{L^2(X)} = 0 ,
+\end{equation}
+uniformly in $M'$: given $\eta > 0$, take $L$ with the norm in \eqref{eq:IH-a} below $\eta$ for
+$A' - A \geq L$, and then $N' - M' \geq \delta^{\ell}(L+1)$ suffices.  (If
+$P_c \cap [M',N')$ is empty the average is $0$ by convention; this does not occur once
+$N' - M' \geq \delta^{\ell}$.)
+
+There are finitely many pairs $(h,c)$ with $1 \leq h \leq H$ and $0 \leq c < \delta^{\ell} - h$.
+Fix $L_0 \geq \delta^{\ell}/\epsilon$ such that for all of them, and all windows with
+$N' - M' \geq L_0$, the norm in \eqref{eq:IH} is less than $\epsilon$.
+
+\emph{Pairing with $F_1$.}  Let $N' - M' \geq L_0$.  By \eqref{eq:two-inner},
+\[
+  \avg{n \in P_c \cap [M',N')} \langle u_{n+h},u_n\rangle
+    = \int_X F_1 \cdot \avg{n \in P_c \cap [M',N')} W_n \, dm
+    + \avg{n \in P_c \cap [M',N')} \int_X F_1 \prod_{j=2}^{t} T^{(s_j-s_1)k_n}\Exp(F_j\mid\Dbb)\,dm .
+\]
+The first term is at most $\norm{F_1}_2 \cdot \epsilon \leq \epsilon$ in modulus, by
+Cauchy--Schwarz.  In the second, the product $\prod_{j \geq 2} T^{(s_j-s_1)k_n}\Exp(F_j\mid\Dbb)$
+is bounded and $\Dbb$-measurable ($\Dbb$ is $T$-invariant), so by
+Lemma~\ref{lem:condexp-facts}(b) its integral against $F_1$ equals its integral against
+$\Exp(F_1\mid\Dbb)$:
+\[
+  \int_X F_1 \prod_{j=2}^{t} T^{(s_j-s_1)k_n}\Exp(F_j\mid\Dbb)\,dm
+    = \int_X \prod_{j=1}^{t} T^{(s_j-s_1)k_n}\Exp(F_j\mid\Dbb)\,dm ,
+\]
+where the $j = 1$ factor carries the exponent $0$.  All $t$ factors are bounded by $1$ by
+Lemma~\ref{lem:condexp-facts}(a).  Bounding all but the $j_0$-th by $1$, and using that
+$T^{(s_{j_0}-s_1)k_n}$ preserves $m$,
+\[
+  \Bigl\lvert \int_X \prod_{j=1}^{t} T^{(s_j-s_1)k_n}\Exp(F_j\mid\Dbb)\,dm \Bigr\rvert
+    \leq \int_X \bigl\lvert T^{(s_{j_0}-s_1)k_n}\Exp(F_{j_0}\mid\Dbb) \bigr\rvert \,dm
+    = \int_X \abs{\Exp(F_{j_0}\mid\Dbb)}\,dm .
+\]
+Finally $F_{j_0} = f \cdot T^{s\Delta_c} f$, so $\Exp(F_{j_0}\mid\Dbb) = \cip{T^{s\Delta_c}f}{f}$
+and the last integral is $\phi(s\Delta_c) = \phi(s(k_{n+h}-k_n))$ for every $n \in P_c$.  Hence
+\begin{equation}
+  \label{eq:per-class}
+  \Bigl\lvert \avg{n \in P_c \cap [M',N')} \langle u_{n+h},u_n\rangle \Bigr\rvert
+    \leq \epsilon + \avg{n \in P_c \cap [M',N')} \phi\bigl(s(k_{n+h}-k_n)\bigr) .
+\end{equation}
+
+\emph{Assembling the classes.}  Let $\mathbb P = \bigcup_{0 \leq c < \delta^{\ell} - h} P_c$ and
+$Q \coloneqq [M',N') \setminus \mathbb P$.  Then
+\[
+  \sum_{M' \leq n < N'} \langle u_{n+h},u_n\rangle
+    = \sum_{c} \sum_{n \in P_c \cap [M',N')} \langle u_{n+h},u_n\rangle + \sum_{n \in Q} \langle u_{n+h},u_n\rangle .
+\]
+Each term of the last sum is at most $1$ in modulus, and by Lemma~\ref{lem:differences}(ii)
+$\abs{Q} \leq h\delta^{-\ell}(N'-M') + \delta^{\ell} \leq \epsilon(N'-M') + \delta^{\ell}$, since
+$h \leq H < \epsilon\delta^{\ell}$.  For the first sum, multiply \eqref{eq:per-class} by
+$\abs{P_c \cap [M',N')}$ and add over $c$; since $\phi \geq 0$ the resulting sum of $\phi$'s
+over $\mathbb P \cap [M',N')$ is at most the sum over all of $[M',N')$.  Dividing by $N'-M'$,
+\[
+  \Bigl\lvert \avg{M' \leq n < N'} \langle u_{n+h}, u_n \rangle \Bigr\rvert
+    \leq \epsilon + \avg{M' \leq n < N'} \phi\bigl(s(k_{n+h}-k_n)\bigr) + \epsilon + \frac{\delta^{\ell}}{N'-M'} ,
+\]
+and $\delta^{\ell}/(N'-M') \leq \delta^{\ell}/L_0 \leq \epsilon$.  This is \eqref{eq:per-shift}.
+
+\subsection*{Step 2: averaging over the shifts}
+
+Let $N - M \geq L_0 + 2H$.  For each $1 \leq h \leq H$ the window $[M, N-h)$ has length at
+least $L_0$, so \eqref{eq:per-shift} applies to it; averaging over $h$,
+\begin{equation}
+  \label{eq:shift-average}
+  \avg{1 \leq h \leq H} \Bigl\lvert \avg{M \leq n < N-h} \langle u_{n+h},u_n\rangle \Bigr\rvert
+    \leq \avg{1 \leq h \leq H} \avg{M \leq n < N-h} \phi\bigl(s(k_{n+h}-k_n)\bigr) + 3\epsilon .
+\end{equation}
+The left side is exactly the quantity appearing in van der Corput, \eqref{eq:vdc}: the absolute
+value is \emph{inside} the average over $h$.  This is why each shift was handled separately in
+Step 1, the shifts being averaged only after the correlation is bounded by the non-negative
+$\phi$.
+
+\emph{From $\phi$ to $\psi$.}  By Cauchy--Schwarz for the (double) average, and $\phi^2 \leq \psi$,
+\[
+  \avg{h} \avg{M \leq n < N-h} \phi\bigl(s(k_{n+h}-k_n)\bigr)
+    \leq \Bigl( \avg{h} \avg{M \leq n < N-h} \psi\bigl(s(k_{n+h}-k_n)\bigr) \Bigr)^{1/2} .
+\]
+Since $\psi \geq 0$, $\sum_{M \leq n < N-h} \psi(\cdot) \leq \sum_{M \leq n < N}\psi(\cdot)$, and
+since $h \leq H \leq (N-M)/2$ we have $1/(N-M-h) \leq 2/(N-M)$; so each inner average over
+$[M,N-h)$ is at most $2$ times the average over $[M,N)$.
+
+\emph{The spectral bound.}  By \eqref{eq:psi-spectral} with $v = s(k_{n+h}-k_n) \geq 0$,
+\[
+  \avg{1 \leq h \leq H} \avg{M \leq n < N} \psi\bigl(s(k_{n+h}-k_n)\bigr)
+    = \int_{\TT} \avg{M\leq n<N} \Bigl[ e(-s\alpha k_n) \avg{1\leq h\leq H} e(s\alpha k_{n+h}) \Bigr] d\sigma(\alpha) ,
+\]
+the finite averages being pulled inside the integral by linearity.  The left side is real and
+non-negative, so it equals its modulus, and taking the modulus inside the integral and inside
+the average over $n$ (but \emph{not} inside the average over $h$),
+\[
+  \leq \int_{\TT} \avg{M\leq n<N} \Bigl\lvert \avg{1\leq h\leq H} e(s\alpha k_{n+h}) \Bigr\rvert d\sigma(\alpha)
+  \leq \int_{\TT} \Phi_H(s\alpha)\, d\sigma(\alpha) < \epsilon .
+\]
+For the middle inequality: for fixed $n$, $\avg{1\leq h\leq H} e(s\alpha k_{n+h})$ is the
+average of $e(s\alpha k_u)$ over the window $u \in [n+1, n+1+H)$ of length $H$, so its modulus
+is at most $\Phi_H(s\alpha)$ by Definition~\ref{def:Phi}, \emph{uniformly in $n$}; the last step
+is \eqref{eq:Hchoice}.
+
+\emph{Combining.}  The double average of $\phi$ in \eqref{eq:shift-average} is at most
+$(2\epsilon)^{1/2}$, so the left side of \eqref{eq:shift-average} is at most
+$\sqrt{2\epsilon} + 3\epsilon$.
+
+\subsection*{Step 3: conclusion}
+
+Let $N - M \geq L_1 \coloneqq L_0 + 2H$.  Then $1 \leq H < N - M$, and the vectors
+$u_M,\dots,u_{N-1}$ have norm at most $1$ in the real Hilbert space $L^2(X)$, so
+Lemma~\ref{lem:vdc} applies:
+\[
+  \Bigl\lVert \unifavg u_n \Bigr\rVert_2^2
+    \leq 4 \avg{1 \leq h \leq H} \Bigl\lvert \avg{M \leq n < N-h} \langle u_{n+h}, u_n \rangle \Bigr\rvert + \frac 2H
+    \leq 4\bigl(\sqrt{2\epsilon} + 3\epsilon\bigr) + 2\epsilon \leq 20\sqrt\epsilon ,
+\]
+using $1/H \leq \epsilon$ and $\epsilon \leq \sqrt\epsilon$.  This is \eqref{eq:wm-target},
+which proves $\mathsf P(t)$ and completes the induction.  \qed
+
+\begin{remark}[Bookkeeping for the formalization]
+  \begin{enumerate}
+    \item Every ``almost everywhere'' above is for a fixed finite collection of functions:
+      the identities of Lemma~\ref{lem:condexp-facts} are used for the finitely many
+      $F_j, G_j$, with finitely many exponents.  No countable intersection of null sets is needed
+      in this chapter.
+    \item The quantities $\phi, \psi$ are indexed by $v \in \NNz$ (the differences
+      $k_{n+h} - k_n$ and the products $s\Delta_c$ are non-negative), and the Lean
+      \texttt{CondWeaklyMixing} and \texttt{HasSpectralMeasure} supply \eqref{eq:psi-spectral}
+      for all $v \in \ZZ$; only $v \geq 0$ is used.
+    \item The real-valuedness is harmless: $\overline{f_j} = f_j$, and the spectral measure
+      $\sigma_G$ of a real vector satisfies $\widehat\sigma(-v) = \widehat\sigma(v)$, so the
+      computation in Step 2 can be done with $e(-s\alpha k_n)$ as written or with its conjugate.
+    \item The constant $20\sqrt{\epsilon}$ is immaterial; any function of $\epsilon$ tending to
+      $0$ serves.  In Lean it is convenient to prove the bound in the form
+      ``for every $\eta > 0$ there is $L_1$ with $\norm{\cdots}_2^2 \leq \eta$ for
+      $N - M \geq L_1$'' and to feed $\epsilon$ with $20\sqrt\epsilon \leq \eta$.
+  \end{enumerate}
+\end{remark}
+
+\section{Part (W) of the extension principles}
 
 \begin{lemma}[Part (W) of the extension principles]
   \label{lem:wm-extension}
   \lean{CantorSzemeredi.MPS.CSZ_of_weaklyMixingExtension}
-  \uses{lem:wm-main, def:csz, lem:csz-functions}
+  \uses{lem:wm-main, def:csz, lem:csz-functions, lem:condexp-facts}
   If $\Dbb$ is CSZ and $\Ebb$ is a weakly mixing extension of $\Dbb$, then $\Ebb$ is CSZ.
 \end{lemma}
 
 \begin{proof}
-  \uses{lem:wm-main, def:csz, lem:csz-functions}
-  Hypothesis \eqref{eq:WM} holds, since a weakly mixing extension satisfies it for every $f$ in
-  the Hilbert module, which contains $L^\infty(\Ebb)$.  Take $s_j = j b^i$, each
-  $f_j = \one_A$ with $A \in \Ebb$, $m(A) > 0$, and set $g \coloneqq \Exp(\one_A \mid \Dbb)$.
-  Pairing \eqref{eq:wm-conclusion} with $\one_A$, and using that $\prod_j T^{jb^i k_n} g$ is
-  $\Dbb$-measurable so its integral against $\one_A$ equals its integral against $g$,
+  \uses{lem:wm-main, def:csz, lem:csz-functions, lem:condexp-facts}
+  Hypothesis \eqref{eq:WM} holds: a weakly mixing extension makes every $f$ in the Hilbert
+  module with $\Exp(f\mid\Dbb) = 0$ conditionally weakly mixing, and a bounded
+  $\Ebb$-measurable $f$ is in the module (it is square integrable and its conditional norm is
+  bounded by $\norm{f}_\infty$, by Lemma~\ref{lem:condexp-facts}(a)).
+
+  Fix a Cantor set $\Cantor$, integers $t \geq 1$ and $i \geq 0$, and $A \in \Ebb$ with
+  $m(A) > 0$.  Set $g \coloneqq \Exp(\one_A\mid\Dbb)$; then $g$ is $\Dbb$-measurable with
+  $0 \leq g \leq 1$ a.e.\ (Lemma~\ref{lem:condexp-facts}(a) and monotonicity), and
+  $\int g\,dm = m(A) > 0$.  Replacing $g$ by $\min(1,\max(0,g))$ changes it only on a null set,
+  so we may take $0 \leq g \leq 1$ everywhere and $g$ strongly $\Dbb$-measurable.
+
+  \emph{The averages for $A$ and for $g$ agree in the limit.}  Apply Lemma~\ref{lem:wm-main} to
+  the tuple $s_j = jb^i$, $1 \leq j \leq t$, and $f_1 = \cdots = f_t = \one_A$; it gives
   \[
-    \unifavg \int_X \prod_{s=0}^{t} T^{s b^i k_n}\one_A \, dm
-      = \unifavg \int_X \prod_{s=0}^{t} T^{s b^i k_n} g \, dm + o(1) .
+    \uniflim \Bigl\lVert \unifavg \Bigl[ \prod_{j=1}^{t} T^{jb^i k_n}\one_A - \prod_{j=1}^{t} T^{jb^ik_n} g \Bigr] \Bigr\rVert_2 = 0 .
   \]
-  The liminf of the right side is positive because $\Dbb$ is CSZ, in the form of
-  Lemma~\ref{lem:csz-functions}: $g \geq 0$ and $\int g \, dm = m(A) > 0$.
+  Pair with $\one_A$: by Cauchy--Schwarz,
+  \[
+    \Bigl\lvert \unifavg \int_X \one_A \prod_{j=1}^{t} T^{jb^ik_n}\one_A\,dm
+      - \unifavg \int_X \one_A \prod_{j=1}^{t} T^{jb^ik_n} g\,dm \Bigr\rvert
+    \leq \Bigl\lVert \unifavg \Bigl[ \prod_j T^{jb^ik_n}\one_A - \prod_j T^{jb^ik_n} g \Bigr] \Bigr\rVert_2 ,
+  \]
+  which tends to $0$ along \texttt{uniformFilter}.  In the second integral the product
+  $\prod_j T^{jb^ik_n}g$ is bounded and $\Dbb$-measurable, so by
+  Lemma~\ref{lem:condexp-facts}(b) it may be paired with $\Exp(\one_A\mid\Dbb) = g$ instead of
+  $\one_A$.  Hence
+  \begin{equation}
+    \label{eq:wm-ext-compare}
+    \unifavg \int_X \prod_{j=0}^{t} T^{jb^i k_n}\one_A\,dm
+      = \unifavg \int_X \prod_{j=0}^{t} T^{jb^ik_n} g\,dm + o(1) ,
+  \end{equation}
+  the $o(1)$ along \texttt{uniformFilter}.  The left side is $\unifavg m(\bigcap_{j} T^{-jb^ik_n}A)$,
+  which is the quantity in \eqref{eq:csz} (Lean: \texttt{multiCorr}; the identity
+  $\int \prod_j \one_A \circ T^{d_j} = m(\bigcap_j T^{-d_j}A)$ is the fact that a product of
+  indicators is the indicator of the intersection).
+
+  \emph{Positivity of the right side.}  $\Dbb$ is CSZ, $g$ is a non-negative bounded
+  $\Dbb$-measurable function which is not a.e.\ zero (its integral is $m(A) > 0$), so by
+  Lemma~\ref{lem:csz-functions} applied to the factor $\Dbb$ --- note the lemma is applied to
+  the system $(X,\Dbb,m,T)$, for which $g$ is a measurable function ---
+  $\unifliminf \unifavg \int \prod_{j=0}^{t} T^{jb^ik_n} g\,dm > 0$.
+
+  \emph{Transfer.}  If two window-indexed quantities $a(M,N)$ and $b(M,N)$ satisfy
+  $a - b \to 0$ along \texttt{uniformFilter}, then $\liminf a = \liminf b$ along it
+  (\texttt{Filter.liminf} is unchanged by adding a sequence tending to $0$, or directly: for
+  $\eta > 0$, $a \geq b - \eta$ eventually).  So by \eqref{eq:wm-ext-compare} the uniform
+  liminf for $A$ equals that for $g$, which is positive.  As $\Cantor, t, i, A$ were arbitrary,
+  $\Ebb$ is CSZ.
+\end{proof}
+
+\section{Weakly mixing systems}
+
+The Lean definition of a weakly mixing \emph{system} (\texttt{MPS.WeaklyMixing}) is the
+set-theoretic one, $\avg{n<N} \abs{m(A \cap T^{-n}B) - m(A)m(B)} \to 0$, while the hypothesis
+\eqref{eq:WM} for the trivial factor concerns functions.  The passage between them is
+standard but has to be written down.
+
+\begin{lemma}[From sets to functions]
+  \label{lem:wm-sets-to-functions}
+  \lean{CantorSzemeredi.MPS.weaklyMixingExtension_of_weaklyMixing}
+  \uses{def:weak-mixing, def:cwm, def:factor}
+  Let $(X,\Abb,m,T)$ be weakly mixing.  Then for all $f, g \in L^2(X)$,
+  \begin{equation}
+    \label{eq:wm-functions}
+    \lim_{N\to\infty} \avg{0 \leq n < N} \Bigl\lvert \int_X T^n f \cdot g \,dm - \int_X f\,dm \int_X g\,dm \Bigr\rvert = 0 .
+  \end{equation}
+  In particular $\Abb$ is a weakly mixing extension of the trivial factor: every $f$ in the
+  Hilbert module with $\int f\,dm = 0$ is conditionally weakly mixing.
+\end{lemma}
+
+\begin{proof}
+  \uses{def:weak-mixing, def:cwm}
+  Write $c_n(f,g)$ for the quantity inside the absolute value in \eqref{eq:wm-functions}; it is
+  bilinear in $(f,g)$, and $\abs{c_n(f,g)} \leq 2\norm{f}_2\norm{g}_2$ by Cauchy--Schwarz, since
+  $T$ preserves $m$ and $m$ is a probability measure.
+
+  \emph{Indicators.}  For $f = \one_A$, $g = \one_B$, $c_n(f,g) = m(T^{-n}A \cap B) - m(A)m(B)$,
+  and \eqref{eq:wm-functions} is the definition of weak mixing (with the roles of $A$ and $B$
+  as in Definition~\ref{def:weak-mixing}, up to the harmless replacement of $T^{-n}A \cap B$ by
+  $A \cap T^{-n}B$, which has the same measure by invariance after applying $T^n$ to the set;
+  the Lean definition uses one of the two forms, and the other follows by
+  $m(T^{-n}A \cap B) = m(A \cap T^{n}B)$ for the invertible $T$ --- or simply state the Lean
+  definition in the form used here).
+
+  \emph{Simple functions.}  For $f = \sum_i a_i \one_{A_i}$ and $g = \sum_j b_j \one_{B_j}$
+  (finite sums),
+  $\avg{n<N}\abs{c_n(f,g)} \leq \sum_{i,j}\abs{a_i}\abs{b_j}\avg{n<N}\abs{c_n(\one_{A_i},\one_{B_j})} \to 0$,
+  a finite sum of sequences tending to $0$.
+
+  \emph{Density.}  Let $f, g \in L^2$ and $\eta > 0$; simple functions are dense in $L^2$
+  (\texttt{MeasureTheory.Lp.simpleFunc.denseRange}), so choose simple $f', g'$ with
+  $\norm{f - f'}_2 \leq \eta$ and $\norm{g - g'}_2 \leq \eta$.  By bilinearity and the bound,
+  for every $n$,
+  \[
+    \abs{c_n(f,g) - c_n(f',g')} \leq \abs{c_n(f-f',g)} + \abs{c_n(f',g-g')}
+      \leq 2\eta\norm{g}_2 + 2\eta(\norm{f}_2 + \eta) .
+  \]
+  Hence $\limsup_N \avg{n<N}\abs{c_n(f,g)} \leq 2\eta(\norm{f}_2 + \norm{g}_2 + \eta)$ for every
+  $\eta$, which gives \eqref{eq:wm-functions}.
+
+  \emph{The trivial factor.}  For the trivial factor $\Dbb = \{\emptyset, X\}$ up to null sets,
+  $\Exp(u \mid \Dbb) = \int u\,dm$ (a constant), so $\cip{T^nf}{f} = \int T^nf \cdot f\,dm$ is
+  the constant $c_n(f,f) + (\int f)^2 = c_n(f,f)$ when $\int f = 0$.  The $L^2(\Dbb)$ norm of a
+  constant is its absolute value on a probability space, so
+  $\bigl\lVert \avg{n<N}\abs{\cip{T^nf}{f}} \bigr\rVert_{L^2} = \avg{n<N}\abs{c_n(f,f)} \to 0$ by
+  \eqref{eq:wm-functions} with $g = f$.  That is \texttt{CondWeaklyMixing} for the trivial
+  factor.  (In Lean: \texttt{condExp\_bot} identifies the conditional expectation onto $\bot$
+  with the integral, and \texttt{eLpNorm\_const} evaluates the norm of a constant.)
 \end{proof}
 
 \begin{corollary}[Weakly mixing systems]
   \label{cor:wm-system}
   \lean{CantorSzemeredi.weaklyMixing_tendsto_prod}
-  \uses{lem:wm-main, def:weak-mixing}
+  \uses{lem:wm-main, def:weak-mixing, lem:wm-sets-to-functions}
   Let $(X,\Abb,m,T)$ be weakly mixing, $0 < s_1 < \cdots < s_t$ integers, and
-  $f_1,\dots,f_t \in L^\infty(X)$.  Then
+  $f_1,\dots,f_t \in L^{\infty}(X)$.  Then
   $\uniflim \unifavg \prod_{j=1}^{t} T^{s_j k_n} f_j = \prod_{j=1}^{t} \int f_j \, dm$ in $L^2(X)$.
 \end{corollary}
 
 \begin{proof}
-  \uses{lem:wm-main}
-  Lemma~\ref{lem:wm-main} with $\Dbb$ trivial and $\Ebb = \Abb$: then
-  $\Exp(f\mid\Dbb) = \int f \, dm$ is constant, the conditional inner product is the inner
-  product of $L^2(X)$, and \eqref{eq:WM} is the case $g=f$ of the definition of weak mixing.
+  \uses{lem:wm-main, lem:wm-sets-to-functions}
+  Apply Lemma~\ref{lem:wm-main} with $\Dbb$ the trivial factor and $\Ebb = \Abb$.  Hypothesis
+  \eqref{eq:WM} is Lemma~\ref{lem:wm-sets-to-functions}, and
+  $\Exp(f_j\mid\Dbb) = \int f_j\,dm$ is constant, so
+  $\prod_j T^{s_jk_n}\Exp(f_j\mid\Dbb) = \prod_j \int f_j\,dm$ for every $n$; the average of a
+  constant is the constant.
 \end{proof}
+
+\begin{remark}[Weakly mixing systems are CSZ]
+  \uses{cor:wm-system, lem:csz-functions}
+  Corollary~\ref{cor:wm-compact-are-csz} for weakly mixing systems follows directly:
+  Lemma~\ref{lem:wm-sets-to-functions} and Lemma~\ref{lem:wm-extension} with
+  $\Dbb$ trivial and $\Ebb = \Abb$, using Lemma~\ref{lem:trivial-csz}.  Alternatively, from
+  Corollary~\ref{cor:wm-system} with $s_j = jb^i$ and $f_j = \one_A$, pairing with $\one_A$
+  gives $\unifavg m(\bigcap_{j=0}^{t} T^{-jb^ik_n}A) \to m(A)^{t+1} > 0$ along
+  \texttt{uniformFilter}, and a quantity converging to a positive limit has positive liminf.
+\end{remark}
