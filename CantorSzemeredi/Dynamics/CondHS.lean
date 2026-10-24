@@ -83,6 +83,185 @@ theorem ae_ae_condKernel (D : Factor S) {p : S.X → Prop}
   rw [ae_iff]
   simpa [Set.compl_ofPred] using hx
 
+
+/-- The disintegration, for `ℝ≥0∞`-valued integrals. -/
+theorem lintegral_condKernel (D : Factor S) {g : S.X → ENNReal} (hg : Measurable g) :
+    ∫⁻ z, g z ∂S.m = ∫⁻ x, (∫⁻ z, g z ∂(condKernel D x)) ∂S.m := by
+  conv_lhs => rw [← condKernel_comp_measure D]
+  exact lintegral_kernel_comp_measure _ _ hg
+
+/-! ### Constancy of the conditional measures along fibres
+
+The conditional measures are constant along fibres: for almost every `x`, `m_z = m_x` for
+`m_x`-almost every `z`.  The proof needs no countable generation and no measurable selection,
+only that `x ↦ m_x` is `D`-measurable.
+
+Fix a bounded measurable `g` and put `G x = ∫ g dm_x`.  Then `G` is `D`-measurable, so it is
+its own conditional expectation, and `∫ G dm_x = G x` a.e.; the same applies to `G²`, since
+that is `D`-measurable too.  Subtracting, the variance of `G` over the fibre through `x`
+vanishes, so `G` is constant on the fibre. -/
+
+omit [StandardBorelSpace S.X] in
+/-- A bounded measurable function is integrable against any probability measure here. -/
+private theorem integrable_of_bound {g : S.X → ℝ} (hg : Measurable g) {C : ℝ}
+    (hb : ∀ x, |g x| ≤ C) (ν : Measure S.X) [IsProbabilityMeasure ν] : Integrable g ν :=
+  MemLp.integrable (q := ⊤) le_top
+    (memLp_top_of_bound hg.aestronglyMeasurable C
+      (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hb x))
+
+/-- **Constancy along fibres**, in functional form: for a fixed bounded measurable `g`, the
+fibre average of `g` is the same at almost every point of almost every fibre. -/
+theorem ae_ae_integral_condKernel_eq (D : Factor S) {g : S.X → ℝ} (hg : Measurable g)
+    {C : ℝ} (hb : ∀ x, |g x| ≤ C) :
+    ∀ᵐ x ∂S.m, ∀ᵐ z ∂(condKernel D x),
+      (∫ y, g y ∂(condKernel D z)) = ∫ y, g y ∂(condKernel D x) := by
+  set G : S.X → ℝ := fun x => ∫ y, g y ∂(condKernel D x) with hG
+  -- `G` is `D`-measurable, because the kernel is.
+  have hGm : StronglyMeasurable[D.σ] G :=
+    StronglyMeasurable.integral_kernel (κ := condExpKernel S.m D.σ) hg.stronglyMeasurable
+  have hGm' : Measurable G := (hGm.mono D.le).measurable
+  -- and bounded by the same constant.
+  have hGb : ∀ x, |G x| ≤ C := by
+    intro x
+    have h0 : (0 : ℝ) ≤ C := le_trans (abs_nonneg _) (hb x)
+    calc |G x| ≤ ∫ y, |g y| ∂(condKernel D x) := abs_integral_le_integral_abs
+      _ ≤ ∫ _y, C ∂(condKernel D x) :=
+          integral_mono (integrable_of_bound hg.abs (fun y => by
+            rw [abs_abs]; exact hb y) _) (integrable_const C)
+            (fun y => hb y)
+      _ = C := by simp
+  have hG2b : ∀ x, |G x ^ 2| ≤ C ^ 2 := by
+    intro x
+    rw [abs_sq]
+    have h0 : (0 : ℝ) ≤ C := le_trans (abs_nonneg _) (hb x)
+    nlinarith [hGb x, abs_nonneg (G x), sq_abs (G x)]
+  -- A `D`-measurable integrable function is its own conditional expectation, and the
+  -- conditional expectation is the fibre average.
+  have key : ∀ (F : S.X → ℝ), StronglyMeasurable[D.σ] F → Measurable F → (∀ x, |F x| ≤ C ^ 2 + C) →
+      ∀ᵐ x ∂S.m, ∫ z, F z ∂(condKernel D x) = F x := by
+    intro F hFm hFm' hFb
+    have hFint : Integrable F S.m := integrable_of_bound hFm' hFb S.m
+    have h1 : S.m[F|D.σ] =ᵐ[S.m] F := by
+      rw [condExp_of_stronglyMeasurable D.le hFm hFint]
+    have h2 : S.m[F|D.σ] =ᵐ[S.m] fun x => ∫ z, F z ∂(condKernel D x) :=
+      condExp_eq_integral_condKernel D hFint
+    filter_upwards [h1, h2] with x hx1 hx2
+    rw [← hx2, hx1]
+  have hCnn : (0 : ℝ) ≤ C := le_trans (abs_nonneg _) (hb (Classical.arbitrary S.X))
+  have h1 := key G hGm hGm' (fun x => le_trans (hGb x) (by nlinarith))
+  have hG2m : StronglyMeasurable[D.σ] (fun x => G x ^ 2) := by
+    simp_rw [sq]
+    exact hGm.mul hGm
+  have h2 := key (fun x => G x ^ 2) hG2m (hGm'.pow_const 2)
+    (fun x => le_trans (hG2b x) (by nlinarith))
+  -- The variance of `G` over the fibre vanishes.
+  filter_upwards [h1, h2] with x hx1 hx2
+  have hGi : Integrable G (condKernel D x) := integrable_of_bound hGm' hGb _
+  have hG2i : Integrable (fun z => G z ^ 2) (condKernel D x) :=
+    integrable_of_bound (hGm'.pow_const 2) hG2b _
+  have hvar : ∫ z, (G z - G x) ^ 2 ∂(condKernel D x) = 0 := by
+    have hrw : (fun z => (G z - G x) ^ 2)
+        = ((fun z => G z ^ 2) + fun z => (-(2 * G x)) * G z) + fun _ => G x ^ 2 := by
+      funext z
+      simp only [Pi.add_apply]
+      ring
+    rw [hrw, integral_add' (hG2i.add (hGi.const_mul _)) (integrable_const _),
+      integral_add' hG2i (hGi.const_mul _), integral_const_mul, hx1, hx2]
+    simp
+    ring
+  have hnn : 0 ≤ᵐ[condKernel D x] fun z => (G z - G x) ^ 2 :=
+    Filter.Eventually.of_forall fun z => sq_nonneg _
+  have hint : Integrable (fun z => (G z - G x) ^ 2) (condKernel D x) := by
+    have hadd : Integrable
+        (((fun z => G z ^ 2) + fun z => (-(2 * G x)) * G z) + fun _ => G x ^ 2)
+        (condKernel D x) := (hG2i.add (hGi.const_mul _)).add (integrable_const _)
+    refine hadd.congr (Filter.Eventually.of_forall fun z => ?_)
+    simp only [Pi.add_apply]
+    ring
+  have hzero := (integral_eq_zero_iff_of_nonneg_ae hnn hint).mp hvar
+  filter_upwards [hzero] with z hz
+  have : (G z - G x) ^ 2 = 0 := hz
+  have : G z - G x = 0 := by nlinarith [sq_nonneg (G z - G x)]
+  linarith
+
+
+/-! ### The graph measure is the joining
+
+Write `ρ = m ⊗ₘ (condKernel D)` for the measure `∫ δ_z ⊗ m_z dm(z)` on `X × X`, which is what
+integrating a kernel row by row against its *own* fibre measure computes.  Constancy says
+`ρ = λ`: a point of `X × X` drawn by first picking `z` and then `y` from `m_z` has the same
+law as one drawn by picking a fibre and then both coordinates independently from it.
+
+This is what makes the row condition available, and only the functional form of constancy is
+needed — one bounded function `1_B` at a time, so no countable generation is required. -/
+
+/-- **Constancy, in the form of an identity of measures.**  `m ⊗ₘ m_z = λ`. -/
+theorem compProd_condKernel_eq_joining (D : Factor S) :
+    S.m ⊗ₘ condKernel D = joining D := by
+  refine ext_of_generate_finite _ generateFrom_prod.symm isPiSystem_prod ?_ ?_
+  · rintro _ ⟨A, hA, B, hB, rfl⟩
+    rw [Measure.compProd_apply_prod hA hB, joining_prod_apply D hA hB]
+    -- Disintegrate the left side and apply constancy to `1_B`.
+    have hmeas : Measurable fun z => A.indicator (1 : S.X → ENNReal) z * condKernel D z B :=
+      (measurable_one.indicator hA).mul ((condKernel D).measurable_coe hB)
+    have hleft : ∫⁻ z in A, condKernel D z B ∂S.m
+        = ∫⁻ z, A.indicator (1 : S.X → ENNReal) z * condKernel D z B ∂S.m := by
+      rw [← lintegral_indicator hA]
+      refine lintegral_congr fun z => ?_
+      by_cases hz : z ∈ A <;> simp [hz]
+    rw [hleft, lintegral_condKernel D hmeas]
+    refine lintegral_congr_ae ?_
+    filter_upwards [ae_ae_integral_condKernel_eq D (g := B.indicator (1 : S.X → ℝ))
+      ((measurable_one.indicator hB)) (C := 1)
+      (fun x => by by_cases hx : x ∈ B <;> simp [hx])] with x hx
+    -- On the fibre through `x`, `m_z B` is the constant `m_x B`.
+    have hBval : ∀ᵐ z ∂(condKernel D x), condKernel D z B = condKernel D x B := by
+      filter_upwards [hx] with z hz
+      have hint : ∀ ν : Measure S.X, [IsProbabilityMeasure ν] →
+          ∫ y, B.indicator (1 : S.X → ℝ) y ∂ν = (ν B).toReal := by
+        intro ν _
+        rw [integral_indicator_one hB]
+        rfl
+      rw [hint (condKernel D z), hint (condKernel D x)] at hz
+      have h1 : condKernel D z B ≠ ⊤ := measure_ne_top _ _
+      have h2 : condKernel D x B ≠ ⊤ := measure_ne_top _ _
+      rw [← ENNReal.ofReal_toReal h1, ← ENNReal.ofReal_toReal h2, hz]
+    rw [lintegral_congr_ae (by
+      filter_upwards [hBval] with z hz
+      rw [hz] : (fun z => A.indicator (1 : S.X → ENNReal) z * condKernel D z B)
+        =ᵐ[condKernel D x] fun z => A.indicator (1 : S.X → ENNReal) z * condKernel D x B)]
+    rw [lintegral_mul_const _ (measurable_one.indicator hA)]
+    have hAval : ∫⁻ z, A.indicator (1 : S.X → ENNReal) z ∂(condKernel D x) = condKernel D x A := by
+      simp [lintegral_indicator hA]
+    rw [hAval]
+  · simp
+
+/-- Integrating a kernel against its own fibre measure, row by row, is integration against
+the joining. -/
+theorem lintegral_row_eq_joining (D : Factor S) {F : S.X × S.X → ENNReal} (hF : Measurable F) :
+    ∫⁻ z, (∫⁻ y, F (z, y) ∂(condKernel D z)) ∂S.m = ∫⁻ p, F p ∂(joining D) := by
+  rw [← compProd_condKernel_eq_joining D, Measure.lintegral_compProd hF]
+
+/-- **The row condition.**  A strongly measurable kernel in `L²(λ)` has almost every row
+square integrable against *its own* fibre measure.
+
+This is the statement that does not follow from `ae_memLp_fibre`: that lemma controls
+`∫∫ H² d(m_x ⊗ m_x)`, an integral over a fibre *pair*, whereas this one integrates
+`H(z, ·)` against `m_z`.  Constancy is exactly what relates them. -/
+theorem ae_memLp_row (D : Factor S) {H : S.X × S.X → ℝ} (hH : StronglyMeasurable H)
+    (hmem : MemLp H 2 (joining D)) :
+    ∀ᵐ z ∂S.m, MemLp (fun y => H (z, y)) 2 (condKernel D z) := by
+  have hmeas : Measurable fun p : S.X × S.X => ‖H p‖ₑ ^ (2 : ℕ) :=
+    hH.measurable.enorm.pow_const _
+  have htot : (∫⁻ z, (∫⁻ y, ‖H (z, y)‖ₑ ^ (2 : ℕ) ∂(condKernel D z)) ∂S.m) ≠ ⊤ := by
+    rw [lintegral_row_eq_joining D hmeas]
+    exact (memLp_two_iff_lintegral hmem.aestronglyMeasurable).mp hmem
+  have hmi : Measurable fun z => ∫⁻ y, ‖H (z, y)‖ₑ ^ (2 : ℕ) ∂(condKernel D z) :=
+    hmeas.lintegral_kernel_prod_right'
+  filter_upwards [(ae_lt_top hmi htot).mono fun z hz => hz.ne] with z hz
+  exact (memLp_two_iff_lintegral
+    (hH.comp_measurable (measurable_prodMk_left)).aestronglyMeasurable).mpr hz
+
 /-! ### Fibre norms -/
 
 /-- The `L²` norm of `g` over the fibre through `x`. -/
@@ -312,12 +491,6 @@ The measurability obligations in `IsFibreReg` and `IsFibreHS` are not extra assu
 kernel: they follow from joint measurability of `H`, through Mathlib's measurability of a
 Bochner integral against a kernel.  And `rowL2`, a condition on almost every fibre, reduces
 to a single `L²(m)` condition on the base, by the disintegration. -/
-
-/-- The disintegration, for `ℝ≥0∞`-valued integrals. -/
-theorem lintegral_condKernel (D : Factor S) {g : S.X → ENNReal} (hg : Measurable g) :
-    ∫⁻ z, g z ∂S.m = ∫⁻ x, (∫⁻ z, g z ∂(condKernel D x)) ∂S.m := by
-  conv_lhs => rw [← condKernel_comp_measure D]
-  exact lintegral_kernel_comp_measure _ _ hg
 
 /-- A function square integrable on the base is square integrable on almost every fibre. -/
 theorem ae_memLp_condKernel (D : Factor S) {g : S.X → ℝ} (hg : StronglyMeasurable g)
