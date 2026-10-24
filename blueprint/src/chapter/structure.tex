@@ -220,15 +220,31 @@
   has to be checked by hand.
 
   \smallskip
-  \emph{What is still open.}  Two things.  First, these hypotheses must be discharged for the
-  actual eigenfunction: identifying the orbit of $f$ with $\Phi_{K_n} a$, and supplying the
-  row condition and the two $L^2(m)$ bounds.  The row condition --- that
-  $\int H(z,y)^2 \,dm_z(y)$ is finite for a.e.\ $z$ --- does \emph{not} follow from
-  $H \in L^2(\lambda)$ by the argument of \texttt{ae\_memLp\_fibre}, because that gives
-  finiteness of $\int\!\!\int H^2 \,d(m_x \otimes m_x)$, an integral over a fibre
-  \emph{pair}, and relating the two needs the a.e.\ constancy of $z \mapsto m_z$ along
-  fibres.  Second, the factor $\Ebb$ must be assembled from the conditionally compact
-  functions.
+  \emph{Constancy along fibres.}  The row condition --- that $\int H(z,y)^2\,dm_z(y)$ is
+  finite for a.e.\ $z$ --- does \emph{not} follow from \texttt{ae\_memLp\_fibre}, which
+  controls $\int\!\!\int H^2\,d(m_x \otimes m_x)$, an integral over a fibre \emph{pair}.
+  Relating the two is the a.e.\ constancy of $z \mapsto m_z$ along fibres, and that is now
+  proved (\texttt{ae\_ae\_integral\_condKernel\_eq}).  The argument needs neither countable
+  generation nor measurable selection.  Fix a bounded measurable $g$ and put
+  $G(x) = \int g\,dm_x$.  Since the kernel is $\Dbb$-measurable, so is $G$, hence $G$ is its
+  own conditional expectation and $\int G\,dm_x = G(x)$ a.e.; the same applies to $G^2$,
+  because that is $\Dbb$-measurable too.  Subtracting, the variance of $G$ over the fibre
+  through $x$ vanishes, so $G$ is constant there.
+
+  Applied one indicator at a time, this identifies two measures on $X \times X$: the graph
+  measure $\rho = \int \delta_z \otimes m_z \,dm(z)$ equals the joining $\lambda$
+  (\texttt{compProd\_condKernel\_eq\_joining}) --- drawing $z$ and then $y$ from $m_z$ has
+  the same law as drawing a fibre and then both coordinates independently from it.  Only the
+  functional form of constancy is used, one bounded $g = \one_B$ at a time, which is why no
+  countable generating $\pi$-system is needed.  The row condition
+  (\texttt{ae\_memLp\_row}) and the bound on the row norms (\texttt{memLp\_hsRow}) both drop
+  out, so \texttt{isFibreReg\_of\_memLp\_joining} builds the whole of \texttt{IsFibreReg}
+  from nothing but joint measurability of $H$ and $H \in L^2(\lambda)$.
+
+  \smallskip
+  \emph{What is still open.}  Two things.  First, the orbit identification: exhibiting the
+  orbit of $f$ as $\Phi_{K_n} a$ for the two-parameter family coming from the eigenfunction.
+  Second, the factor $\Ebb$ must be assembled from the conditionally compact functions.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}
