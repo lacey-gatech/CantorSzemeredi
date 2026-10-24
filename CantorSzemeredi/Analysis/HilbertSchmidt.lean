@@ -123,4 +123,39 @@ theorem eLpNorm_integralKernel_le {k : α × β → ℂ} {f : β → ℂ}
     _ = eLpNorm k 2 (μ.prod ν) * eLpNorm f 2 ν := by
         rw [eLpNorm_two_eq_rpow (μ.prod ν) _ hk, hA, eLpNorm_two_eq_rpow ν _ hf]
 
+/-! ### The bundled operator
+
+To speak of compactness at all the operator has to be a `ContinuousLinearMap`, since
+`isCompactOperator_of_tendsto` is stated for those.  Packaging it needs three things: that the
+slices `k (x, ·)` are in `L²(ν)` for a.e. `x`, that the resulting function of `x` is
+measurable, and the bound already proved.
+-/
+
+variable [SFinite μ]
+
+/-- For a.e. `x`, the slice `k (x, ·)` is square integrable. -/
+theorem memLp_slice {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν)) :
+    ∀ᵐ x ∂μ, MemLp (fun y => k (x, y)) 2 ν := by
+  have hmeas : ∀ᵐ x ∂μ, AEStronglyMeasurable (fun y => k (x, y)) ν :=
+    hk.aestronglyMeasurable.prodMk_left
+  have hfin : ∫⁻ x, (∫⁻ y, ‖k (x, y)‖ₑ ^ (2 : ℝ) ∂ν) ∂μ ≠ ⊤ := by
+    rw [← lintegral_prod _ (hk.aestronglyMeasurable.aemeasurable.enorm.pow_const (2 : ℝ))]
+    have := hk.eLpNorm_ne_top
+    rw [eLpNorm_two_eq_rpow _ _ hk.aestronglyMeasurable] at this
+    intro hcon
+    exact this (by rw [hcon]; simp)
+  have hae : ∀ᵐ x ∂μ, (∫⁻ y, ‖k (x, y)‖ₑ ^ (2 : ℝ) ∂ν) ≠ ⊤ :=
+    ae_lt_top' (hk.aestronglyMeasurable.aemeasurable.enorm.pow_const (2 : ℝ)).lintegral_prod_right'
+      hfin |>.mono fun x hx => hx.ne
+  filter_upwards [hmeas, hae] with x hx hx'
+  rw [memLp_iff, eLpNorm_two_eq_rpow _ _ hx]
+  exact ENNReal.rpow_lt_top_of_nonneg (by norm_num) hx'
+
+/-- For a.e. `x`, the integrand of the operator is integrable. -/
+theorem integrable_slice_mul {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν))
+    {f : β → ℂ} (hf : MemLp f 2 ν) :
+    ∀ᵐ x ∂μ, Integrable (fun y => k (x, y) * f y) ν := by
+  filter_upwards [memLp_slice hk] with x hx
+  exact (MemLp.integrable_mul hx hf)
+
 end HilbertSchmidt
