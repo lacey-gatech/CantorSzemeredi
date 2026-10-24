@@ -123,6 +123,51 @@ theorem eLpNorm_integralKernel_le {k : α × β → ℂ} {f : β → ℂ}
     _ = eLpNorm k 2 (μ.prod ν) * eLpNorm f 2 ν := by
         rw [eLpNorm_two_eq_rpow (μ.prod ν) _ hk, hA, eLpNorm_two_eq_rpow ν _ hf]
 
+/-! ### Rank-one operators are compact
+
+Mathlib has no "finite rank implies compact" lemma: it has `IsCompactOperator.add`,
+`IsCompactOperator.smul` and `isCompactOperator_of_tendsto`, but no base case.  This supplies
+it.  A rank-one map `x ↦ φ x • g` sends the unit ball into `{t • g : ‖t‖ ≤ ‖φ‖}`, the image of
+a closed ball of `ℂ` under a continuous map, hence compact. -/
+
+theorem isCompactOperator_rankOne {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E]
+    [NormedAddCommGroup F] [NormedSpace ℂ F] (φ : E →L[ℂ] ℂ) (g : F) :
+    IsCompactOperator (fun x => φ x • g) := by
+  rw [isCompactOperator_iff_exists_mem_nhds_image_subset_compact]
+  refine ⟨Metric.closedBall (0 : E) 1, Metric.closedBall_mem_nhds 0 one_pos,
+    (fun t : ℂ => t • g) '' (Metric.closedBall (0 : ℂ) ‖φ‖), ?_, ?_⟩
+  · exact (isCompact_closedBall (0 : ℂ) ‖φ‖).image (continuous_id.smul continuous_const)
+  · rintro _ ⟨x, hx, rfl⟩
+    refine ⟨φ x, ?_, rfl⟩
+    simp only [Metric.mem_closedBall, dist_zero_right]
+    calc ‖φ x‖ ≤ ‖φ‖ * ‖x‖ := φ.le_opNorm x
+      _ ≤ ‖φ‖ * 1 := by
+          refine mul_le_mul_of_nonneg_left ?_ (norm_nonneg _)
+          simpa [Metric.mem_closedBall, dist_zero_right] using hx
+      _ = ‖φ‖ := mul_one _
+
+/-- A finite sum of rank-one operators is compact. -/
+theorem isCompactOperator_sum_rankOne {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E]
+    [NormedAddCommGroup F] [NormedSpace ℂ F] {ι : Type*} (s : Finset ι)
+    (φ : ι → (E →L[ℂ] ℂ)) (g : ι → F) :
+    IsCompactOperator (fun x => ∑ i ∈ s, φ i x • g i) := by
+  classical
+  induction s using Finset.induction with
+  | empty =>
+    have hz : (fun x : E => ∑ j ∈ (∅ : Finset ι), φ j x • g j) = fun _ : E => (0 : F) := by
+      funext x
+      simp
+    rw [hz]
+    exact isCompactOperator_zero
+  | insert i s hi ih =>
+    have hrw : (fun x => ∑ j ∈ insert i s, φ j x • g j)
+        = (fun x => φ i x • g i) + fun x => ∑ j ∈ s, φ j x • g j := by
+      funext x
+      rw [Finset.sum_insert hi]
+      rfl
+    rw [hrw]
+    exact (isCompactOperator_rankOne (φ i) (g i)).add ih
+
 /-! ### The bundled operator
 
 To speak of compactness at all the operator has to be a `ContinuousLinearMap`, since
@@ -133,6 +178,7 @@ measurable, and the bound already proved.
 
 variable [SFinite μ]
 
+omit [SFinite μ] in
 /-- For a.e. `x`, the slice `k (x, ·)` is square integrable. -/
 theorem memLp_slice {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν)) :
     ∀ᵐ x ∂μ, MemLp (fun y => k (x, y)) 2 ν := by
