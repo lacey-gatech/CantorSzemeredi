@@ -306,16 +306,34 @@
   density in \emph{compact extension} absorbs the error, exactly as anticipated.
 
   \smallskip
-  \emph{What is still open.}  One input to the cutoff remains: that finite-rank kernels are
-  dense in $L^2(\lambda)$, for real-valued kernels and the joining.  The repository has
-  \texttt{topologicalClosure\_span\_prodKernels}, but for complex kernels and a
-  \emph{product} measure $\mu \otimes \nu$; $\lambda$ is not a product.  The Dynkin argument
-  behind it uses nothing about the product structure --- only that measurable rectangles form
-  a $\pi$-system generating the product $\sigma$-algebra --- so it generalises to any finite
-  measure on $X \times X$; what does not carry over is
-  \texttt{memLp\_prod\_mul}, since $\norm{g \otimes h}_{L^2(\lambda)}$ is not bounded by
-  $\norm{g}_2 \norm{h}_2$ off a product measure, so the tensors must be taken bounded.  After
-  that, the factor $\Ebb$ must still be assembled from the conditionally compact functions.
+  \emph{The density.}  The input to the cutoff --- that finite-rank kernels are dense in
+  $L^2(\lambda)$ --- is now in place.  The repository already had
+  \texttt{topologicalClosure\_span\_prodKernels}, but for complex kernels and a \emph{product}
+  measure, and $\lambda$ is not a product.  The Dynkin argument behind it never used the
+  product structure, only that measurable rectangles form a $\pi$-system generating the
+  product $\sigma$-algebra, so
+  \texttt{ae\_eq\_zero\_of\_forall\_setIntegral\_rectangle\_eq\_zero} is now stated for an
+  arbitrary finite measure on $X \times X$ and any Banach target.  What does \emph{not}
+  generalise is \texttt{memLp\_prod\_mul}: off a product measure
+  $\norm{g \otimes h}_{L^2}$ is not controlled by $\norm{g}_2\norm{h}_2$, so the totality is
+  proved for \emph{indicators} of rectangles --- bounded, hence in $L^2$ of any finite
+  measure --- which is all that is needed
+  (\texttt{topologicalClosure\_span\_rectKernels}).  \texttt{exists\_rectSum\_eLpNorm\_sub\_lt}
+  extracts from this an explicit finite sum $\sum_i c_i \one_{A_i} \otimes \one_{B_i}$.
+
+  Combining with the cutoff gives \texttt{exists\_finiteRank\_cutoff}: for every
+  $\delta, \eta > 0$ a finite-rank kernel $K$ and a $\Dbb$-set $B$ with $m(B^c) \leq \eta$ on
+  which $\norm{H-K}_{\mathrm{HS},\text{fibre}} \leq \delta$ everywhere.  This is exactly the
+  hypothesis of \texttt{condCompact\_of\_kernel\_approx}, with the exceptional set $B^c$ left
+  for the density in \emph{compact extension} to absorb.
+
+  \smallskip
+  \emph{What is still open.}  Two things, both now assembly rather than new ideas.  First,
+  running \texttt{condCompact\_of\_kernel\_approx} against
+  \texttt{exists\_finiteRank\_cutoff} and \texttt{condIntegralOp\_comp\_iterate}: the finite
+  net for the finite-rank images, which is the grid-rounding described above, and the passage
+  from the cut kernel back to $H$ through the density in \emph{compact extension}.  Second,
+  the factor $\Ebb$ must be assembled from the conditionally compact functions.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}
