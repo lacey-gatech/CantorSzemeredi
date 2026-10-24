@@ -197,12 +197,50 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 \end{definition}
 
 \begin{remark}
-  These definitions are those of Moreira's notes, except that conditional weak mixing is asked
-  only for $g = f$ and with ordinary Ces\`aro means.  This is a \emph{weaker} requirement on
-  $f$, hence a \emph{weaker} hypothesis on the extension in
+  Conditional weak mixing is asked only for $g = f$ and with ordinary Ces\`aro means.  This is
+  a \emph{weaker} requirement on $f$, hence a \emph{weaker} hypothesis on the extension in
   Definition~\ref{def:cwm} than Moreira's --- which is the direction that makes
   Lemma~\ref{lem:dichotomy} apply as stated.  This asymmetry must be reproduced faithfully in
   Lean or the dichotomy will not typecheck against the extension principles.
+\end{remark}
+
+\begin{remark}[Definition~\ref{def:compact-extension} is stronger than Moreira's]
+  \label{rem:compact-mismatch}
+  Definition~\ref{def:compact-extension} as stated above is \textbf{not} Moreira's, and the
+  difference goes in the dangerous direction.  His Definition 6.11 reads
+  \[
+    \forall n \in \NN \quad \min_{1 \leq i \leq r} \norm{T^n f - g_i}_{L^2(\mu_y)} < \epsilon
+    \qquad \text{for } \sigma\text{-a.e.\ } y ,
+  \]
+  with the minimum \emph{inside} the almost-everywhere quantifier: the index $i$ may depend on
+  the fibre.  Our $\sup_n \min_q \norm{\cdot}_{L^\infty(\Dbb)}$ puts the minimum outside, so a
+  single $q$ must serve almost every $x$ at once.  Three discrepancies, all making our
+  condition stronger:
+  \begin{enumerate}
+    \item the quantifier order just described;
+    \item Moreira's approximants are arbitrary elements of $L^2(X)$, ours are required to lie
+      in the Hilbert module;
+    \item Moreira indexes the orbit by $n \in \NN$, we by $n \in \ZZ$.
+  \end{enumerate}
+  This matters because \emph{compact extension} occurs in the \textbf{conclusion} of
+  Lemma~\ref{lem:dichotomy}: a stronger notion means Moreira's proposition does not give what
+  we state.  (Contrast the conditional weak mixing asymmetry above, which was deliberately
+  arranged in the safe direction.)
+
+  The fix is to weaken Definition~\ref{def:compact-extension} to Moreira's form, and nothing
+  is lost by doing so: the only place the definition is \emph{consumed},
+  equation~\eqref{eq:net} in the proof of Theorem~\ref{thm:compact-extension}, already uses
+  exactly his form --- ``for a.e.\ $x$ and all $n \in \NNz$, $\min_\ell \cnorm{T^nf-f_\ell}(x)
+  < \epsilon/2$'' --- and the pigeonhole of Lemma~\ref{lem:unfortunate} explicitly chooses
+  $\ell_s$ \emph{depending on $x$}.  It also indexes by $\NN$, not $\ZZ$.  So the weaker
+  definition suffices downstream and is what the dichotomy supplies.
+
+  \emph{Caveat on the citation.}  The notes located are the Fall 2021 edition, whose numbering
+  is two-level: the dichotomy is Theorem 6.19 and the definition above is 6.11, while
+  ``Proposition 8.6'' there is the correspondence principle for van der Waerden.  The
+  citation to ``Proposition 8.6.1'' is therefore to a different edition, which we were unable
+  to locate; the definition could in principle differ there, though the quantifier order
+  above is the standard one in Furstenberg, Zimmer and Einsiedler--Ward.
 \end{remark}
 
 \section{The relatively independent self-joining}

@@ -281,23 +281,22 @@
 
   \emph{(ii)} It asks for a finite net of module elements covering the finite-rank images
   $\sum_i c_i^n g_i$, where $c_i^n = \cip{h_i}{a \circ T^n}_{\Dbb}$ are bounded
-  $\Dbb$-measurable \emph{functions}.  In the essential-sup conditional norm this amounts to a
-  finite net for $\{c^n\}$ in the $L^\infty(\Dbb)$ ball --- and a bounded subset of $L^\infty$
-  is not totally bounded.  Rounding $c^n(x)$ to a grid pointwise gives one module element per
-  $n$, not finitely many.
+  $\Dbb$-measurable \emph{functions}.  Under Definition~\ref{def:compact-extension} as
+  currently stated this amounts to a finite net for $\{c^n\}$ in the $L^\infty(\Dbb)$ ball,
+  and a bounded subset of $L^\infty$ is not totally bounded.
 
-  So the obstruction is neither the fibrewise compactness of \texttt{Fibre.lean} nor the
-  circle structure of the kernel orbit: it is the passage from ``compact on each fibre'' to
-  ``uniformly compact over the base''.  Both (i) and (ii) are exactly the places where the
-  standard arguments admit an exceptional set of small measure, whereas
-  Definition~\ref{def:compact-extension} states \texttt{CondCompact} with an $L^\infty(\Dbb)$
-  norm and no exceptional set.  Either that exceptional set is absorbed by the density
-  required in \emph{compact extension}, or \texttt{CondCompact} should carry the
-  exceptional-set form.  This should be checked against Moreira's Proposition 8.6.1 before
-  the step is attempted --- it is a question about the source, not about the formalization,
-  and the \textbf{remark on Definition~\ref{def:compact-extension} currently records only the
-  conditional-weak-mixing asymmetry, not this one}.  After it is settled, the factor $\Ebb$
-  must still be assembled from the conditionally compact functions.
+  \smallskip
+  \emph{But (ii) is an artefact of our definition, not of the mathematics.}  Moreira's
+  Definition 6.11 allows the index of the approximant to depend on the fibre, and with that
+  order (ii) dissolves: rounding the coefficient vector $c^n(x)$ to a fixed finite grid
+  pointwise is exactly a fibre-dependent choice of index, and the finitely many grid points
+  give the finitely many module elements $\sum_i v_i g_i$.  See
+  Remark~\ref{rem:compact-mismatch}, which records the discrepancy and why weakening our
+  definition costs nothing downstream.  Obstruction \emph{(i)} survives the change and is the
+  genuine remaining content; it is where the cutoff to a base set of large measure enters,
+  absorbed by the density required in \emph{compact extension} rather than by
+  \texttt{CondCompact}.  After that, the factor $\Ebb$ must still be assembled from the
+  conditionally compact functions.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}

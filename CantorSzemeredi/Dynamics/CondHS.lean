@@ -1126,20 +1126,25 @@ Hilbert–Schmidt error is small except on a base set of small measure, and that
 cut off somewhere.
 
 **(ii) A finite net for the finite-rank images.**  By `condIntegralOp_sum_tensor` these are
-`Σᵢ cᵢⁿ · gᵢ` with `cᵢⁿ = ⟨hᵢ, b n⟩_D`, bounded `D`-measurable *functions*.  Covering them by
-finitely many module elements in the essential-sup conditional norm amounts to a finite net
-for `{cⁿ}` in the `L^∞(D)` ball — and a bounded subset of `L^∞` is not totally bounded.
-Rounding `cⁿ(x)` to a grid pointwise produces one module element per `n`, not finitely many.
+`Σᵢ cᵢⁿ · gᵢ` with `cᵢⁿ = ⟨hᵢ, b n⟩_D`, bounded `D`-measurable *functions*.  Under
+`CondCompact` as currently stated, covering them means a finite net for `{cⁿ}` in the
+`L^∞(D)` ball — and a bounded subset of `L^∞` is not totally bounded.
 
-So the obstruction is not fibrewise compactness, which `Fibre.lean` supplies, nor the circle
-structure of the kernel orbit, which `exists_kernel_net` supplies.  It is the passage from
-"compact on each fibre" to "uniformly compact over the base", and both (i) and (ii) are
-places where the standard arguments admit an exceptional set of small measure.
-`def:compact-extension` as stated here — following Moreira — has no exceptional set in
-`CondCompact`, so either the exceptional set is absorbed by the density in
-`CompactExtension`, or `CondCompact` needs the exceptional-set form.  That is a question
-about the source, not about the formalization, and it should be settled before this step is
-attempted. -/
+**(ii) is an artefact of the definition.**  Moreira's Definition 6.11 reads
+
+  `∀ n ∈ ℕ, min_{1≤i≤r} ‖Tⁿ f - gᵢ‖_{L²(m_y)} < ε  for a.e. y`,
+
+with the minimum *inside* the almost-everywhere quantifier, so the index may depend on the
+fibre.  `CondCompact` puts `∃ q` before `∀ᵐ x`, which is strictly stronger.  With Moreira's
+order (ii) dissolves: rounding `cⁿ(x)` to a fixed finite grid pointwise is exactly a
+fibre-dependent choice of index, and the finitely many grid points give the finitely many
+module elements.  Only (i) then remains, and that is where a cutoff to a base set of large
+measure enters, absorbed by the density in `CompactExtension`.
+
+See `rem:compact-mismatch` in `blueprint/src/chapter/mps.tex`: the definition here is
+stronger than Moreira's on three counts, in the direction that breaks the dichotomy, while
+the one place it is consumed — the pigeonhole in the compact-extension lifting — already
+uses only his weaker form. -/
 
 end MPS
 
