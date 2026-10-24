@@ -242,9 +242,35 @@
   from nothing but joint measurability of $H$ and $H \in L^2(\lambda)$.
 
   \smallskip
-  \emph{What is still open.}  Two things.  First, the orbit identification: exhibiting the
-  orbit of $f$ as $\Phi_{K_n} a$ for the two-parameter family coming from the eigenfunction.
-  Second, the factor $\Ebb$ must be assembled from the conditionally compact functions.
+  \emph{The orbit identity.}  The conditional operator intertwines the dynamics:
+  \[
+    (\Phi_H a) \circ T^n \;=\; \Phi_{H \circ R^n}\,(a \circ T^n), \qquad R = T \times T
+  \]
+  (\texttt{condIntegralOp\_comp\_T} and \texttt{condIntegralOp\_comp\_iterate}).  The proof is
+  short given what precedes it: both sides integrate row by row against the conditional
+  measures, so by \texttt{compProd\_condKernel\_eq\_joining} both are integrals against
+  $\lambda$, and the identity becomes the $R$-invariance of $\lambda$.  In particular no
+  equivariance statement relating $m_{Tx}$ to $m_x$ is needed --- which matters, because the
+  set-level \texttt{condKernel\_comp} does not give one without countable generation.
+
+  \smallskip
+  \emph{What is still open, and what shape it has.}  The orbit identity makes one thing
+  explicit that was not visible before: along the orbit the transformation acts on the kernel
+  \emph{and} on the function.  The kernel part is harmless --- for an eigenfunction
+  $H \circ R^n$ runs around a circle, which is what \texttt{exists\_kernel\_net} handles ---
+  but $a \circ T^n$ moves too, and \texttt{CondCompact} wants one finite net covering the
+  whole orbit.  So \texttt{condCompact\_of\_param\_orbit}, which assumes a \emph{fixed} $a$,
+  does not apply to an eigenfunction orbit; its statement now says so.
+
+  The remaining step is therefore not a statement about kernels at all.  It is that $\Phi_H$
+  carries the bounded set $\{a \circ T^n\}$ of the module --- bounded because $T$ preserves
+  $m$, so conditional norms are constant along the orbit --- to a conditionally totally
+  bounded set.  That is the conditional analogue of ``a Hilbert--Schmidt operator is
+  compact'', and it does \emph{not} follow from the fibrewise compactness of
+  \texttt{Fibre.lean}: approximating $H$ by finite-rank kernels leaves coefficients
+  $\cip{h_i}{a \circ T^n}_{\Dbb}$ that are \emph{functions} on the base, so a finite net for
+  them is a statement in $L^\infty(\Dbb)$, not a consequence of compactness fibre by fibre.
+  After that, the factor $\Ebb$ must be assembled from the conditionally compact functions.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}
