@@ -69,7 +69,9 @@ everywhere, and every identity between conditional norms below holds almost ever
 
 \begin{lemma}[Pull-out property of the conditional norm]
   \label{lem:cnorm-pullout}
-  \lean{CantorSzemeredi.MPS.condNorm_mul_left}
+  \lean{CantorSzemeredi.MPS.condNorm_indicator, CantorSzemeredi.MPS.condNorm_indicator_sub_le,
+    CantorSzemeredi.MPS.condNorm_comp_iterate}
+  \leanok
   \uses{def:hilbert-module, lem:condexp-facts}
   Let $B \in \Dbb$ and $u, v \in L^2(\Ebb)$.  Then for almost every $x$,
   \[
@@ -94,7 +96,8 @@ everywhere, and every identity between conditional norms below holds almost ever
 
 \begin{lemma}[Localization]
   \label{lem:localize}
-  \lean{CantorSzemeredi.exists_condCompact_restrict}
+  \lean{CantorSzemeredi.MPS.exists_condCompact_restrict}
+  \leanok
   \uses{def:compact-extension, lem:cnorm-pullout, lem:condexp-facts}
   Let $\Ebb \mid \Dbb$ be a compact extension.  For every $f \in L^2(\Ebb)$ and
   $0 < \eta < 1$ there is $A \in \Dbb$ with $m(A) > 1-\eta$ such that $f\one_A$ is
