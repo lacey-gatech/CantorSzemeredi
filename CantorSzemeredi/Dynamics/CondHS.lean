@@ -822,6 +822,28 @@ theorem isFibreReg_of_memLp_hsRow (D : Factor S) {H : S.X × S.X → ℝ}
   ⟨hrow, measurable_hsRow D hH,
     ae_memLp_condKernel D (measurable_hsRow D hH).stronglyMeasurable hL2⟩
 
+omit [StandardBorelSpace S.X] in
+/-- `‖√(∫ u²)‖ₑ² = ∫⁻ ‖u‖ₑ²`: the square of a fibre norm as a `lintegral`. -/
+private theorem enorm_sqrt_integral_sq (ρ : Measure S.X) {u : S.X → ℝ} (hu : MemLp u 2 ρ) :
+    ‖Real.sqrt (∫ z, u z ^ 2 ∂ρ)‖ₑ ^ (2 : ℕ) = ∫⁻ z, ‖u z‖ₑ ^ (2 : ℕ) ∂ρ := by
+  have hint : Integrable (fun z => u z ^ 2) ρ := by
+    simp_rw [sq]
+    exact hu.integrable_mul hu
+  have hnn : (0 : ℝ) ≤ ∫ z, u z ^ 2 ∂ρ := integral_nonneg fun _ => sq_nonneg _
+  rw [Real.enorm_eq_ofReal (Real.sqrt_nonneg _), ← ENNReal.ofReal_pow (Real.sqrt_nonneg _),
+    Real.sq_sqrt hnn,
+    ofReal_integral_eq_lintegral_ofReal hint (Filter.Eventually.of_forall fun z => sq_nonneg _)]
+  refine lintegral_congr fun z => ?_
+  rw [Real.enorm_eq_ofReal_abs, ← ENNReal.ofReal_pow (abs_nonneg _), sq_abs]
+
+/-- The squared row norm, as a `lintegral` over the fibre. -/
+theorem enorm_hsRow_sq (D : Factor S) {H : S.X × S.X → ℝ} (hH : StronglyMeasurable H)
+    (hmem : MemLp H 2 (joining D)) :
+    ∀ᵐ z ∂S.m, ‖hsRow D H z‖ₑ ^ (2 : ℕ)
+      = ∫⁻ y, ‖H (z, y)‖ₑ ^ (2 : ℕ) ∂(condKernel D z) := by
+  filter_upwards [ae_memLp_row D hH hmem] with z hz
+  exact enorm_sqrt_integral_sq (condKernel D z) hz
+
 /-- The row norms of an `L²(λ)` kernel are square integrable on the base: by constancy, their
 squares integrate to `‖H‖²_{L²(λ)}`. -/
 theorem memLp_hsRow (D : Factor S) {H : S.X × S.X → ℝ} (hH : StronglyMeasurable H)
@@ -831,25 +853,160 @@ theorem memLp_hsRow (D : Factor S) {H : S.X × S.X → ℝ} (hH : StronglyMeasur
     hH.measurable.enorm.pow_const _
   refine (memLp_two_iff_lintegral
     (measurable_hsRow D hH).aestronglyMeasurable).mpr ?_
-  -- Rewrite the outer integrand as the inner `lintegral` over the fibre.
-  have hfib : ∀ᵐ z ∂S.m, ‖hsRow D H z‖ₑ ^ (2 : ℕ)
-      = ∫⁻ y, ‖H (z, y)‖ₑ ^ (2 : ℕ) ∂(condKernel D z) := by
-    filter_upwards [ae_memLp_row D hH hmem] with z hz
-    have hint : Integrable (fun y => H (z, y) ^ 2) (condKernel D z) := by
-      simp_rw [sq]
-      exact hz.integrable_mul hz
-    have hnn : (0 : ℝ) ≤ ∫ y, H (z, y) ^ 2 ∂(condKernel D z) :=
-      integral_nonneg fun _ => sq_nonneg _
-    have hsq : hsRow D H z ^ 2 = ∫ y, H (z, y) ^ 2 ∂(condKernel D z) := by
-      change Real.sqrt (∫ y, H (z, y) ^ 2 ∂(condKernel D z)) ^ 2 = _
-      exact Real.sq_sqrt hnn
-    rw [Real.enorm_eq_ofReal (hsRow_nonneg D H z), ← ENNReal.ofReal_pow (hsRow_nonneg D H z),
-      hsq,
-      ofReal_integral_eq_lintegral_ofReal hint (Filter.Eventually.of_forall fun y => sq_nonneg _)]
-    refine lintegral_congr fun y => ?_
-    rw [Real.enorm_eq_ofReal_abs, ← ENNReal.ofReal_pow (abs_nonneg _), sq_abs]
-  rw [lintegral_congr_ae hfib, lintegral_row_eq_joining D hmeas]
+  rw [lintegral_congr_ae (enorm_hsRow_sq D hH hmem), lintegral_row_eq_joining D hmeas]
   exact (memLp_two_iff_lintegral hmem.aestronglyMeasurable).mp hmem
+
+
+/-- **The fibre Hilbert–Schmidt norm recovers the `L²(λ)` norm.**
+
+`∫ ‖H‖²_{HS, fibre} dm = ‖H‖²_{L²(λ)}`: integrating the fibre Hilbert–Schmidt norm over the
+base gives back the norm on the joining.  This is the disintegration twice — once to unfold
+the fibre, once to recognise the row integrals as an integral against `λ` — and it is what
+turns `L²(λ)` approximation of kernels into control of `hsFibre` on the base. -/
+theorem lintegral_hsFibre_sq (D : Factor S) {H : S.X × S.X → ℝ} (hH : StronglyMeasurable H)
+    (hmem : MemLp H 2 (joining D)) :
+    ∫⁻ x, ‖hsFibre D H x‖ₑ ^ (2 : ℕ) ∂S.m = ∫⁻ p, ‖H p‖ₑ ^ (2 : ℕ) ∂(joining D) := by
+  have hmeas : Measurable fun p : S.X × S.X => ‖H p‖ₑ ^ (2 : ℕ) :=
+    hH.measurable.enorm.pow_const _
+  -- Unfold the outer fibre.
+  have hout : ∀ᵐ x ∂S.m, ‖hsFibre D H x‖ₑ ^ (2 : ℕ)
+      = ∫⁻ z, ‖hsRow D H z‖ₑ ^ (2 : ℕ) ∂(condKernel D x) := by
+    filter_upwards [ae_memLp_condKernel D (measurable_hsRow D hH).stronglyMeasurable
+      (memLp_hsRow D hH hmem)] with x hx
+    exact enorm_sqrt_integral_sq (condKernel D x) hx
+  rw [lintegral_congr_ae hout,
+    ← lintegral_condKernel D ((measurable_hsRow D hH).enorm.pow_const _),
+    lintegral_congr_ae (enorm_hsRow_sq D hH hmem), lintegral_row_eq_joining D hmeas]
+
+/-- The fibre Hilbert–Schmidt norm is `D`-measurable, so its level sets are factor sets. -/
+theorem stronglyMeasurable_hsFibre (D : Factor S) {H : S.X × S.X → ℝ}
+    (hH : StronglyMeasurable H) :
+    StronglyMeasurable[D.σ] (hsFibre D H) := by
+  have h1 : StronglyMeasurable fun z => hsRow D H z ^ 2 := by
+    simp_rw [sq]
+    exact (measurable_hsRow D hH).stronglyMeasurable.mul (measurable_hsRow D hH).stronglyMeasurable
+  have h2 : StronglyMeasurable[D.σ] fun x => ∫ z, hsRow D H z ^ 2 ∂(condKernel D x) :=
+    StronglyMeasurable.integral_kernel (κ := condExpKernel S.m D.σ) h1
+  exact Real.continuous_sqrt.comp_stronglyMeasurable h2
+
+
+/-! ### The cutoff
+
+`L²(λ)` density of finite-rank kernels gives `hsFibre (H - K)` small *in `L²` of the base*,
+not uniformly; Chebyshev turns that into "small outside a set of small measure".  The set can
+be taken in `D`, because `hsFibre` is `D`-measurable, and cutting the kernel down to it costs
+nothing: a `D`-set is a union of fibres, so restricting the rows multiplies `hsFibre` by the
+indicator.  That is what makes the hypothesis of `condCompact_of_kernel_approx` — a bound
+holding almost everywhere — attainable. -/
+
+/-- A `D`-measurable set is a union of fibres: its indicator is constant along almost every
+fibre. -/
+theorem ae_ae_indicator_eq (D : Factor S) {B : Set S.X} (hB : MeasurableSet[D.σ] B) :
+    ∀ᵐ x ∂S.m, ∀ᵐ z ∂(condKernel D x),
+      B.indicator (1 : S.X → ℝ) z = B.indicator (1 : S.X → ℝ) x := by
+  have hB' : MeasurableSet B := D.le _ hB
+  have hsm : StronglyMeasurable[D.σ] (B.indicator (fun _ => (1 : ℝ))) :=
+    stronglyMeasurable_const.indicator hB
+  have hint : Integrable (B.indicator (fun _ => (1 : ℝ))) S.m :=
+    (integrable_const (1 : ℝ)).indicator hB'
+  have hce : S.m⟦B|D.σ⟧ =ᵐ[S.m] B.indicator (fun _ => (1 : ℝ)) :=
+    Filter.EventuallyEq.of_eq (condExp_of_stronglyMeasurable D.le hsm hint)
+  filter_upwards [condKernel_real_ae_eq D hB', hce] with x h1 h2
+  have hval : (condKernel D x).real B = B.indicator (fun _ => (1 : ℝ)) x := by rw [h1, h2]
+  by_cases hx : x ∈ B
+  · have hone : condKernel D x B = 1 := by
+      have hne : condKernel D x B ≠ ⊤ := measure_ne_top _ _
+      have hr : (condKernel D x).real B = 1 := by
+        rw [hval, Set.indicator_of_mem hx]
+      rw [← ENNReal.ofReal_toReal hne, ← measureReal_def, hr, ENNReal.ofReal_one]
+    have hae : ∀ᵐ z ∂(condKernel D x), z ∈ B := by
+      rw [ae_iff]
+      exact (prob_compl_eq_zero_iff hB').mpr hone
+    filter_upwards [hae] with z hz
+    rw [Set.indicator_of_mem hz, Set.indicator_of_mem hx]
+    rfl
+  · have hnull : condKernel D x B = 0 := by
+      have hne : condKernel D x B ≠ ⊤ := measure_ne_top _ _
+      have hr : (condKernel D x).real B = 0 := by
+        rw [hval, Set.indicator_of_notMem hx]
+      rw [← ENNReal.ofReal_toReal hne, ← measureReal_def, hr, ENNReal.ofReal_zero]
+    have hae : ∀ᵐ z ∂(condKernel D x), z ∉ B := by
+      rw [ae_iff]
+      simpa using hnull
+    filter_upwards [hae] with z hz
+    rw [Set.indicator_of_notMem hz, Set.indicator_of_notMem hx]
+
+/-- Cutting the rows of a kernel down to a `D`-set multiplies the row norm by the
+indicator. -/
+theorem hsRow_indicator (D : Factor S) (B : Set S.X) (H : S.X × S.X → ℝ) (x : S.X) :
+    hsRow D (fun p => B.indicator (1 : S.X → ℝ) p.1 * H p) x
+      = B.indicator (1 : S.X → ℝ) x * hsRow D H x := by
+  have := sqrt_integral_const_mul_sq (ρ := condKernel D x)
+    (B.indicator (1 : S.X → ℝ) x) (fun y => H (x, y))
+  rw [hsRow, hsRow, this]
+  congr 1
+  by_cases hx : x ∈ B <;> simp [hx]
+
+/-- …and the fibre Hilbert–Schmidt norm likewise. -/
+theorem hsFibre_indicator (D : Factor S) {B : Set S.X} (hB : MeasurableSet[D.σ] B)
+    (H : S.X × S.X → ℝ) :
+    ∀ᵐ x ∂S.m, hsFibre D (fun p => B.indicator (1 : S.X → ℝ) p.1 * H p) x
+      = B.indicator (1 : S.X → ℝ) x * hsFibre D H x := by
+  filter_upwards [ae_ae_indicator_eq D hB] with x hx
+  have hrw : ∫ z, hsRow D (fun p => B.indicator (1 : S.X → ℝ) p.1 * H p) z ^ 2
+        ∂(condKernel D x)
+      = ∫ z, (B.indicator (1 : S.X → ℝ) x * hsRow D H z) ^ 2 ∂(condKernel D x) := by
+    refine integral_congr_ae ?_
+    filter_upwards [hx] with z hz
+    rw [hsRow_indicator, hz]
+  rw [hsFibre, hrw, sqrt_integral_const_mul_sq, hsFibre]
+  congr 1
+  by_cases hxB : x ∈ B <;> simp [hxB]
+
+
+/-- **The cutoff.**  Given a kernel `F` in `L²(λ)` and `δ > 0`, there is a `D`-measurable set
+`B` whose complement has measure at most `‖F‖²_{L²(λ)}/δ²`, such that the kernel cut down to
+`B` has fibre Hilbert–Schmidt norm at most `δ` *everywhere*.
+
+Applied to `F = H - K` with `K` finite rank and `‖H - K‖_{L²(λ)}` small, this is the uniform
+approximation that `condCompact_of_kernel_approx` asks for: `L²(λ)` density gives smallness
+of `hsFibre` only in `L²` of the base, Chebyshev converts that to smallness outside a small
+set, and the cutoff — legitimate because `hsFibre` is `D`-measurable, so the set is a union
+of fibres — makes the bound hold everywhere. -/
+theorem exists_cutoff_hsFibre_le (D : Factor S) {F : S.X × S.X → ℝ}
+    (hF : StronglyMeasurable F) (hmem : MemLp F 2 (joining D)) {δ : ℝ} (hδ : 0 < δ) :
+    ∃ B : Set S.X, MeasurableSet[D.σ] B ∧
+      S.m Bᶜ ≤ (∫⁻ p, ‖F p‖ₑ ^ (2 : ℕ) ∂(joining D)) / ENNReal.ofReal (δ ^ 2) ∧
+      ∀ᵐ x ∂S.m, hsFibre D (fun p => B.indicator (1 : S.X → ℝ) p.1 * F p) x ≤ δ := by
+  classical
+  have hDm : StronglyMeasurable[D.σ] (hsFibre D F) := stronglyMeasurable_hsFibre D hF
+  set B : Set S.X := {x | hsFibre D F x ≤ δ} with hBdef
+  have hBmeas : MeasurableSet[D.σ] B := measurableSet_le hDm.measurable measurable_const
+  refine ⟨B, hBmeas, ?_, ?_⟩
+  · -- Chebyshev against the identity `∫ hsFibre² = ‖F‖²_{L²(λ)}`.
+    have hsub : Bᶜ ⊆ {x | ENNReal.ofReal (δ ^ 2) ≤ ‖hsFibre D F x‖ₑ ^ (2 : ℕ)} := by
+      intro x hx
+      have hlt : δ < hsFibre D F x := by
+        simpa [hBdef, Set.mem_compl_iff, not_le] using hx
+      have hnn : (0 : ℝ) ≤ hsFibre D F x := hsFibre_nonneg D F x
+      have hle : ENNReal.ofReal (δ ^ 2) ≤ ENNReal.ofReal (hsFibre D F x ^ 2) :=
+        ENNReal.ofReal_le_ofReal (by nlinarith)
+      change ENNReal.ofReal (δ ^ 2) ≤ ‖hsFibre D F x‖ₑ ^ (2 : ℕ)
+      rwa [Real.enorm_eq_ofReal hnn, ← ENNReal.ofReal_pow hnn]
+    have hcheb := meas_ge_le_lintegral_div
+      ((hDm.mono D.le).measurable.enorm.pow_const (2 : ℕ)).aemeasurable
+      (μ := S.m) (ε := ENNReal.ofReal (δ ^ 2))
+      (by simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; positivity) (by simp)
+    rw [lintegral_hsFibre_sq D hF hmem] at hcheb
+    exact le_trans (measure_mono hsub) hcheb
+  · filter_upwards [hsFibre_indicator D hBmeas F] with x hx
+    rw [hx]
+    by_cases hxB : x ∈ B
+    · rw [Set.indicator_of_mem hxB]
+      have : hsFibre D F x ≤ δ := hxB
+      simpa using this
+    · rw [Set.indicator_of_notMem hxB]
+      simp [hδ.le]
 
 /-- **Fibre regularity from `L²(λ)` alone.**  Joint measurability and membership in `L²` of the
 joining are enough: constancy supplies the row condition and the bound on the row norms, and
