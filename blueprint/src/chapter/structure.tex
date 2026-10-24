@@ -355,15 +355,33 @@
   on $H_n - K_n$.
 
   \smallskip
-  \emph{What is still open.}  Two steps of wiring.  First, instantiating
-  \texttt{condCompact\_of\_kernel\_approx} with \texttt{exists\_finiteRank\_cutoff} and the
-  net: every input now exists, and what is left is bookkeeping over the \texttt{IsFibreHS}
-  fields and the coefficient bounds (conditional Cauchy--Schwarz against
-  \texttt{condNorm\_indicator\_le\_one}).  Second, discharging the exceptional set: the
-  cutoff gives conditional compactness of $\one_B \Phi_H a$, and absolute continuity of the
-  integral makes $\norm{\Phi_H a - \one_B \Phi_H a}_2$ small, which is what the density in
-  \emph{compact extension} absorbs.  Then the factor $\Ebb$ can be assembled from the
-  conditionally compact functions.
+  \smallskip
+  \emph{Both hypotheses are now theorems.}  \texttt{exists\_finiteRank\_cutoff} supplies the
+  kernel approximation, and \texttt{exists\_net\_of\_finiteRank} the net:
+  \texttt{condIntegralOp\_rectSum} identifies the image of a rectangle-sum kernel as a
+  $\Dbb$-linear combination of the fixed generators $\one_{A_i}$ with coefficients
+  $c_i \cip{\one_{B_i}}{b}_{\Dbb}$ --- $\Dbb$-measurable by construction, bounded by
+  conditional Cauchy--Schwarz against \texttt{condNorm\_indicator\_le\_one} --- and
+  \texttt{exists\_net\_of\_finite\_span} rounds those coefficients.
+
+  \smallskip
+  \emph{What is still open, and one wrinkle.}  Combining the two is the remaining step, and
+  it is not quite mechanical.  \texttt{exists\_finiteRank\_cutoff} produces a $\Dbb$-set $B$
+  and the kernel cut to it; since $B \in \Dbb$ the indicator pulls out of the fibre integral,
+  so the cut operator is $\one_B \Phi_H a$.  But conditional compactness of that function
+  concerns \emph{its} orbit,
+  $(\one_B \Phi_H a) \circ T^n = \one_{T^{-n}B}\,\Phi_{H \circ R^n}(a \circ T^n)$, and
+  $T^{-n}B$ moves: one cannot cut once and forget it.  What saves the argument is that
+  $\Dbb$ is $T$-invariant, so each $\one_{T^{-n}B}$ is again $\Dbb$-measurable and bounded by
+  $1$; the coefficients become
+  $\one_{T^{-n}B}(x)\, c_i \cip{\one_{B_i}}{b_n}_{\Dbb}(x)$, and the grid-rounding absorbs
+  the moving indicator exactly as it absorbs the circle.  The care needed is in the
+  kernel-error term, where the bound must be taken for the cut kernel at each $n$.
+
+  After that, absolute continuity of the integral makes
+  $\norm{\Phi_H a - \one_B \Phi_H a}_2$ small, which the density in \emph{compact extension}
+  absorbs, and the factor $\Ebb$ can be assembled from the conditionally compact
+  functions.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}
