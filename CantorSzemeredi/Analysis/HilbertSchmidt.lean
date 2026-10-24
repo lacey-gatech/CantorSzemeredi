@@ -174,6 +174,45 @@ theorem isSetSemiring_measurableRectangles (α β : Type*) [MeasurableSpace α]
         · exact ⟨⟨hxa, hyb⟩, fun h => hyb' h.2⟩
         · exact ⟨⟨hxa, hyb⟩, fun h => hxa' h.1⟩
 
+/-- The rectangles are exactly the collection `generateFrom_prod` is stated for. -/
+theorem measurableRectangles_eq (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] :
+    measurableRectangles α β
+      = Set.image2 (· ×ˢ ·) {s : Set α | MeasurableSet s} {t : Set β | MeasurableSet t} := by
+  ext s
+  simp only [measurableRectangles, Set.mem_setOf_eq, Set.mem_image2]
+  constructor
+  · rintro ⟨a, b, ha, hb, rfl⟩
+    exact ⟨a, ha, b, hb, rfl⟩
+  · rintro ⟨a, ha, b, hb, rfl⟩
+    exact ⟨a, b, ha, hb, rfl⟩
+
+/-- The rectangles generate the product σ-algebra. -/
+theorem generateFrom_measurableRectangles (α β : Type*) [MeasurableSpace α]
+    [MeasurableSpace β] :
+    MeasurableSpace.generateFrom (measurableRectangles α β) = Prod.instMeasurableSpace := by
+  rw [measurableRectangles_eq]
+  exact generateFrom_prod
+
+/-- **Set-level density.**  For a finite product measure, every measurable subset of `α × β`
+is approximated in symmetric difference by a finite union of measurable rectangles.
+
+This is the step that makes finite-rank kernels dense in `L²(μ ⊗ ν)`, and hence the step that
+makes integral operators compact. -/
+theorem exists_rectangleUnion_symmDiff_lt {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
+    (μ : Measure α) (ν : Measure β) [SFinite ν] [IsFiniteMeasure (μ.prod ν)]
+    {s : Set (α × β)} (hs : MeasurableSet s) {ε : ℝ≥0∞} (hε : 0 < ε) :
+    ∃ t ∈ supClosure (measurableRectangles α β), (μ.prod ν) (symmDiff t s) < ε := by
+  refine exists_measure_symmDiff_lt_of_generateFrom_isSetSemiring
+    (isSetSemiring_measurableRectangles α β) ?_
+    (generateFrom_measurableRectangles α β).symm hs hε
+  -- The whole space is itself a rectangle, so the covering hypothesis is immediate.
+  refine ⟨{Set.univ}, Set.countable_singleton _, ?_, ?_⟩
+  · rintro t ht
+    rw [Set.mem_singleton_iff] at ht
+    subst ht
+    exact ⟨Set.univ, Set.univ, MeasurableSet.univ, MeasurableSet.univ, by simp⟩
+  · simp
+
 /-! ### Rank-one operators are compact
 
 Mathlib has no "finite rank implies compact" lemma: it has `IsCompactOperator.add`,
