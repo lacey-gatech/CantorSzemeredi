@@ -53,9 +53,9 @@ noncomputable def integralKernel (k : α × β → ℂ) (f : β → ℂ) : α �
 
 omit [MeasurableSpace α] [SFinite ν] in
 /-- The pointwise Cauchy–Schwarz bound: `|T_k f x| ≤ ‖k(x, ·)‖_{L²(ν)} ‖f‖_{L²(ν)}`. -/
-theorem enorm_integralKernel_le (k : α × β → ℂ) (f : β → ℂ)
-    (hk : ∀ x, AEMeasurable (fun y => ‖k (x, y)‖ₑ) ν) (hf : AEMeasurable (fun y => ‖f y‖ₑ) ν)
-    (x : α) :
+theorem enorm_integralKernel_le_of_slice (k : α × β → ℂ) (f : β → ℂ)
+    {x : α} (hk : AEMeasurable (fun y => ‖k (x, y)‖ₑ) ν)
+    (hf : AEMeasurable (fun y => ‖f y‖ₑ) ν) :
     ‖integralKernel (ν := ν) k f x‖ₑ
       ≤ (∫⁻ y, ‖k (x, y)‖ₑ ^ (2 : ℝ) ∂ν) ^ (1 / (2 : ℝ))
         * (∫⁻ y, ‖f y‖ₑ ^ (2 : ℝ) ∂ν) ^ (1 / (2 : ℝ)) := by
@@ -66,7 +66,7 @@ theorem enorm_integralKernel_le (k : α × β → ℂ) (f : β → ℂ)
         rw [enorm_mul]
     _ ≤ (∫⁻ y, ‖k (x, y)‖ₑ ^ (2 : ℝ) ∂ν) ^ (1 / (2 : ℝ))
         * (∫⁻ y, ‖f y‖ₑ ^ (2 : ℝ) ∂ν) ^ (1 / (2 : ℝ)) :=
-        ENNReal.lintegral_mul_le_Lp_mul_Lq ν Real.HolderConjugate.two_two (hk x) hf
+        ENNReal.lintegral_mul_le_Lp_mul_Lq ν Real.HolderConjugate.two_two hk hf
 
 private theorem eLpNorm_two_eq_rpow {γ : Type*} [MeasurableSpace γ] (ρ : Measure γ)
     (g : γ → ℂ) (hg : AEStronglyMeasurable g ρ) :
@@ -80,7 +80,7 @@ Stated with `eLpNorm`, so it holds unconditionally: no integrability hypotheses,
 bound is vacuous when the right-hand side is infinite. -/
 theorem eLpNorm_integralKernel_le {k : α × β → ℂ} {f : β → ℂ}
     (hk : AEStronglyMeasurable k (μ.prod ν))
-    (hkx : ∀ x, AEMeasurable (fun y => k (x, y)) ν)
+    (hkx : ∀ᵐ x ∂μ, AEMeasurable (fun y => k (x, y)) ν)
     (hf : AEStronglyMeasurable f ν)
     (hKf : AEStronglyMeasurable (integralKernel (ν := ν) k f) μ) :
     eLpNorm (integralKernel (ν := ν) k f) 2 μ
@@ -90,11 +90,11 @@ theorem eLpNorm_integralKernel_le {k : α × β → ℂ} {f : β → ℂ}
   have htop : (2 : ℝ≥0∞) ≠ ⊤ := by norm_num
   set A : ℝ≥0∞ := (∫⁻ y, ‖f y‖ₑ ^ (2 : ℝ) ∂ν) ^ (1 / (2 : ℝ)) with hA
   -- Pointwise Cauchy–Schwarz, then integrate in `x`.
-  have hptw : ∀ x, ‖integralKernel (ν := ν) k f x‖ₑ ^ (2 : ℝ)
+  have hptw : ∀ᵐ x ∂μ, ‖integralKernel (ν := ν) k f x‖ₑ ^ (2 : ℝ)
       ≤ (∫⁻ y, ‖k (x, y)‖ₑ ^ (2 : ℝ) ∂ν) * A ^ (2 : ℝ) := by
-    intro x
-    have hb := enorm_integralKernel_le k f (fun x => (hkx x).enorm)
-      hf.aemeasurable.enorm x
+    filter_upwards [hkx] with x hxm
+    have hb := enorm_integralKernel_le_of_slice (x := x) k f hxm.enorm
+      hf.aemeasurable.enorm
     calc ‖integralKernel (ν := ν) k f x‖ₑ ^ (2 : ℝ)
         ≤ ((∫⁻ y, ‖k (x, y)‖ₑ ^ (2 : ℝ) ∂ν) ^ (1 / (2 : ℝ)) * A) ^ (2 : ℝ) :=
           ENNReal.rpow_le_rpow hb (by norm_num)
@@ -105,7 +105,7 @@ theorem eLpNorm_integralKernel_le {k : α × β → ℂ} {f : β → ℂ}
       ≤ (∫⁻ z, ‖k z‖ₑ ^ (2 : ℝ) ∂(μ.prod ν)) * A ^ (2 : ℝ) := by
     calc ∫⁻ x, ‖integralKernel (ν := ν) k f x‖ₑ ^ (2 : ℝ) ∂μ
         ≤ ∫⁻ x, (∫⁻ y, ‖k (x, y)‖ₑ ^ (2 : ℝ) ∂ν) * A ^ (2 : ℝ) ∂μ :=
-          lintegral_mono hptw
+          lintegral_mono_ae hptw
       _ = (∫⁻ x, ∫⁻ y, ‖k (x, y)‖ₑ ^ (2 : ℝ) ∂ν ∂μ) * A ^ (2 : ℝ) := by
           rw [lintegral_mul_const'' _ ((hk.aemeasurable.enorm.pow_const
             (2 : ℝ)).lintegral_prod_right')]
@@ -294,5 +294,87 @@ theorem integrable_slice_mul {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν)
     ∀ᵐ x ∂μ, Integrable (fun y => k (x, y) * f y) ν := by
   filter_upwards [memLp_slice hk] with x hx
   exact (MemLp.integrable_mul hx hf)
+
+omit [SFinite μ] in
+/-- The image of a square integrable function under the operator is measurable. -/
+theorem aestronglyMeasurable_integralKernel {k : α × β → ℂ}
+    (hk : AEStronglyMeasurable k (μ.prod ν)) {f : β → ℂ} (hf : AEStronglyMeasurable f ν) :
+    AEStronglyMeasurable (integralKernel (ν := ν) k f) μ :=
+  (hk.mul hf.comp_snd).integral_prod_right'
+
+omit [SFinite μ] in
+/-- The operator maps `L²(ν)` into `L²(μ)`. -/
+theorem memLp_integralKernel {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν))
+    {f : β → ℂ} (hf : MemLp f 2 ν) :
+    MemLp (integralKernel (ν := ν) k f) 2 μ := by
+  rw [memLp_iff]
+  refine lt_of_le_of_lt (eLpNorm_integralKernel_le hk.aestronglyMeasurable
+    (hk.aestronglyMeasurable.prodMk_left.mono fun x hx => hx.aemeasurable)
+    hf.aestronglyMeasurable
+    (aestronglyMeasurable_integralKernel hk.aestronglyMeasurable hf.aestronglyMeasurable))
+    (ENNReal.mul_lt_top hk hf)
+
+/-- The operator as a linear map on `L²`. -/
+noncomputable def integralKernelL0 {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν)) :
+    Lp ℂ 2 ν →ₗ[ℂ] Lp ℂ 2 μ where
+  toFun f := (memLp_integralKernel hk (Lp.memLp f)).toLp _
+  map_add' f g := by
+    refine Lp.ext ?_
+    filter_upwards [(memLp_integralKernel hk (Lp.memLp (f + g))).coeFn_toLp,
+      Lp.coeFn_add ((memLp_integralKernel hk (Lp.memLp f)).toLp _)
+        ((memLp_integralKernel hk (Lp.memLp g)).toLp _),
+      (memLp_integralKernel hk (Lp.memLp f)).coeFn_toLp,
+      (memLp_integralKernel hk (Lp.memLp g)).coeFn_toLp,
+      integrable_slice_mul hk (Lp.memLp f), integrable_slice_mul hk (Lp.memLp g)]
+      with x hx hxa hx2 hx3 hif hig
+    rw [hx, hxa, Pi.add_apply, hx2, hx3, integralKernel, integralKernel, integralKernel,
+      ← integral_add hif hig]
+    refine integral_congr_ae ?_
+    filter_upwards [Lp.coeFn_add f g] with y hy
+    rw [hy]
+    simp [mul_add]
+  map_smul' c f := by
+    refine Lp.ext ?_
+    filter_upwards [(memLp_integralKernel hk (Lp.memLp (c • f))).coeFn_toLp,
+      Lp.coeFn_smul c ((memLp_integralKernel hk (Lp.memLp f)).toLp _),
+      (memLp_integralKernel hk (Lp.memLp f)).coeFn_toLp] with x hx hxs hx2
+    simp only [RingHom.id_apply]
+    rw [hx, hxs, Pi.smul_apply, hx2, integralKernel, integralKernel, ← integral_smul]
+    refine integral_congr_ae ?_
+    filter_upwards [Lp.coeFn_smul c f] with y hy
+    rw [hy]
+    simp [smul_eq_mul]
+    ring
+
+/-- **The integral operator as a continuous linear map**, with operator norm at most the
+`L²` norm of the kernel.  This is the form `isCompactOperator_of_tendsto` consumes. -/
+noncomputable def integralKernelL {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν)) :
+    Lp ℂ 2 ν →L[ℂ] Lp ℂ 2 μ :=
+  LinearMap.mkContinuous (integralKernelL0 hk) ((eLpNorm k 2 (μ.prod ν)).toReal) (by
+    intro f
+    have hbound := eLpNorm_integralKernel_le (μ := μ) (ν := ν) (k := k) (f := ⇑f)
+      hk.aestronglyMeasurable
+      (hk.aestronglyMeasurable.prodMk_left.mono fun x hx => hx.aemeasurable)
+      (Lp.aestronglyMeasurable f)
+      (aestronglyMeasurable_integralKernel hk.aestronglyMeasurable (Lp.aestronglyMeasurable f))
+    have hnorm : ‖integralKernelL0 hk f‖ = (eLpNorm (integralKernel (ν := ν) k ⇑f) 2 μ).toReal := by
+      rw [Lp.norm_def]
+      congr 1
+      exact eLpNorm_congr_ae (memLp_integralKernel hk (Lp.memLp f)).coeFn_toLp
+    rw [hnorm, Lp.norm_def]
+    rw [← ENNReal.toReal_mul]
+    refine ENNReal.toReal_mono (by
+      exact ENNReal.mul_ne_top hk.eLpNorm_ne_top (Lp.memLp f).eLpNorm_ne_top) hbound)
+
+omit [SFinite μ] in
+@[simp] theorem integralKernelL_apply {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν))
+    (f : Lp ℂ 2 ν) :
+    integralKernelL hk f = (memLp_integralKernel hk (Lp.memLp f)).toLp _ := rfl
+
+omit [SFinite μ] in
+/-- The operator norm bound, in the form used for the limiting argument. -/
+theorem norm_integralKernelL_le {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν)) :
+    ‖integralKernelL hk‖ ≤ (eLpNorm k 2 (μ.prod ν)).toReal :=
+  LinearMap.mkContinuous_norm_le _ ENNReal.toReal_nonneg _
 
 end HilbertSchmidt
