@@ -266,9 +266,7 @@ slices `k (x, ·)` are in `L²(ν)` for a.e. `x`, that the resulting function of
 measurable, and the bound already proved.
 -/
 
-variable [SFinite μ]
 
-omit [SFinite μ] in
 /-- For a.e. `x`, the slice `k (x, ·)` is square integrable. -/
 theorem memLp_slice {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν)) :
     ∀ᵐ x ∂μ, MemLp (fun y => k (x, y)) 2 ν := by
@@ -287,7 +285,6 @@ theorem memLp_slice {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν)) :
   rw [memLp_iff, eLpNorm_two_eq_rpow _ _ hx]
   exact ENNReal.rpow_lt_top_of_nonneg (by norm_num) hx'
 
-omit [SFinite μ] in
 /-- For a.e. `x`, the integrand of the operator is integrable. -/
 theorem integrable_slice_mul {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν))
     {f : β → ℂ} (hf : MemLp f 2 ν) :
@@ -295,14 +292,12 @@ theorem integrable_slice_mul {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν)
   filter_upwards [memLp_slice hk] with x hx
   exact (MemLp.integrable_mul hx hf)
 
-omit [SFinite μ] in
 /-- The image of a square integrable function under the operator is measurable. -/
 theorem aestronglyMeasurable_integralKernel {k : α × β → ℂ}
     (hk : AEStronglyMeasurable k (μ.prod ν)) {f : β → ℂ} (hf : AEStronglyMeasurable f ν) :
     AEStronglyMeasurable (integralKernel (ν := ν) k f) μ :=
   (hk.mul hf.comp_snd).integral_prod_right'
 
-omit [SFinite μ] in
 /-- The operator maps `L²(ν)` into `L²(μ)`. -/
 theorem memLp_integralKernel {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν))
     {f : β → ℂ} (hf : MemLp f 2 ν) :
@@ -366,12 +361,10 @@ noncomputable def integralKernelL {k : α × β → ℂ} (hk : MemLp k 2 (μ.pro
     refine ENNReal.toReal_mono (by
       exact ENNReal.mul_ne_top hk.eLpNorm_ne_top (Lp.memLp f).eLpNorm_ne_top) hbound)
 
-omit [SFinite μ] in
 @[simp] theorem integralKernelL_apply {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν))
     (f : Lp ℂ 2 ν) :
     integralKernelL hk f = (memLp_integralKernel hk (Lp.memLp f)).toLp _ := rfl
 
-omit [SFinite μ] in
 /-- The operator norm bound, in the form used for the limiting argument. -/
 theorem norm_integralKernelL_le {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν)) :
     ‖integralKernelL hk‖ ≤ (eLpNorm k 2 (μ.prod ν)).toReal :=
@@ -380,7 +373,6 @@ theorem norm_integralKernelL_le {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod 
 
 /-! ### Product kernels give rank-one operators -/
 
-omit [SFinite μ] in
 /-- A tensor product of two `L²` functions is an `L²` kernel. -/
 theorem memLp_prod_mul {g : α → ℂ} {h : β → ℂ} (hg : MemLp g 2 μ) (hh : MemLp h 2 ν) :
     MemLp (fun p : α × β => g p.1 * h p.2) 2 (μ.prod ν) := by
@@ -572,12 +564,13 @@ noncomputable def integralKernelCLM :
 
 /-! ### Kernels orthogonal to every rectangle vanish -/
 
-omit [SFinite ν] [SFinite μ] in
+omit [SFinite ν] in
 theorem isPiSystem_measurableRectangles (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] :
     IsPiSystem (measurableRectangles α β) := by
   rintro _ ⟨a, b, ha, hb, rfl⟩ _ ⟨a', b', ha', hb', rfl⟩ _
   exact ⟨a ∩ a', b ∩ b', ha.inter ha', hb.inter hb', Set.prod_inter_prod⟩
 
+omit [SFinite ν] in
 /-- A function whose integral over every measurable rectangle vanishes is a.e. zero.
 The rectangles form a π-system generating the product σ-algebra, so this is Dynkin's lemma. -/
 theorem ae_eq_zero_of_forall_setIntegral_rectangle_eq_zero
