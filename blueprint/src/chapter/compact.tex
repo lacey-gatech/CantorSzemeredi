@@ -195,7 +195,8 @@ $F \subset \Cantor$ is \emph{unfortunate at $x$} if no pair in $F$ is good at $x
 
 \begin{lemma}[Pigeonhole]
   \label{lem:unfortunate}
-  \lean{CantorSzemeredi.not_unfortunate_of_card_le}
+  \lean{CantorSzemeredi.MPS.not_unfortunate_of_card_le, CantorSzemeredi.MPS.condNorm_neg}
+  \leanok
   \uses{def:compact-extension, lem:cond-cs}
   Set $M \coloneqq r^{t+1}+1$.  If $F \subset \Cantor$ is finite with $\abs{F} \geq M$ then for
   every $x \in Y$, $F$ is not unfortunate at $x$.
