@@ -494,4 +494,79 @@ theorem isCompactOperator_integralKernelL_of_approx {k : α × β → ℂ}
   refine squeeze_zero (fun n => norm_nonneg _) hbd ?_
   exact tendsto_one_div_add_atTop_nhds_zero_nat
 
+
+/-! ### The kernel map as a bounded operator-valued map -/
+
+/-- The operator depends only on the a.e. class of the kernel. -/
+theorem integralKernelL_congr {k k' : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν))
+    (hk' : MemLp k' 2 (μ.prod ν)) (h : k =ᵐ[μ.prod ν] k') :
+    integralKernelL hk = integralKernelL hk' := by
+  refine ContinuousLinearMap.ext fun f => ?_
+  refine Lp.ext ?_
+  filter_upwards [(memLp_integralKernel hk (Lp.memLp f)).coeFn_toLp,
+    (memLp_integralKernel hk' (Lp.memLp f)).coeFn_toLp,
+    Measure.ae_ae_of_ae_prod h] with x hx hx' hslice
+  rw [integralKernelL_apply, integralKernelL_apply, hx, hx', integralKernel, integralKernel]
+  refine integral_congr_ae ?_
+  filter_upwards [hslice] with y hy
+  rw [hy]
+
+/-- `k ↦ T_k` is additive. -/
+theorem integralKernelL_add {k k' : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν))
+    (hk' : MemLp k' 2 (μ.prod ν)) :
+    integralKernelL (hk.add hk') = integralKernelL hk + integralKernelL hk' := by
+  refine ContinuousLinearMap.ext fun f => ?_
+  simp only [ContinuousLinearMap.add_apply]
+  refine Lp.ext ?_
+  filter_upwards [(memLp_integralKernel (hk.add hk') (Lp.memLp f)).coeFn_toLp,
+    Lp.coeFn_add ((memLp_integralKernel hk (Lp.memLp f)).toLp _)
+      ((memLp_integralKernel hk' (Lp.memLp f)).toLp _),
+    (memLp_integralKernel hk (Lp.memLp f)).coeFn_toLp,
+    (memLp_integralKernel hk' (Lp.memLp f)).coeFn_toLp,
+    integrable_slice_mul hk (Lp.memLp f), integrable_slice_mul hk' (Lp.memLp f)]
+    with x hx hxs hx1 hx2 hi1 hi2
+  rw [integralKernelL_apply, integralKernelL_apply, integralKernelL_apply, hx, hxs,
+    Pi.add_apply, hx1, hx2, integralKernel, integralKernel, integralKernel,
+    ← integral_add hi1 hi2]
+  simp [Pi.add_apply, add_mul]
+
+/-- `k ↦ T_k` is homogeneous. -/
+theorem integralKernelL_smul (c : ℂ) {k : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν)) :
+    integralKernelL (hk.const_mul c) = c • integralKernelL hk := by
+  refine ContinuousLinearMap.ext fun f => ?_
+  simp only [ContinuousLinearMap.smul_apply]
+  refine Lp.ext ?_
+  filter_upwards [(memLp_integralKernel (hk.const_mul c) (Lp.memLp f)).coeFn_toLp,
+    Lp.coeFn_smul c ((memLp_integralKernel hk (Lp.memLp f)).toLp _),
+    (memLp_integralKernel hk (Lp.memLp f)).coeFn_toLp] with x hx hxs hx1
+  rw [integralKernelL_apply, integralKernelL_apply, hx, hxs, Pi.smul_apply, hx1,
+    integralKernel, integralKernel, smul_eq_mul, ← integral_const_mul]
+  refine integral_congr_ae (.of_forall fun y => ?_)
+  ring
+
+
+/-- **The kernel map.**  Sending an `L²` kernel to its integral operator is itself a
+norm-one bounded linear map. -/
+noncomputable def integralKernelCLM :
+    Lp ℂ 2 (μ.prod ν) →L[ℂ] (Lp ℂ 2 ν →L[ℂ] Lp ℂ 2 μ) :=
+  LinearMap.mkContinuous
+    { toFun := fun u => integralKernelL (Lp.memLp u)
+      map_add' := fun u v => by
+        rw [integralKernelL_congr (Lp.memLp (u + v)) ((Lp.memLp u).add (Lp.memLp v))
+          (Lp.coeFn_add u v), integralKernelL_add]
+      map_smul' := fun c u => by
+        have hae : ⇑(c • u) =ᵐ[μ.prod ν] fun p => c * u p := by
+          filter_upwards [Lp.coeFn_smul c u] with p hp
+          simpa [smul_eq_mul] using hp
+        rw [integralKernelL_congr (Lp.memLp (c • u)) ((Lp.memLp u).const_mul c) hae,
+          integralKernelL_smul]
+        rfl }
+    1 (by
+      intro u
+      refine (norm_integralKernelL_le (Lp.memLp u)).trans ?_
+      rw [Lp.norm_def, one_mul])
+
+@[simp] theorem integralKernelCLM_apply (u : Lp ℂ 2 (μ.prod ν)) :
+    integralKernelCLM u = integralKernelL (Lp.memLp u) := rfl
+
 end HilbertSchmidt
