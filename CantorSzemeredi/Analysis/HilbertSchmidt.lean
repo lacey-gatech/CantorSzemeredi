@@ -443,4 +443,55 @@ theorem isCompactOperator_integralKernelL_prod_mul {g : α → ℂ} {h : β → 
   rw [key]
   exact isCompactOperator_rankOne _ _
 
+
+/-! ### Compactness by approximation in the kernel -/
+
+/-- The assignment `k ↦ T_k` is additive, in the form needed to compare two kernels. -/
+theorem integralKernelL_sub {k k' : α × β → ℂ} (hk : MemLp k 2 (μ.prod ν))
+    (hk' : MemLp k' 2 (μ.prod ν)) :
+    integralKernelL (hk.sub hk') = integralKernelL hk - integralKernelL hk' := by
+  refine ContinuousLinearMap.ext fun f => ?_
+  simp only [ContinuousLinearMap.sub_apply]
+  refine Lp.ext ?_
+  filter_upwards [(memLp_integralKernel (hk.sub hk') (Lp.memLp f)).coeFn_toLp,
+    Lp.coeFn_sub ((memLp_integralKernel hk (Lp.memLp f)).toLp _)
+      ((memLp_integralKernel hk' (Lp.memLp f)).toLp _),
+    (memLp_integralKernel hk (Lp.memLp f)).coeFn_toLp,
+    (memLp_integralKernel hk' (Lp.memLp f)).coeFn_toLp,
+    integrable_slice_mul hk (Lp.memLp f), integrable_slice_mul hk' (Lp.memLp f)]
+    with x hx hxs hx1 hx2 hi1 hi2
+  rw [integralKernelL_apply, integralKernelL_apply, integralKernelL_apply, hx, hxs,
+    Pi.sub_apply, hx1, hx2, integralKernel, integralKernel, integralKernel,
+    ← integral_sub hi1 hi2]
+  simp [Pi.sub_apply, sub_mul]
+
+/-- **Compactness is inherited from approximating kernels.**  If `k` is approximated in
+`L²(μ⊗ν)` by kernels whose operators are compact, then `T_k` is compact. -/
+theorem isCompactOperator_integralKernelL_of_approx {k : α × β → ℂ}
+    (hk : MemLp k 2 (μ.prod ν))
+    (happrox : ∀ ε : ℝ≥0∞, 0 < ε → ∃ k' : α × β → ℂ, ∃ hk' : MemLp k' 2 (μ.prod ν),
+      IsCompactOperator (integralKernelL hk') ∧ eLpNorm (k - k') 2 (μ.prod ν) < ε) :
+    IsCompactOperator (integralKernelL hk) := by
+  choose kn hkn hcpt hlt using fun n : ℕ =>
+    happrox ((n + 1 : ℝ≥0∞)⁻¹) (ENNReal.inv_pos.mpr (by simp))
+  refine isCompactOperator_of_tendsto (l := Filter.atTop)
+    (F := fun n => integralKernelL (hkn n)) ?_ (.of_forall hcpt)
+  rw [tendsto_iff_norm_sub_tendsto_zero]
+  have hbd : ∀ n : ℕ, ‖integralKernelL (hkn n) - integralKernelL hk‖ ≤ 1 / (n + 1 : ℝ) := by
+    intro n
+    have hsub : integralKernelL (hkn n) - integralKernelL hk
+        = -(integralKernelL ((hk.sub (hkn n)))) := by
+      rw [integralKernelL_sub hk (hkn n)]; abel
+    rw [hsub, norm_neg]
+    refine (norm_integralKernelL_le (hk.sub (hkn n))).trans ?_
+    have := (hlt n).le
+    have h1 : ((n + 1 : ℝ≥0∞)⁻¹) ≠ ⊤ := by simp
+    calc (eLpNorm (k - kn n) 2 (μ.prod ν)).toReal
+        ≤ ((n + 1 : ℝ≥0∞)⁻¹).toReal := ENNReal.toReal_mono h1 this
+      _ = 1 / (n + 1 : ℝ) := by
+          rw [ENNReal.toReal_inv, one_div]
+          congr 1
+  refine squeeze_zero (fun n => norm_nonneg _) hbd ?_
+  exact tendsto_one_div_add_atTop_nhds_zero_nat
+
 end HilbertSchmidt
