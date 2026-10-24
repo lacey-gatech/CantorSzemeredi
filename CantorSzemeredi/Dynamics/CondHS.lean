@@ -621,6 +621,43 @@ theorem isFibreReg_of_memLp_hsRow (D : Factor S) {H : S.X × S.X → ℝ}
   ⟨hrow, measurable_hsRow D hH,
     ae_memLp_condKernel D (measurable_hsRow D hH).stronglyMeasurable hL2⟩
 
+/-- The row norms of an `L²(λ)` kernel are square integrable on the base: by constancy, their
+squares integrate to `‖H‖²_{L²(λ)}`. -/
+theorem memLp_hsRow (D : Factor S) {H : S.X × S.X → ℝ} (hH : StronglyMeasurable H)
+    (hmem : MemLp H 2 (joining D)) :
+    MemLp (hsRow D H) 2 S.m := by
+  have hmeas : Measurable fun p : S.X × S.X => ‖H p‖ₑ ^ (2 : ℕ) :=
+    hH.measurable.enorm.pow_const _
+  refine (memLp_two_iff_lintegral
+    (measurable_hsRow D hH).aestronglyMeasurable).mpr ?_
+  -- Rewrite the outer integrand as the inner `lintegral` over the fibre.
+  have hfib : ∀ᵐ z ∂S.m, ‖hsRow D H z‖ₑ ^ (2 : ℕ)
+      = ∫⁻ y, ‖H (z, y)‖ₑ ^ (2 : ℕ) ∂(condKernel D z) := by
+    filter_upwards [ae_memLp_row D hH hmem] with z hz
+    have hint : Integrable (fun y => H (z, y) ^ 2) (condKernel D z) := by
+      simp_rw [sq]
+      exact hz.integrable_mul hz
+    have hnn : (0 : ℝ) ≤ ∫ y, H (z, y) ^ 2 ∂(condKernel D z) :=
+      integral_nonneg fun _ => sq_nonneg _
+    have hsq : hsRow D H z ^ 2 = ∫ y, H (z, y) ^ 2 ∂(condKernel D z) := by
+      show Real.sqrt (∫ y, H (z, y) ^ 2 ∂(condKernel D z)) ^ 2 = _
+      exact Real.sq_sqrt hnn
+    rw [Real.enorm_eq_ofReal (hsRow_nonneg D H z), ← ENNReal.ofReal_pow (hsRow_nonneg D H z),
+      hsq,
+      ofReal_integral_eq_lintegral_ofReal hint (Filter.Eventually.of_forall fun y => sq_nonneg _)]
+    refine lintegral_congr fun y => ?_
+    rw [Real.enorm_eq_ofReal_abs, ← ENNReal.ofReal_pow (abs_nonneg _), sq_abs]
+  rw [lintegral_congr_ae hfib, lintegral_row_eq_joining D hmeas]
+  exact (memLp_two_iff_lintegral hmem.aestronglyMeasurable).mp hmem
+
+/-- **Fibre regularity from `L²(λ)` alone.**  Joint measurability and membership in `L²` of the
+joining are enough: constancy supplies the row condition and the bound on the row norms, and
+the kernel-integral measurability supplies the rest. -/
+theorem isFibreReg_of_memLp_joining (D : Factor S) {H : S.X × S.X → ℝ}
+    (hH : StronglyMeasurable H) (hmem : MemLp H 2 (joining D)) :
+    IsFibreReg D H :=
+  isFibreReg_of_memLp_hsRow D hH (ae_memLp_row D hH hmem) (memLp_hsRow D hH hmem)
+
 /-- **`IsFibreHS` with the measurability discharged.**  What is left to supply is a condition
 on the rows and two `L²(m)` bounds on the base: everything fibrewise follows. -/
 theorem isFibreHS_of_memLp (D : Factor S) {H : S.X × S.X → ℝ} {a : S.X → ℝ}
