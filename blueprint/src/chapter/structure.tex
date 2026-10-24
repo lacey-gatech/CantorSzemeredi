@@ -135,9 +135,26 @@
   $k \mapsto T_k$ is continuous by the Hilbert--Schmidt bound, so compactness passes to the
   closure.
 
-  What remains for Lemma~\ref{lem:dichotomy} is the second half proper: viewing the
-  eigenfunction $H \in L^2(\lambda)$ as a kernel on the fibres and passing to the conditionally
-  compact functions it generates, then assembling the factor $\Ebb$.
+  \smallskip
+  \emph{The fibrewise reading.}  This too is now formalized, in
+  \texttt{CantorSzemeredi/Dynamics/Fibre.lean}.  Since
+  $\lambda = \int m_x \otimes m_x \,dm(x)$ is an \emph{average} of product measures, Fubini for
+  the joining (\texttt{lintegral\_joining}) makes the fibre integrals
+  $\int \abs{H}^2 \,d(m_x\otimes m_x)$ average to $\norm{H}_{L^2(\lambda)}^2 < \infty$, so they
+  are finite for $m$-a.e.\ $x$: the eigenfunction is, on almost every fibre, a Hilbert--Schmidt
+  kernel (\texttt{ae\_memLp\_fibre}).  Each $m_x$ is a probability measure, so
+  \texttt{isCompactOperator\_integralKernelL} applies fibre by fibre and gives
+  \texttt{ae\_isCompactOperator\_fibre}: for a.e.\ $x$, $H$ defines a compact operator on
+  $L^2(m_x)$.
+
+  One point of care, recorded in that file: $H \in L^2(\lambda)$ gives only
+  $\lambda$-a.e.\ strong measurability, which says nothing about any individual fibre --- a
+  $\lambda$-null set can meet every fibre.  The lemmas therefore take a strongly measurable
+  representative, which costs nothing, since \texttt{integralKernelL\_congr} says the operator
+  depends only on the a.e.\ class of its kernel.
+
+  What remains for Lemma~\ref{lem:dichotomy} is to pass from these fibrewise compact operators
+  to the conditionally compact functions they generate, and to assemble the factor $\Ebb$.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}

@@ -15,3 +15,4 @@ import CantorSzemeredi.Dynamics.Spectral
 import CantorSzemeredi.Dynamics.SpectralExists
 import CantorSzemeredi.Dynamics.System
 import CantorSzemeredi.Dynamics.VanDerCorput
+import CantorSzemeredi.Dynamics.Fibre
