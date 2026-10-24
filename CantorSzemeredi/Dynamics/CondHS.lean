@@ -6,6 +6,7 @@ Authors: Alex Burgin, Anastasios Fragkos, Michael T. Lacey, Dario Mena, Maria Ca
 -/
 import CantorSzemeredi.Dynamics.Fibre
 import CantorSzemeredi.Dynamics.Extensions
+import CantorSzemeredi.Analysis.SqrtIntegral
 
 /-!
 # The conditional Hilbert–Schmidt operator
@@ -43,7 +44,7 @@ through `ae_ae_condKernel`; keeping the hypotheses visible is what keeps that st
 
 namespace CantorSzemeredi
 
-open MeasureTheory ProbabilityTheory
+open MeasureTheory ProbabilityTheory SqrtIntegral
 
 namespace MPS
 
@@ -302,6 +303,190 @@ theorem condCompact_of_kernel_net (D E : Factor S) {f a : S.X → ℝ} {C : ℝ}
     _ < ε := by
         rw [mul_div_assoc', div_lt_iff₀ hCpos]
         nlinarith
+
+
+/-! ### Scaling and the triangle inequality for the fibre norms -/
+
+/-- Fibre regularity: what a kernel needs for the fibre norms to behave. -/
+structure IsFibreReg (D : Factor S) (H : S.X × S.X → ℝ) : Prop where
+  /-- Almost every row is square integrable on its fibre. -/
+  row : ∀ᵐ z ∂S.m, MemLp (fun y => H (z, y)) 2 (condKernel D z)
+  /-- The row norms are measurable in the base point. -/
+  measRow : Measurable (hsRow D H)
+  /-- The row norms are square integrable along almost every fibre. -/
+  rowL2 : ∀ᵐ x ∂S.m, MemLp (hsRow D H) 2 (condKernel D x)
+
+theorem hsRow_const_mul (D : Factor S) (c : ℝ) (H : S.X × S.X → ℝ) (x : S.X) :
+    hsRow D (fun p => c * H p) x = |c| * hsRow D H x :=
+  sqrt_integral_const_mul_sq c _
+
+theorem hsFibre_const_mul (D : Factor S) (c : ℝ) (H : S.X × S.X → ℝ) (x : S.X) :
+    hsFibre D (fun p => c * H p) x = |c| * hsFibre D H x := by
+  rw [hsFibre, hsFibre]
+  simp_rw [hsRow_const_mul D c H]
+  rw [sqrt_integral_const_mul_sq |c| _, abs_abs]
+
+theorem hsRow_add_le (D : Factor S) {H K : S.X × S.X → ℝ} {x : S.X}
+    (hH : MemLp (fun y => H (x, y)) 2 (condKernel D x))
+    (hK : MemLp (fun y => K (x, y)) 2 (condKernel D x)) :
+    hsRow D (fun p => H p + K p) x ≤ hsRow D H x + hsRow D K x :=
+  sqrt_integral_add_sq_le hH hK
+
+/-- **The triangle inequality for the fibre Hilbert–Schmidt norm.**  Minkowski twice: once
+inside each fibre for the rows, once across the fibre for the row norms. -/
+theorem hsFibre_add_le (D : Factor S) {H K : S.X × S.X → ℝ}
+    (hH : IsFibreReg D H) (hK : IsFibreReg D K) (hHK : IsFibreReg D (fun p => H p + K p)) :
+    ∀ᵐ x ∂S.m, hsFibre D (fun p => H p + K p) x ≤ hsFibre D H x + hsFibre D K x := by
+  have hptw : ∀ᵐ z ∂S.m, hsRow D (fun p => H p + K p) z ≤ hsRow D H z + hsRow D K z := by
+    filter_upwards [hH.row, hK.row] with z h1 h2
+    exact hsRow_add_le D h1 h2
+  have hset : MeasurableSet {z | hsRow D (fun p => H p + K p) z ≤ hsRow D H z + hsRow D K z} :=
+    measurableSet_le hHK.measRow (hH.measRow.add hK.measRow)
+  filter_upwards [ae_ae_condKernel D hset hptw, hH.rowL2, hK.rowL2, hHK.rowL2]
+    with x hx h1 h2 h3
+  have hint3 : Integrable (fun z => hsRow D (fun p => H p + K p) z ^ 2) (condKernel D x) := by
+    simp_rw [sq]
+    exact h3.integrable_mul h3
+  have hintsum : Integrable (fun z => (hsRow D H z + hsRow D K z) ^ 2) (condKernel D x) := by
+    have hsum := h1.add h2
+    simp_rw [sq]
+    exact hsum.integrable_mul hsum
+  calc hsFibre D (fun p => H p + K p) x
+      ≤ Real.sqrt (∫ z, (hsRow D H z + hsRow D K z) ^ 2 ∂(condKernel D x)) := by
+        refine sqrt_integral_sq_mono ?_ hint3 hintsum
+        filter_upwards [hx] with z hz
+        rw [abs_of_nonneg (hsRow_nonneg D _ z)]
+        exact hz
+    _ ≤ hsFibre D H x + hsFibre D K x := sqrt_integral_add_sq_le h1 h2
+
+
+/-! ### The finite net
+
+No measurable selection is involved.  The eigenfunction's orbit is a *circle*: `H ∘ Rⁿ`
+traces `(cos nθ, sin nθ)` through the real span of the real and imaginary parts of `H`.  So
+the orbit of kernels is the image of a bounded subset of `ℝ²` under a map that is Lipschitz
+for the fibre Hilbert–Schmidt norm, and the finite net comes from total boundedness of that
+parameter set — a fact about `ℝ²`, not about the fibres. -/
+
+/-- The real two-parameter family of kernels spanned by `H₀` and `H₁`. -/
+def kerComb (H₀ H₁ : S.X × S.X → ℝ) (v : ℝ × ℝ) : S.X × S.X → ℝ :=
+  fun p => v.1 * H₀ p + v.2 * H₁ p
+
+omit [StandardBorelSpace S.X] in
+theorem kerComb_sub (H₀ H₁ : S.X × S.X → ℝ) (v w : ℝ × ℝ) :
+    (fun p => kerComb H₀ H₁ v p - kerComb H₀ H₁ w p) = kerComb H₀ H₁ (v - w) := by
+  funext p
+  simp only [kerComb, Prod.fst_sub, Prod.snd_sub]
+  ring
+
+theorem IsFibreReg.const_mul {D : Factor S} {H : S.X × S.X → ℝ} (h : IsFibreReg D H) (c : ℝ) :
+    IsFibreReg D (fun p => c * H p) := by
+  have hrow : hsRow D (fun p => c * H p) = fun x => |c| * hsRow D H x :=
+    funext (hsRow_const_mul D c H)
+  refine ⟨?_, ?_, ?_⟩
+  · filter_upwards [h.row] with z hz
+    exact hz.const_mul c
+  · rw [hrow]
+    exact h.measRow.const_mul _
+  · filter_upwards [h.rowL2] with x hx
+    rw [hrow]
+    exact hx.const_mul _
+
+/-- The fibre Hilbert–Schmidt norm is Lipschitz in the parameter. -/
+theorem hsFibre_kerComb_le (D : Factor S) {H₀ H₁ : S.X × S.X → ℝ} {M : ℝ} (hM : 0 ≤ M)
+    (hreg0 : IsFibreReg D H₀) (hreg1 : IsFibreReg D H₁)
+    (hreg : ∀ v : ℝ × ℝ, IsFibreReg D (kerComb H₀ H₁ v))
+    (hb0 : ∀ᵐ x ∂S.m, hsFibre D H₀ x ≤ M) (hb1 : ∀ᵐ x ∂S.m, hsFibre D H₁ x ≤ M)
+    (v : ℝ × ℝ) :
+    ∀ᵐ x ∂S.m, hsFibre D (kerComb H₀ H₁ v) x ≤ (|v.1| + |v.2|) * M := by
+  filter_upwards [hsFibre_add_le D (hreg0.const_mul v.1) (hreg1.const_mul v.2) (hreg v),
+    hb0, hb1] with x hx h0 h1
+  calc hsFibre D (kerComb H₀ H₁ v) x
+      ≤ hsFibre D (fun p => v.1 * H₀ p) x + hsFibre D (fun p => v.2 * H₁ p) x := hx
+    _ = |v.1| * hsFibre D H₀ x + |v.2| * hsFibre D H₁ x := by
+        rw [hsFibre_const_mul, hsFibre_const_mul]
+    _ ≤ |v.1| * M + |v.2| * M := by
+        have ha := mul_le_mul_of_nonneg_left h0 (abs_nonneg v.1)
+        have hb := mul_le_mul_of_nonneg_left h1 (abs_nonneg v.2)
+        linarith
+    _ = (|v.1| + |v.2|) * M := by ring
+
+/-- **A finite net of kernels.**  A bounded two-parameter family admits, for every `δ > 0`, a
+finite set of parameters approximating it to within `δ` in the fibre Hilbert–Schmidt norm,
+uniformly over the fibres. -/
+theorem exists_kernel_net (D : Factor S) {H₀ H₁ : S.X × S.X → ℝ} {M : ℝ} (hM : 0 ≤ M)
+    (hreg0 : IsFibreReg D H₀) (hreg1 : IsFibreReg D H₁)
+    (hreg : ∀ v : ℝ × ℝ, IsFibreReg D (kerComb H₀ H₁ v))
+    (hb0 : ∀ᵐ x ∂S.m, hsFibre D H₀ x ≤ M) (hb1 : ∀ᵐ x ∂S.m, hsFibre D H₁ x ≤ M)
+    (u : ℤ → ℝ × ℝ) (hu : ∀ n, u n ∈ Metric.closedBall (0 : ℝ × ℝ) 1)
+    {δ : ℝ} (hδ : 0 < δ) :
+    ∃ (r : ℕ) (w : Fin r → ℝ × ℝ), ∀ n : ℤ, ∃ q : Fin r, ∀ᵐ x ∂S.m,
+      hsFibre D (fun p => kerComb H₀ H₁ (u n) p - kerComb H₀ H₁ (w q) p) x < δ := by
+  classical
+  set η : ℝ := δ / (2 * M + 2) with hηdef
+  have hηpos : 0 < η := by rw [hηdef]; positivity
+  obtain ⟨t, htfin, hcover⟩ := Metric.totallyBounded_iff.mp
+    (isCompact_closedBall (0 : ℝ × ℝ) 1).totallyBounded η hηpos
+  set T := htfin.toFinset with hT
+  refine ⟨T.card, fun q => (T.equivFin.symm q : ℝ × ℝ), fun n => ?_⟩
+  obtain ⟨y, hyt, hy⟩ : ∃ y ∈ t, u n ∈ Metric.ball y η := by
+    have := hcover (hu n)
+    simpa only [Set.mem_iUnion, exists_prop] using this
+  have hyT : y ∈ T := by rwa [hT, Set.Finite.mem_toFinset]
+  refine ⟨T.equivFin ⟨y, hyT⟩, ?_⟩
+  simp only [Equiv.symm_apply_apply]
+  rw [kerComb_sub]
+  -- The parameter difference is small in each coordinate.
+  have hdist : dist (u n) y < η := hy
+  have hco : |(u n - y).1| + |(u n - y).2| ≤ 2 * η := by
+    have h1 : |(u n).1 - y.1| ≤ dist (u n) y := by
+      rw [Prod.dist_eq, ← Real.dist_eq]
+      exact le_max_left _ _
+    have h2 : |(u n).2 - y.2| ≤ dist (u n) y := by
+      rw [Prod.dist_eq, ← Real.dist_eq]
+      exact le_max_right _ _
+    simp only [Prod.fst_sub, Prod.snd_sub]
+    linarith
+  filter_upwards [hsFibre_kerComb_le D hM hreg0 hreg1 hreg hb0 hb1 (u n - y)] with x hx
+  calc hsFibre D (kerComb H₀ H₁ (u n - y)) x ≤ (|(u n - y).1| + |(u n - y).2|) * M := hx
+    _ ≤ (2 * η) * M := by gcongr
+    _ < δ := by
+        have hpos : (0 : ℝ) < 2 * M + 2 := by linarith
+        rw [hηdef, show 2 * (δ / (2 * M + 2)) * M = δ * (2 * M) / (2 * M + 2) by
+          field_simp, div_lt_iff₀ hpos]
+        nlinarith
+
+
+/-- **Conditional compactness for a circle orbit.**
+
+If the orbit of `f` is realised by kernels drawn from a bounded two-parameter family acting on
+a single module element, then `f` is conditionally compact.  This is the case the dichotomy
+needs: the eigenfunction `H` of the Koopman operator on the self-joining has
+`H ∘ Rⁿ = e(nθ) H`, so the orbit of kernels is the circle traced by `(cos nθ, sin nθ)`
+through the real span of the real and imaginary parts of `H`.
+
+The finite net of module elements comes from total boundedness of the parameter set, and the
+conditional Hilbert–Schmidt bound carries it over to the functions. -/
+theorem condCompact_of_param_orbit (D E : Factor S) {f a : S.X → ℝ}
+    {H₀ H₁ : S.X × S.X → ℝ} {C M : ℝ} (hC : 0 ≤ C) (hM : 0 ≤ M)
+    (hamem : ∀ᵐ z ∂S.m, MemLp a 2 (condKernel D z))
+    (hbd : ∀ᵐ z ∂S.m, fibreNorm D a z ≤ C)
+    (hreg0 : IsFibreReg D H₀) (hreg1 : IsFibreReg D H₁)
+    (hreg : ∀ v : ℝ × ℝ, IsFibreReg D (kerComb H₀ H₁ v))
+    (hb0 : ∀ᵐ x ∂S.m, hsFibre D H₀ x ≤ M) (hb1 : ∀ᵐ x ∂S.m, hsFibre D H₁ x ≤ M)
+    (u : ℤ → ℝ × ℝ) (hu : ∀ n, u n ∈ Metric.closedBall (0 : ℝ × ℝ) 1)
+    (horbit : ∀ n : ℤ, f ∘ S.iter n =ᵐ[S.m] condIntegralOp D (kerComb H₀ H₁ (u n)) a)
+    (hmod : ∀ v : ℝ × ℝ, MemModule D E (condIntegralOp D (kerComb H₀ H₁ v) a))
+    (hHS : ∀ v w : ℝ × ℝ, IsFibreHS D a (kerComb H₀ H₁ v - kerComb H₀ H₁ w)) :
+    CondCompact D E f := by
+  refine condCompact_of_kernel_net D E hC hamem hbd
+    (K := fun n => kerComb H₀ H₁ (u n)) (fun n => (hreg (u n)).row) horbit ?_
+  intro δ hδ
+  obtain ⟨r, w, hw⟩ := exists_kernel_net D hM hreg0 hreg1 hreg hb0 hb1 u hu hδ
+  refine ⟨r, fun q => kerComb H₀ H₁ (w q), fun q => hmod (w q),
+    fun q => (hreg (w q)).row, fun n => ?_⟩
+  obtain ⟨q, hq⟩ := hw n
+  exact ⟨q, hHS (u n) (w q), hq⟩
 
 end MPS
 

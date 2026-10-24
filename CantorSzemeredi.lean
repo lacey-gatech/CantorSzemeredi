@@ -1,4 +1,5 @@
 import CantorSzemeredi.Analysis.HilbertSchmidt
+import CantorSzemeredi.Analysis.SqrtIntegral
 import CantorSzemeredi.Basic
 import CantorSzemeredi.Cantor.Defs
 import CantorSzemeredi.Cantor.Enum
