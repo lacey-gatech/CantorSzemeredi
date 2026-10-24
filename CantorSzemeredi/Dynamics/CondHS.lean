@@ -1298,6 +1298,27 @@ theorem condNorm_comb_le (D : Factor S) {k : ℕ} (u γ : Fin k → S.X → ℝ)
 
 
 omit [StandardBorelSpace S.X] in
+/-- An indicator has conditional norm at most `1`, so indicators are admissible generators
+for `exists_net_of_finite_span`. -/
+theorem condNorm_indicator_le_one (D : Factor S) {A : Set S.X} (hA : MeasurableSet A) :
+    ∀ᵐ x ∂S.m, condNorm D (A.indicator (fun _ => (1 : ℝ))) x ≤ 1 := by
+  have hff : (A.indicator (fun _ => (1 : ℝ))) * (A.indicator (fun _ => (1 : ℝ)))
+      = A.indicator (fun _ => (1 : ℝ)) := by
+    funext x
+    by_cases h : x ∈ A <;> simp [h]
+  have hint : Integrable (A.indicator (fun _ => (1 : ℝ))) S.m := (integrable_const 1).indicator hA
+  have hmono : S.m[A.indicator (fun _ => (1 : ℝ))|D.σ] ≤ᵐ[S.m] S.m[fun _ : S.X => (1 : ℝ)|D.σ] :=
+    condExp_mono hint (integrable_const 1)
+      (Filter.Eventually.of_forall fun x => by by_cases h : x ∈ A <;> simp [h])
+  have hconst : S.m[fun _ : S.X => (1 : ℝ)|D.σ] =ᵐ[S.m] fun _ => (1 : ℝ) :=
+    Filter.EventuallyEq.of_eq (condExp_const D.le 1)
+  filter_upwards [hmono, hconst] with x h1 h2
+  rw [condNorm, condInner, hff]
+  calc Real.sqrt (S.m[A.indicator (fun _ => (1 : ℝ))|D.σ] x) ≤ Real.sqrt 1 := by
+        exact Real.sqrt_le_sqrt (h1.trans (le_of_eq h2))
+    _ = 1 := Real.sqrt_one
+
+omit [StandardBorelSpace S.X] in
 /-- **A finitely generated submodule is conditionally totally bounded.**
 
 Given finitely many elements `u i` of `L²(E)` with conditional norm at most `1`, the
@@ -1497,33 +1518,39 @@ theorem condCompact_of_kernel_approx (D E : Factor S) {f : S.X → ℝ} {b : ℤ
 
 /-! ### What is left, precisely
 
-`condCompact_of_kernel_approx` reduces conditional compactness of `Φ_H` along an orbit to two
-things.  Neither is a formality.
+The two obstructions to `condCompact_of_kernel_approx` are both resolved.
 
-**(i) Uniform finite-rank approximation.**  The hypothesis asks for `‖H - K‖_{HS,fibre} ≤ δ`
-*almost everywhere on the base*, with `K` of finite rank.  What `L²(λ)` density of tensor
-products gives (`HilbertSchmidt.topologicalClosure_span_prodKernels`) is smallness of the
-`L²` norm *over* the base, which is weaker.  Upgrading needs an exhaustion: the fibre
-Hilbert–Schmidt error is small except on a base set of small measure, and that set has to be
-cut off somewhere.
+*(i)* is `exists_finiteRank_cutoff`: `L²(λ)` density of rectangle indicators, Chebyshev
+through `lintegral_hsFibre_sq`, and a cutoff to a `D`-set, giving a finite-rank kernel within
+`δ` in the fibre Hilbert–Schmidt norm *everywhere*, at the cost of a base set of measure `η`.
 
-**(ii) A finite net for the finite-rank images.**  By `condIntegralOp_sum_tensor` these are
-`Σᵢ cᵢⁿ · gᵢ` with `cᵢⁿ = ⟨hᵢ, b n⟩_D`, bounded `D`-measurable *functions*.  Under
-`CondCompact` as currently stated, covering them means a finite net for `{cⁿ}` in the
-`L^∞(D)` ball — and a bounded subset of `L^∞` is not totally bounded.
+*(ii)* is `exists_net_of_finite_span`: the `D`-linear combinations of finitely many
+generators of conditional norm at most `1`, with coefficients bounded by `M`, are covered to
+within `ε` by the finitely many combinations with grid coefficients.  Indicators are
+admissible generators by `condNorm_indicator_le_one`, and `condIntegralOp_sum_tensor` puts a
+finite-rank image in exactly that form, with coefficients
+`c_i ⟨1_{B_i}, b⟩_D` — `D`-measurable, and bounded by `|c_i| · C` by conditional
+Cauchy–Schwarz.
 
-**(ii) dissolved when `CondCompact` was corrected.**  Moreira's Definition 6.11 reads
+What remains is wiring, in three steps.
 
-  `∀ n ∈ ℕ, min_{1≤i≤r} ‖Tⁿ f - gᵢ‖_{L²(m_y)} < ε  for a.e. y`,
+1. **Finite-rank images are covered.**  Combine `condIntegralOp_sum_tensor` with
+   `exists_net_of_finite_span`, taking `u i = 1_{A_i}` and
+   `γ i = c i · ⟨1_{B_i}, b n⟩_D`.  This produces the net hypothesis of
+   `condCompact_of_kernel_approx` directly.
 
-with the minimum *inside* the almost-everywhere quantifier, so the index may depend on the
-fibre; `CondCompact` now says exactly that.  Rounding `cⁿ(x)` to a fixed finite grid
-pointwise is a fibre-dependent choice of index, and the finitely many grid points give the
-finitely many approximants.  Only (i) remains, and that is where a cutoff to a base set of
-large measure enters, absorbed by the density in `CompactExtension`.
+2. **The orbit has a moving kernel as well as a moving function.**
+   `condIntegralOp_comp_iterate` gives `Φ_{H ∘ Rⁿ}(a ∘ Tⁿ)`, while
+   `condCompact_of_kernel_approx` is stated for a fixed `H`.  For an eigenfunction the kernel
+   moves only inside the two-dimensional real span of `Re H` and `Im H`, so the reduction
+   needs a two-term version — or `exists_kernel_net` applied to the kernel orbit first, the
+   two errors then adding as usual.
 
-See `rem:compact-mismatch` in `blueprint/src/chapter/mps.tex` for the record of the
-correction and why nothing downstream was lost. -/
+3. **From the cut kernel back to `H`.**  `exists_finiteRank_cutoff` yields conditional
+   compactness of the operator with kernel cut to `B`, hence of `1_B · Φ_H a`, not of
+   `Φ_H a`.  Since `m(Bᶜ)` is small and `Φ_H a ∈ L²`, absolute continuity of the integral
+   makes `‖Φ_H a - 1_B · Φ_H a‖₂` small, which is what the density in `CompactExtension`
+   absorbs.  This is where the exceptional set is finally discharged. -/
 
 end MPS
 
