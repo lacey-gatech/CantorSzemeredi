@@ -274,10 +274,8 @@
   hypotheses, and neither is a formality.
 
   \emph{(i)} It asks for $\norm{H-K}_{\mathrm{HS},\text{fibre}} \leq \delta$ \emph{a.e.\ on
-  the base} with $K$ of finite rank.  What $L^2(\lambda)$ density of tensor products gives
-  (\texttt{topologicalClosure\_span\_prodKernels}) is smallness of the $L^2$ norm \emph{over}
-  the base, which is weaker; upgrading needs an exhaustion, and the exceptional set has to be
-  cut off somewhere.
+  the base} with $K$ of finite rank, whereas $L^2(\lambda)$ density of tensor products gives
+  smallness of the $L^2$ norm \emph{over} the base.
 
   \emph{(ii)} It asks for a finite net covering the finite-rank images $\sum_i c_i^n g_i$,
   where $c_i^n = \cip{h_i}{a \circ T^n}_{\Dbb}$ are bounded $\Dbb$-measurable \emph{functions}.
@@ -289,10 +287,35 @@
   Remark~\ref{rem:compact-mismatch}.
 
   \smallskip
-  So \emph{(i)} is the genuine remaining content.  It is where the cutoff to a base set of
-  large measure enters, absorbed by the density required in \emph{compact extension} rather
-  than by \texttt{CondCompact}.  After that, the factor $\Ebb$ must still be assembled from
-  the conditionally compact functions.
+  \emph{(i) is settled by a cutoff.}  The bridge is the exact identity
+  \[
+    \int_X \norm{H}_{\mathrm{HS},\text{fibre}}^2 \,dm \;=\; \norm{H}_{L^2(\lambda)}^2
+  \]
+  (\texttt{lintegral\_hsFibre\_sq}), which is the disintegration applied twice --- once to
+  unfold the fibre, once to recognise the row integrals as an integral against $\lambda$.  So
+  $L^2(\lambda)$ approximation \emph{does} control $\norm{H-K}_{\mathrm{HS},\text{fibre}}$,
+  but only in $L^2$ of the base; Chebyshev converts this to smallness outside a set of small
+  measure.  The point is that the set may be taken in $\Dbb$, since
+  $\norm{\cdot}_{\mathrm{HS},\text{fibre}}$ is $\Dbb$-measurable
+  (\texttt{stronglyMeasurable\_hsFibre}) --- the kernel $x \mapsto m_x$ being
+  $\Dbb$-measurable --- and a $\Dbb$-set is a union of fibres, so cutting the rows down to it
+  simply multiplies the fibre norm by its indicator
+  (\texttt{ae\_ae\_indicator\_eq}, \texttt{hsFibre\_indicator}).  The cut kernel then
+  satisfies the bound \emph{everywhere}: this is \texttt{exists\_cutoff\_hsFibre\_le}, with
+  $m(B^c) \leq \norm{H-K}_{L^2(\lambda)}^2/\delta^2$.  The discarded set is where the
+  density in \emph{compact extension} absorbs the error, exactly as anticipated.
+
+  \smallskip
+  \emph{What is still open.}  One input to the cutoff remains: that finite-rank kernels are
+  dense in $L^2(\lambda)$, for real-valued kernels and the joining.  The repository has
+  \texttt{topologicalClosure\_span\_prodKernels}, but for complex kernels and a
+  \emph{product} measure $\mu \otimes \nu$; $\lambda$ is not a product.  The Dynkin argument
+  behind it uses nothing about the product structure --- only that measurable rectangles form
+  a $\pi$-system generating the product $\sigma$-algebra --- so it generalises to any finite
+  measure on $X \times X$; what does not carry over is
+  \texttt{memLp\_prod\_mul}, since $\norm{g \otimes h}_{L^2(\lambda)}$ is not bounded by
+  $\norm{g}_2 \norm{h}_2$ off a product measure, so the tensors must be taken bounded.  After
+  that, the factor $\Ebb$ must still be assembled from the conditionally compact functions.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}
