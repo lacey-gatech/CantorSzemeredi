@@ -947,10 +947,8 @@ a single module element, then `f` is conditionally compact.
 **Caution.**  The hypothesis `horbit` asks for the orbit to be `Φ_{K n} a` with `a` *fixed*.
 That is not what `condIntegralOp_comp_iterate` supplies: along the orbit the transformation
 acts on the kernel *and* on the function, giving `Φ_{H ∘ Rⁿ}(a ∘ Tⁿ)`.  So this theorem does
-not apply directly to an eigenfunction orbit; see the note at the end of the file.  This is the case the dichotomy
-needs: the eigenfunction `H` of the Koopman operator on the self-joining has
-`H ∘ Rⁿ = e(nθ) H`, so the orbit of kernels is the circle traced by `(cos nθ, sin nθ)`
-through the real span of the real and imaginary parts of `H`.
+not apply directly to an eigenfunction orbit; see the note at the end of the file.  It covers
+the case where the orbit's dependence is only through the kernel.
 
 The finite net of module elements comes from total boundedness of the parameter set, and the
 conditional Hilbert–Schmidt bound carries it over to the functions. -/
@@ -974,6 +972,146 @@ theorem condCompact_of_param_orbit (D E : Factor S) {f a : S.X → ℝ}
     fun q => (hreg (w q)).row, fun n => ?_⟩
   obtain ⟨q, hq⟩ := hw n
   exact ⟨q, hHS (u n) (w q), hq⟩
+
+
+/-! ### Finite-rank kernels, and the reduction to them
+
+A conditionally Hilbert–Schmidt operator should be approximable by finite-rank ones, and a
+finite-rank kernel `Σ gᵢ ⊗ hᵢ` gives the operator `b ↦ Σ ⟨hᵢ, b⟩_D · gᵢ`, whose coefficients
+are `D`-measurable.  The lemmas below are that computation, the triangle inequality for the
+conditional norm, and the reduction of conditional compactness along an orbit to the
+finite-rank case. -/
+
+omit [StandardBorelSpace S.X] in
+/-- **The triangle inequality for the conditional norm.**  Expand `⟨u+v, u+v⟩_D` and apply
+conditional Cauchy–Schwarz to the cross term. -/
+theorem condNorm_add_le (D : Factor S) {u v : S.X → ℝ}
+    (hu : MemLp u 2 S.m) (hv : MemLp v 2 S.m) :
+    ∀ᵐ x ∂S.m, condNorm D (u + v) x ≤ condNorm D u x + condNorm D v x := by
+  have huu : Integrable (u * u) S.m := hu.integrable_mul hu
+  have hvv : Integrable (v * v) S.m := hv.integrable_mul hv
+  have huv : Integrable (u * v) S.m := hu.integrable_mul hv
+  have hrw : (u + v) * (u + v) = fun x => 1 * (u * u) x + 2 * (u * v) x + (v * v) x := by
+    funext x
+    simp only [Pi.add_apply, Pi.mul_apply]
+    ring
+  have hexp : condInner D (u + v) (u + v)
+      =ᵐ[S.m] fun x => 1 * condInner D u u x + 2 * condInner D u v x + condInner D v v x := by
+    rw [condInner, hrw]
+    exact condExp_lin3 D huu huv hvv 1 2
+  filter_upwards [hexp, abs_condInner_le D huu hvv huv, condNorm_sq D u, condNorm_sq D v]
+    with x h1 h2 h3 h4
+  rw [condNorm, h1]
+  have hcross : condInner D u v x ≤ condNorm D u x * condNorm D v x :=
+    le_trans (le_abs_self _) h2
+  have hle : 1 * condInner D u u x + 2 * condInner D u v x + condInner D v v x
+      ≤ (condNorm D u x + condNorm D v x) ^ 2 := by
+    rw [← h3, ← h4]
+    nlinarith [hcross]
+  calc Real.sqrt (1 * condInner D u u x + 2 * condInner D u v x + condInner D v v x)
+      ≤ Real.sqrt ((condNorm D u x + condNorm D v x) ^ 2) := Real.sqrt_le_sqrt hle
+    _ = condNorm D u x + condNorm D v x :=
+        Real.sqrt_sq (add_nonneg (condNorm_nonneg D u x) (condNorm_nonneg D v x))
+
+/-- **A rank-one kernel.**  `Φ_{g ⊗ h} b = g · ⟨h, b⟩_D`. -/
+theorem condIntegralOp_tensor (D : Factor S) (g h b : S.X → ℝ) (x : S.X) :
+    condIntegralOp D (fun p => g p.1 * h p.2) b x
+      = g x * ∫ y, h y * b y ∂(condKernel D x) := by
+  rw [condIntegralOp, ← integral_const_mul]
+  refine integral_congr_ae (Filter.Eventually.of_forall fun y => ?_)
+  ring
+
+/-- The coefficient of a rank-one kernel is a conditional inner product, hence
+`D`-measurable. -/
+theorem condIntegralOp_tensor_ae (D : Factor S) {g h b : S.X → ℝ}
+    (hint : Integrable (h * b) S.m) :
+    condIntegralOp D (fun p => g p.1 * h p.2) b
+      =ᵐ[S.m] fun x => g x * condInner D h b x := by
+  filter_upwards [condExp_eq_integral_condKernel D hint] with x hx
+  rw [condIntegralOp_tensor, condInner, hx]
+  rfl
+
+/-- **A finite-rank kernel.**  `Φ_{Σ gᵢ ⊗ hᵢ} b = Σ gᵢ · ⟨hᵢ, b⟩_D`. -/
+theorem condIntegralOp_sum_tensor (D : Factor S) {k : ℕ} (g h : Fin k → S.X → ℝ) (b : S.X → ℝ)
+    {x : S.X} (hint : ∀ i, Integrable (fun y => h i y * b y) (condKernel D x)) :
+    condIntegralOp D (fun p => ∑ i, g i p.1 * h i p.2) b x
+      = ∑ i, g i x * ∫ y, h i y * b y ∂(condKernel D x) := by
+  have hrw : ∀ y, (∑ i, g i x * h i y) * b y = ∑ i, g i x * (h i y * b y) := by
+    intro y
+    rw [Finset.sum_mul]
+    exact Finset.sum_congr rfl fun i _ => by ring
+  rw [condIntegralOp]
+  simp_rw [hrw]
+  rw [integral_finsetSum _ fun i _ => (hint i).const_mul _]
+  exact Finset.sum_congr rfl fun i _ => integral_const_mul _ _
+
+/-- **Reduction to finite-rank kernels.**
+
+Suppose the orbit of `f` is `Φ_H (b n)` for a family `b n` with conditional norms bounded by
+`C` — this is the shape `condIntegralOp_comp_iterate` produces, with `b n = a ∘ Tⁿ`.  If for
+every `δ` the kernel `H` can be replaced, to within `δ` in the essential fibre
+Hilbert–Schmidt norm, by a kernel `K` whose images `Φ_K (b n)` already admit a finite net of
+module elements, then `f` is conditionally compact.
+
+The Hilbert–Schmidt bound transports the approximation of kernels to the functions, and the
+two errors add.  So conditional compactness along the orbit reduces to the finite-rank
+case. -/
+theorem condCompact_of_kernel_approx (D E : Factor S) {f : S.X → ℝ} {b : ℤ → S.X → ℝ}
+    {H : S.X × S.X → ℝ} {C : ℝ} (hC : 0 ≤ C) (hf : MemLp f 2 S.m)
+    (hbC : ∀ n, ∀ᵐ z ∂S.m, fibreNorm D (b n) z ≤ C)
+    (hbmem : ∀ n, ∀ᵐ z ∂S.m, MemLp (b n) 2 (condKernel D z))
+    (hrowH : ∀ᵐ z ∂S.m, MemLp (fun y => H (z, y)) 2 (condKernel D z))
+    (horbit : ∀ n : ℤ, f ∘ S.iter n =ᵐ[S.m] condIntegralOp D H (b n))
+    (happrox : ∀ δ : ℝ, 0 < δ → ∃ K : S.X × S.X → ℝ,
+      (∀ᵐ z ∂S.m, MemLp (fun y => K (z, y)) 2 (condKernel D z)) ∧
+      (∀ n : ℤ, MemLp (condIntegralOp D K (b n)) 2 S.m) ∧
+      (∀ n : ℤ, IsFibreHS D (b n) (fun p => H p - K p)) ∧
+      (∀ᵐ x ∂S.m, hsFibre D (fun p => H p - K p) x ≤ δ) ∧
+      (∃ (r : ℕ) (g : Fin r → S.X → ℝ), (∀ q, MemModule D E (g q)) ∧
+        ∀ n : ℤ, ∃ q : Fin r,
+          ∀ᵐ x ∂S.m, condNorm D (condIntegralOp D K (b n) - g q) x < δ)) :
+    CondCompact D E f := by
+  intro ε hε
+  have hCpos : (0 : ℝ) < 2 * (C + 1) := by linarith
+  set δ : ℝ := ε / (2 * (C + 1)) with hδdef
+  have hδ : 0 < δ := by rw [hδdef]; positivity
+  obtain ⟨K, hrowK, hKL2, hHS, hsmall, r, g, hgmod, hgnet⟩ := happrox δ hδ
+  refine ⟨r, g, hgmod, fun n => ?_⟩
+  obtain ⟨q, hq⟩ := hgnet n
+  refine ⟨q, ?_⟩
+  -- Error one: replacing `H` by `K`.
+  have hmid : ∀ᵐ x ∂S.m,
+      condNorm D (f ∘ S.iter n - condIntegralOp D K (b n)) x ≤ C * δ := by
+    have hsub : f ∘ S.iter n - condIntegralOp D K (b n)
+        =ᵐ[S.m] condIntegralOp D (fun p => H p - K p) (b n) := by
+      filter_upwards [horbit n, condIntegralOp_sub_ae D hrowH hrowK (hbmem n)] with x h1 h2
+      rw [Pi.sub_apply, h1]
+      exact h2.symm
+    filter_upwards [condNorm_congr_ae D hsub,
+      condNorm_condIntegralOp_le D hC (hHS n) (hbmem n) (hbC n), hsmall] with x h1 h2 h3
+    rw [h1]
+    exact h2.trans (mul_le_mul_of_nonneg_left h3 hC)
+  -- The two errors add.
+  have hfL2 : MemLp (f ∘ S.iter n) 2 S.m := hf.comp_measurePreserving (S.measurePreserving_iter n)
+  have hu : MemLp (f ∘ S.iter n - condIntegralOp D K (b n)) 2 S.m := hfL2.sub (hKL2 n)
+  have hv : MemLp (condIntegralOp D K (b n) - g q) 2 S.m := (hKL2 n).sub (hgmod q).memLp
+  have hsum : (f ∘ S.iter n - condIntegralOp D K (b n))
+      + (condIntegralOp D K (b n) - g q) = f ∘ S.iter n - g q := by
+    funext x
+    simp only [Pi.add_apply, Pi.sub_apply]
+    ring
+  filter_upwards [condNorm_add_le D hu hv, hmid, hq] with x h1 h2 h3
+  rw [hsum] at h1
+  calc condNorm D (f ∘ S.iter n - g q) x
+      ≤ condNorm D (f ∘ S.iter n - condIntegralOp D K (b n)) x
+        + condNorm D (condIntegralOp D K (b n) - g q) x := h1
+    _ < C * δ + δ := by linarith
+    _ ≤ ε := by
+        have hid : C * (ε / (2 * (C + 1))) + ε / (2 * (C + 1))
+            = ε * (C + 1) / (2 * (C + 1)) := by
+          field_simp
+        rw [hid, div_le_iff₀ hCpos]
+        nlinarith
 
 /-! ### What the orbit identity does and does not give
 
