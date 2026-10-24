@@ -254,23 +254,50 @@
   set-level \texttt{condKernel\_comp} does not give one without countable generation.
 
   \smallskip
-  \emph{What is still open, and what shape it has.}  The orbit identity makes one thing
-  explicit that was not visible before: along the orbit the transformation acts on the kernel
-  \emph{and} on the function.  The kernel part is harmless --- for an eigenfunction
-  $H \circ R^n$ runs around a circle, which is what \texttt{exists\_kernel\_net} handles ---
-  but $a \circ T^n$ moves too, and \texttt{CondCompact} wants one finite net covering the
-  whole orbit.  So \texttt{condCompact\_of\_param\_orbit}, which assumes a \emph{fixed} $a$,
-  does not apply to an eigenfunction orbit; its statement now says so.
+  \emph{Reduction to finite-rank kernels.}  The orbit identity makes one thing explicit that
+  was not visible before: along the orbit the transformation acts on the kernel \emph{and} on
+  the function.  The kernel part is harmless --- for an eigenfunction $H \circ R^n$ runs
+  around a circle, which \texttt{exists\_kernel\_net} handles --- but $a \circ T^n$ moves too,
+  so \texttt{condCompact\_of\_param\_orbit}, which assumes a \emph{fixed} $a$, does not apply
+  to an eigenfunction orbit; its statement now says so.
 
-  The remaining step is therefore not a statement about kernels at all.  It is that $\Phi_H$
-  carries the bounded set $\{a \circ T^n\}$ of the module --- bounded because $T$ preserves
-  $m$, so conditional norms are constant along the orbit --- to a conditionally totally
-  bounded set.  That is the conditional analogue of ``a Hilbert--Schmidt operator is
-  compact'', and it does \emph{not} follow from the fibrewise compactness of
-  \texttt{Fibre.lean}: approximating $H$ by finite-rank kernels leaves coefficients
-  $\cip{h_i}{a \circ T^n}_{\Dbb}$ that are \emph{functions} on the base, so a finite net for
-  them is a statement in $L^\infty(\Dbb)$, not a consequence of compactness fibre by fibre.
-  After that, the factor $\Ebb$ must be assembled from the conditionally compact functions.
+  What is needed instead is that $\Phi_H$ carries the bounded set $\{a \circ T^n\}$ to a
+  conditionally totally bounded set, and \texttt{condCompact\_of\_kernel\_approx} reduces this
+  to the finite-rank case: the conditional Hilbert--Schmidt bound transports an
+  essential-sup approximation of \emph{kernels} to the \emph{functions}, the triangle
+  inequality \texttt{condNorm\_add\_le} adds the two errors, and a finite-rank kernel acts by
+  $\Phi_{\sum g_i \otimes h_i} b = \sum_i \cip{h_i}{b}_{\Dbb} \, g_i$
+  (\texttt{condIntegralOp\_sum\_tensor}), with $\Dbb$-measurable coefficients.
+
+  \smallskip
+  \emph{What is still open, and a question about the source.}  The reduction leaves two
+  hypotheses, and neither is a formality.
+
+  \emph{(i)} It asks for $\norm{H-K}_{\mathrm{HS},\text{fibre}} \leq \delta$ \emph{a.e.\ on
+  the base} with $K$ of finite rank.  What $L^2(\lambda)$ density of tensor products gives
+  (\texttt{topologicalClosure\_span\_prodKernels}) is smallness of the $L^2$ norm \emph{over}
+  the base, which is weaker; upgrading needs an exhaustion, and the exceptional set has to be
+  cut off somewhere.
+
+  \emph{(ii)} It asks for a finite net of module elements covering the finite-rank images
+  $\sum_i c_i^n g_i$, where $c_i^n = \cip{h_i}{a \circ T^n}_{\Dbb}$ are bounded
+  $\Dbb$-measurable \emph{functions}.  In the essential-sup conditional norm this amounts to a
+  finite net for $\{c^n\}$ in the $L^\infty(\Dbb)$ ball --- and a bounded subset of $L^\infty$
+  is not totally bounded.  Rounding $c^n(x)$ to a grid pointwise gives one module element per
+  $n$, not finitely many.
+
+  So the obstruction is neither the fibrewise compactness of \texttt{Fibre.lean} nor the
+  circle structure of the kernel orbit: it is the passage from ``compact on each fibre'' to
+  ``uniformly compact over the base''.  Both (i) and (ii) are exactly the places where the
+  standard arguments admit an exceptional set of small measure, whereas
+  Definition~\ref{def:compact-extension} states \texttt{CondCompact} with an $L^\infty(\Dbb)$
+  norm and no exceptional set.  Either that exceptional set is absorbed by the density
+  required in \emph{compact extension}, or \texttt{CondCompact} should carry the
+  exceptional-set form.  This should be checked against Moreira's Proposition 8.6.1 before
+  the step is attempted --- it is a question about the source, not about the formalization,
+  and the \textbf{remark on Definition~\ref{def:compact-extension} currently records only the
+  conditional-weak-mixing asymmetry, not this one}.  After it is settled, the factor $\Ebb$
+  must still be assembled from the conditionally compact functions.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}

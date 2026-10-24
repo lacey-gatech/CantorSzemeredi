@@ -1113,23 +1113,33 @@ theorem condCompact_of_kernel_approx (D E : Factor S) {f : S.X → ℝ} {b : ℤ
         rw [hid, div_le_iff₀ hCpos]
         nlinarith
 
-/-! ### What the orbit identity does and does not give
+/-! ### What is left, precisely
 
-`condIntegralOp_comp_iterate` says `(Φ_H a) ∘ Tⁿ = Φ_{H ∘ Rⁿ}(a ∘ Tⁿ)`.  When `H` is an
-eigenfunction the kernel part is harmless — `H ∘ Rⁿ` runs around a circle, which is what
-`exists_kernel_net` handles — but the function part `a ∘ Tⁿ` moves as well, and
-`CondCompact` asks for a finite net covering the whole orbit.
+`condCompact_of_kernel_approx` reduces conditional compactness of `Φ_H` along an orbit to two
+things.  Neither is a formality.
 
-So the remaining step is *not* a statement about kernels.  It is that `Φ_H` carries the
-bounded set `{a ∘ Tⁿ : n}` of the module (bounded because `T` preserves `m`, so the
-conditional norms are constant along the orbit) to a conditionally totally bounded set.  That
-is the conditional analogue of "a Hilbert–Schmidt operator is compact", and it does not follow
-from the fibrewise compactness of `Fibre.lean`: approximating `H` by finite-rank kernels
-produces coefficients `⟨h_i, a ∘ Tⁿ⟩_D` that are *functions* on the base, so a finite net for
-them is a statement in `L^∞(D)`, not a consequence of compactness fibre by fibre.
+**(i) Uniform finite-rank approximation.**  The hypothesis asks for `‖H - K‖_{HS,fibre} ≤ δ`
+*almost everywhere on the base*, with `K` of finite rank.  What `L²(λ)` density of tensor
+products gives (`HilbertSchmidt.topologicalClosure_span_prodKernels`) is smallness of the
+`L²` norm *over* the base, which is weaker.  Upgrading needs an exhaustion: the fibre
+Hilbert–Schmidt error is small except on a base set of small measure, and that set has to be
+cut off somewhere.
 
-`condCompact_of_param_orbit` is therefore stated for a fixed `a`, which covers the case where
-the orbit's dependence is only through the kernel. -/
+**(ii) A finite net for the finite-rank images.**  By `condIntegralOp_sum_tensor` these are
+`Σᵢ cᵢⁿ · gᵢ` with `cᵢⁿ = ⟨hᵢ, b n⟩_D`, bounded `D`-measurable *functions*.  Covering them by
+finitely many module elements in the essential-sup conditional norm amounts to a finite net
+for `{cⁿ}` in the `L^∞(D)` ball — and a bounded subset of `L^∞` is not totally bounded.
+Rounding `cⁿ(x)` to a grid pointwise produces one module element per `n`, not finitely many.
+
+So the obstruction is not fibrewise compactness, which `Fibre.lean` supplies, nor the circle
+structure of the kernel orbit, which `exists_kernel_net` supplies.  It is the passage from
+"compact on each fibre" to "uniformly compact over the base", and both (i) and (ii) are
+places where the standard arguments admit an exceptional set of small measure.
+`def:compact-extension` as stated here — following Moreira — has no exceptional set in
+`CondCompact`, so either the exceptional set is absorbed by the density in
+`CompactExtension`, or `CondCompact` needs the exceptional-set form.  That is a question
+about the source, not about the formalization, and it should be settled before this step is
+attempted. -/
 
 end MPS
 
