@@ -183,14 +183,37 @@
   fibrewise follows until it is pushed through \texttt{ae\_ae\_condKernel}.
 
   \smallskip
-  \emph{What is still open.}  \texttt{condCompact\_of\_kernel\_net} is a reduction: it
-  \emph{assumes} the finite net of kernels.  Producing that net from the eigenfunction is the
-  remaining step, and it is the one with genuine content left --- the orbit
-  $\{H \circ R^n\}$ is precompact in $L^2(\lambda)$ because $H$ is an eigenfunction, but
-  \texttt{CondCompact} needs a single finite net of \emph{module elements} valid for all $n$
-  and uniformly over the fibres, which is a measurable-selection argument rather than a
-  consequence of $L^2(\lambda)$ precompactness.  After that, the factor $\Ebb$ must be
-  assembled from the conditionally compact functions.
+  \emph{The finite net.}  \texttt{condCompact\_of\_kernel\_net} is a reduction: it assumes a
+  finite net of kernels.  Producing that net needs no measurable selection, contrary to what
+  one might expect from the fibrewise compactness --- the orbit is not a general precompact
+  set but a \emph{circle}.  Since $H$ is an eigenfunction, $H \circ R^n = e(n\theta) H$, so
+  the orbit of kernels traces $(\cos n\theta, \sin n\theta)$ through the real span of
+  $\Re H$ and $\Im H$.  The net is then total boundedness of a bounded subset of $\RR^2$,
+  a fact about $\RR^2$ and not about the fibres, carried over by the two estimates
+  \[
+    \norm{c H}_{\mathrm{HS},\text{fibre}} = \abs{c}\,\norm{H}_{\mathrm{HS},\text{fibre}},
+    \qquad
+    \norm{H+K}_{\mathrm{HS},\text{fibre}}
+      \leq \norm{H}_{\mathrm{HS},\text{fibre}} + \norm{K}_{\mathrm{HS},\text{fibre}} .
+  \]
+  The second is Minkowski applied twice --- inside each fibre for the rows, then across the
+  fibre for the row norms (\texttt{hsFibre\_add\_le}); both uses go through
+  \texttt{CantorSzemeredi/Analysis/SqrtIntegral.lean}, which states Cauchy--Schwarz and
+  Minkowski for $\sqrt{\int f^2}$ rather than for \texttt{eLpNorm}, since a conditional norm
+  is a real number depending on a base point which is then integrated again.  The outcome is
+  \texttt{exists\_kernel\_net}, and combining it with the reduction gives
+  \texttt{condCompact\_of\_param\_orbit}: an orbit of kernels drawn from a bounded
+  two-parameter family, acting on a single module element, consists of conditionally compact
+  functions.
+
+  \smallskip
+  \emph{What is still open.}  Two things.  First, the hypotheses of
+  \texttt{condCompact\_of\_param\_orbit} must be discharged for the actual eigenfunction:
+  identifying the orbit of $f$ with $\Phi_{K_n} a$, and the fibre regularity collected in
+  \texttt{IsFibreReg} and \texttt{IsFibreHS} --- of these, the measurability of
+  $x \mapsto \norm{H(x,\cdot)}_{L^2(m_x)}$ for each member of the family is the one that does
+  not follow formally from the others.  Second, the factor $\Ebb$ must be assembled from the
+  conditionally compact functions.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}
