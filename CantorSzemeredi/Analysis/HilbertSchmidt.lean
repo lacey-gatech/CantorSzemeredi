@@ -573,17 +573,19 @@ theorem isPiSystem_measurableRectangles (α β : Type*) [MeasurableSpace α] [Me
 omit [SFinite ν] in
 /-- A function whose integral over every measurable rectangle vanishes is a.e. zero.
 The rectangles form a π-system generating the product σ-algebra, so this is Dynkin's lemma. -/
-theorem ae_eq_zero_of_forall_setIntegral_rectangle_eq_zero
-    [IsFiniteMeasure μ] [IsFiniteMeasure ν] {u : α × β → ℂ} (hu : Integrable u (μ.prod ν))
+theorem ae_eq_zero_of_forall_setIntegral_rectangle_eq_zero {E : Type*}
+    [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E] (ρ : Measure (α × β))
+    [IsFiniteMeasure ρ]
+    {u : α × β → E} (hu : Integrable u ρ)
     (h : ∀ a b, MeasurableSet a → MeasurableSet b →
-      ∫ p in a ×ˢ b, u p ∂(μ.prod ν) = 0) :
-    u =ᵐ[μ.prod ν] 0 := by
-  have huniv : ∫ p in (Set.univ : Set (α × β)), u p ∂(μ.prod ν) = 0 := by
+      ∫ p in a ×ˢ b, u p ∂ρ = 0) :
+    u =ᵐ[ρ] 0 := by
+  have huniv : ∫ p in (Set.univ : Set (α × β)), u p ∂ρ = 0 := by
     have := h Set.univ Set.univ MeasurableSet.univ MeasurableSet.univ
     simpa using this
-  have key : ∀ t (_ : MeasurableSet t), ∫ p in t, u p ∂(μ.prod ν) = 0 := by
+  have key : ∀ t (_ : MeasurableSet t), ∫ p in t, u p ∂ρ = 0 := by
     refine MeasurableSpace.induction_on_inter
-      (C := fun t _ => ∫ p in t, u p ∂(μ.prod ν) = 0)
+      (C := fun t _ => ∫ p in t, u p ∂ρ = 0)
       (generateFrom_measurableRectangles α β).symm (isPiSystem_measurableRectangles α β)
       (by simp) ?_ ?_ ?_
     · rintro _ ⟨a, b, ha, hb, rfl⟩
@@ -591,13 +593,130 @@ theorem ae_eq_zero_of_forall_setIntegral_rectangle_eq_zero
     · intro t htm ht
       have := integral_add_compl htm hu
       rw [ht, zero_add] at this
-      rw [this, ← Measure.restrict_univ (μ := μ.prod ν)] at *
+      rw [this, ← Measure.restrict_univ (μ := ρ)] at *
       simpa using huniv
     · intro f hdisj hfm hf
       rw [integral_iUnion hfm hdisj hu.integrableOn]
       simp [hf]
   exact hu.ae_eq_zero_of_forall_setIntegral_eq_zero fun t htm _ => key t htm
 
+
+
+/-! ### Real kernels: rectangle indicators are total
+
+The statement above is for complex kernels and a product measure.  The approximation used in
+the conditional setting is for *real* kernels against a measure on `α × β` that is not a
+product — the relatively independent self-joining.  Nothing in the Dynkin argument needs the
+product structure, so the same proof works; what does not survive is `memLp_prod_mul`, since
+`‖g ⊗ h‖_{L²(ρ)}` is not controlled by `‖g‖₂‖h‖₂` off a product measure.  Indicators of
+rectangles are bounded, so they are in `L²(ρ)` for any finite `ρ`, and they already span
+enough. -/
+
+omit [SFinite ν] in
+theorem memLp_indicator_rect (ρ : Measure (α × β)) [IsFiniteMeasure ρ] {a : Set α} {b : Set β}
+    (ha : MeasurableSet a) (hb : MeasurableSet b) :
+    MemLp ((a ×ˢ b).indicator (fun _ => (1 : ℝ))) 2 ρ :=
+  memLp_indicator_const 2 (ha.prod hb).nullMeasurableSet 1 (Or.inr (measure_ne_top ρ _))
+
+/-- The indicators of measurable rectangles, as elements of `L²(ρ)`. -/
+def rectKernels (ρ : Measure (α × β)) [IsFiniteMeasure ρ] : Set (Lp ℝ 2 ρ) :=
+  {v | ∃ (a : Set α) (b : Set β) (ha : MeasurableSet a) (hb : MeasurableSet b),
+    v = (memLp_indicator_rect ρ ha hb).toLp _}
+
+omit [SFinite ν] in
+/-- **Rectangle indicators are total in `L²(ρ)`**, for any finite measure `ρ` on `α × β`. -/
+theorem topologicalClosure_span_rectKernels (ρ : Measure (α × β)) [IsFiniteMeasure ρ] :
+    (Submodule.span ℝ (rectKernels ρ)).topologicalClosure = ⊤ := by
+  rw [Submodule.topologicalClosure_eq_top_iff, Submodule.eq_bot_iff]
+  intro u hu
+  have hrect : ∀ a b, MeasurableSet a → MeasurableSet b →
+      ∫ p in a ×ˢ b, (u : α × β → ℝ) p ∂ρ = 0 := by
+    intro a b ha hb
+    have hmem : (memLp_indicator_rect ρ ha hb).toLp _ ∈ rectKernels ρ := ⟨a, b, ha, hb, rfl⟩
+    have hinner : inner ℝ ((memLp_indicator_rect ρ ha hb).toLp _) u = 0 :=
+      hu _ (Submodule.subset_span hmem)
+    rw [L2.inner_def] at hinner
+    rw [← hinner, ← integral_indicator (ha.prod hb)]
+    refine integral_congr_ae ?_
+    filter_upwards [(memLp_indicator_rect ρ ha hb).coeFn_toLp] with p hp
+    rw [hp]
+    by_cases hpm : p ∈ a ×ˢ b <;> simp [hpm, RCLike.inner_apply]
+  have hae : (u : α × β → ℝ) =ᵐ[ρ] 0 :=
+    ae_eq_zero_of_forall_setIntegral_rectangle_eq_zero ρ
+      ((Lp.memLp u).integrable (by norm_num)) hrect
+  exact Submodule.mem_bot ℝ |>.mpr (Lp.eq_zero_iff_ae_eq_zero.mpr hae)
+
+
+omit [MeasurableSpace α] [MeasurableSpace β] [SFinite ν] in
+theorem indicator_prod_eq (a : Set α) (b : Set β) (p : α × β) :
+    (a ×ˢ b).indicator (fun _ => (1 : ℝ)) p
+      = a.indicator (fun _ => (1 : ℝ)) p.1 * b.indicator (fun _ => (1 : ℝ)) p.2 := by
+  by_cases h1 : p.1 ∈ a <;> by_cases h2 : p.2 ∈ b <;> simp [Set.mem_prod, h1, h2]
+
+omit [SFinite ν] in
+theorem coeFn_finset_sum {ι : Type*} (ρ : Measure (α × β)) (s : Finset ι)
+    (F : ι → Lp ℝ 2 ρ) :
+    ⇑(∑ i ∈ s, F i) =ᵐ[ρ] fun p => ∑ i ∈ s, F i p := by
+  classical
+  induction s using Finset.induction with
+  | empty =>
+    simp only [Finset.sum_empty]
+    exact (Lp.coeFn_zero ℝ 2 ρ).trans (Filter.EventuallyEq.of_eq rfl)
+  | insert i s hi ih =>
+    rw [Finset.sum_insert hi]
+    filter_upwards [Lp.coeFn_add (F i) (∑ j ∈ s, F j), ih] with p h1 h2
+    rw [h1, Pi.add_apply, h2, Finset.sum_insert hi]
+
+omit [SFinite ν] in
+/-- **Finite-rank approximation in `L²(ρ)`.**  Every `L²` kernel on `α × β`, for any finite
+measure, is approximated in `L²` by a finite linear combination of tensor products of
+indicators — a finite-rank kernel. -/
+theorem exists_rectSum_eLpNorm_sub_lt (ρ : Measure (α × β)) [IsFiniteMeasure ρ]
+    {H : α × β → ℝ} (hH : MemLp H 2 ρ) {η : ℝ} (hη : 0 < η) :
+    ∃ (k : ℕ) (c : Fin k → ℝ) (a : Fin k → Set α) (b : Fin k → Set β),
+      (∀ i, MeasurableSet (a i)) ∧ (∀ i, MeasurableSet (b i)) ∧
+      eLpNorm (fun p => H p - ∑ i, c i *
+          (a i).indicator (fun _ => (1 : ℝ)) p.1 * (b i).indicator (fun _ => (1 : ℝ)) p.2)
+        2 ρ < ENNReal.ofReal η := by
+  classical
+  set u : Lp ℝ 2 ρ := hH.toLp H with hu
+  have hclo : u ∈ closure ((Submodule.span ℝ (rectKernels ρ) : Submodule ℝ (Lp ℝ 2 ρ)) :
+      Set (Lp ℝ 2 ρ)) := by
+    have : u ∈ (Submodule.span ℝ (rectKernels ρ)).topologicalClosure := by
+      rw [topologicalClosure_span_rectKernels]
+      trivial
+    exact this
+  obtain ⟨v, hv, hdist⟩ := Metric.mem_closure_iff.mp hclo η hη
+  obtain ⟨k, c, g, hsum⟩ := Submodule.mem_span_set'.mp hv
+  choose a b ha hb hgi using fun i => (g i).2
+  refine ⟨k, c, a, b, ha, hb, ?_⟩
+  -- Identify the span element with the explicit finite-rank kernel.
+  have hgcoe : ∀ i, ⇑(g i : Lp ℝ 2 ρ) =ᵐ[ρ] (a i ×ˢ b i).indicator (fun _ => (1 : ℝ)) := by
+    intro i
+    rw [hgi i]
+    exact (memLp_indicator_rect ρ (ha i) (hb i)).coeFn_toLp
+  have hvcoe : ⇑v =ᵐ[ρ] fun p => ∑ i, c i *
+      (a i).indicator (fun _ => (1 : ℝ)) p.1 * (b i).indicator (fun _ => (1 : ℝ)) p.2 := by
+    have h1 : ⇑v =ᵐ[ρ] fun p => ∑ i, (c i • (g i : Lp ℝ 2 ρ)) p := by
+      rw [← hsum]
+      exact coeFn_finset_sum ρ _ _
+    filter_upwards [h1, ae_all_iff.mpr fun i => Lp.coeFn_smul (c i) (g i : Lp ℝ 2 ρ),
+      ae_all_iff.mpr hgcoe] with p hp hsm hgc
+    rw [hp]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [hsm i, Pi.smul_apply, smul_eq_mul, hgc i, indicator_prod_eq, ← mul_assoc]
+  -- The difference of functions is the difference in `Lp`.
+  have hdiff : (fun p => H p - ∑ i, c i *
+      (a i).indicator (fun _ => (1 : ℝ)) p.1 * (b i).indicator (fun _ => (1 : ℝ)) p.2)
+      =ᵐ[ρ] ⇑(u - v) := by
+    filter_upwards [Lp.coeFn_sub u v, hH.coeFn_toLp, hvcoe] with p h1 h2 h3
+    rw [h1, Pi.sub_apply, h2, h3]
+  rw [eLpNorm_congr_ae hdiff]
+  have hnorm : eLpNorm (⇑(u - v)) 2 ρ = ENNReal.ofReal ‖u - v‖ := by
+    rw [Lp.norm_def, ENNReal.ofReal_toReal (Lp.eLpNorm_ne_top _)]
+  rw [hnorm]
+  refine (ENNReal.ofReal_lt_ofReal_iff hη).mpr ?_
+  rwa [← dist_eq_norm]
 
 /-! ### Tensor products span a dense subspace, and compactness follows -/
 
@@ -630,7 +749,7 @@ theorem topologicalClosure_span_prodKernels [IsFiniteMeasure μ] [IsFiniteMeasur
     by_cases hpa : p.1 ∈ a <;> by_cases hpb : p.2 ∈ b <;>
       simp [hpa, hpb, Set.mem_prod, RCLike.inner_apply]
   have hae : (u : α × β → ℂ) =ᵐ[μ.prod ν] 0 :=
-    ae_eq_zero_of_forall_setIntegral_rectangle_eq_zero
+    ae_eq_zero_of_forall_setIntegral_rectangle_eq_zero (μ.prod ν)
       ((Lp.memLp u).integrable (by norm_num)) hrect
   exact Submodule.mem_bot ℂ |>.mpr (Lp.eq_zero_iff_ae_eq_zero.mpr hae)
 

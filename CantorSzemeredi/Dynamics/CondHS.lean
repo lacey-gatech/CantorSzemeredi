@@ -1133,6 +1133,54 @@ theorem condCompact_of_param_orbit (D E : Factor S) {f a : S.X → ℝ}
   exact ⟨q, hHS (u n) (w q), hq⟩
 
 
+
+/-- **Finite-rank approximation, uniformly on a `D`-set.**
+
+Combining `HilbertSchmidt.exists_rectSum_eLpNorm_sub_lt` — rectangle indicators are total in
+`L²(λ)`, the joining being a finite measure on `X × X` even though it is not a product — with
+the cutoff: for every `δ, η > 0` there is a finite-rank kernel `K` and a `D`-set `B` with
+`m(Bᶜ) ≤ η`, such that the difference `H - K`, cut down to `B`, has fibre Hilbert–Schmidt
+norm at most `δ` *everywhere*.
+
+This is the hypothesis `condCompact_of_kernel_approx` needs, with the exceptional set `Bᶜ`
+left for the density in `CompactExtension` to absorb. -/
+theorem exists_finiteRank_cutoff (D : Factor S) {H : S.X × S.X → ℝ}
+    (hHm : StronglyMeasurable H) (hH : MemLp H 2 (joining D)) {δ η : ℝ}
+    (hδ : 0 < δ) (hη : 0 < η) :
+    ∃ (k : ℕ) (c : Fin k → ℝ) (a b : Fin k → Set S.X) (B : Set S.X),
+      (∀ i, MeasurableSet (a i)) ∧ (∀ i, MeasurableSet (b i)) ∧
+      MeasurableSet[D.σ] B ∧ S.m Bᶜ ≤ ENNReal.ofReal η ∧
+      ∀ᵐ x ∂S.m, hsFibre D (fun p => B.indicator (1 : S.X → ℝ) p.1 *
+        (H p - ∑ i, c i * (a i).indicator (fun _ => (1 : ℝ)) p.1
+          * (b i).indicator (fun _ => (1 : ℝ)) p.2)) x ≤ δ := by
+  classical
+  -- Approximate in `L²(λ)` to within `δ √η`.
+  set θ : ℝ := δ * Real.sqrt η with hθdef
+  have hθ : 0 < θ := by rw [hθdef]; positivity
+  obtain ⟨k, c, a, b, ha, hb, hlt⟩ :=
+    HilbertSchmidt.exists_rectSum_eLpNorm_sub_lt (joining D) hH hθ
+  set F : S.X × S.X → ℝ := fun p => H p - ∑ i, c i *
+    (a i).indicator (fun _ => (1 : ℝ)) p.1 * (b i).indicator (fun _ => (1 : ℝ)) p.2 with hFdef
+  have hFm : StronglyMeasurable F := by
+    refine hHm.sub (Finset.stronglyMeasurable_fun_sum _ fun i _ => ?_)
+    exact (((stronglyMeasurable_const.indicator (ha i)).comp_measurable
+      measurable_fst).const_mul (c i)).mul
+      ((stronglyMeasurable_const.indicator (hb i)).comp_measurable measurable_snd)
+  have hFmem : MemLp F 2 (joining D) := hlt.trans_le le_top
+  -- Chebyshev, through the cutoff.
+  obtain ⟨B, hBmeas, hBsmall, hbound⟩ := exists_cutoff_hsFibre_le D hFm hFmem hδ
+  refine ⟨k, c, a, b, B, ha, hb, hBmeas, ?_, hbound⟩
+  refine hBsmall.trans ?_
+  have hsq : ∫⁻ p, ‖F p‖ₑ ^ (2 : ℕ) ∂(joining D) ≤ ENNReal.ofReal (θ ^ 2) := by
+    rw [← eLpNorm_two_sq hFm.aestronglyMeasurable, ENNReal.ofReal_pow hθ.le]
+    exact pow_le_pow_left' hlt.le 2
+  refine le_trans (ENNReal.div_le_div_right hsq _) ?_
+  rw [← ENNReal.ofReal_div_of_pos (by positivity), hθdef]
+  refine ENNReal.ofReal_le_ofReal ?_
+  rw [mul_pow, Real.sq_sqrt hη.le]
+  field_simp
+  exact le_rfl
+
 /-! ### Finite-rank kernels, and the reduction to them
 
 A conditionally Hilbert–Schmidt operator should be approximable by finite-rank ones, and a

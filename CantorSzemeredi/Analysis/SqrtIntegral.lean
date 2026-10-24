@@ -106,4 +106,13 @@ theorem memLp_two_iff_lintegral {F : Type*} [NormedAddCommGroup F] {g : γ → F
     simp [ENNReal.top_rpow_of_pos] at h
   · exact fun h => ENNReal.rpow_lt_top_of_nonneg (by norm_num) h
 
+
+/-- The square of the `L²` seminorm is the `lintegral` of the squared enorm. -/
+theorem eLpNorm_two_sq {F : γ → ℝ} (hF : AEStronglyMeasurable F ρ) :
+    (eLpNorm F 2 ρ) ^ (2 : ℕ) = ∫⁻ z, ‖F z‖ₑ ^ (2 : ℕ) ∂ρ := by
+  rw [eLpNorm_eq_lintegral_rpow_enorm_toReal (by norm_num) (by norm_num) hF]
+  norm_num
+  rw [← ENNReal.rpow_natCast _ 2, ← ENNReal.rpow_mul]
+  norm_num
+
 end SqrtIntegral
