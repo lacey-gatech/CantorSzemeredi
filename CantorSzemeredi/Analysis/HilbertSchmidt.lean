@@ -123,6 +123,57 @@ theorem eLpNorm_integralKernel_le {k : α × β → ℂ} {f : β → ℂ}
     _ = eLpNorm k 2 (μ.prod ν) * eLpNorm f 2 ν := by
         rw [eLpNorm_two_eq_rpow (μ.prod ν) _ hk, hA, eLpNorm_two_eq_rpow ν _ hf]
 
+/-! ### Measurable rectangles form a set semiring
+
+Mathlib has `isSetSemiring_measurableCylinders` for infinite products, but nothing for the
+binary product.  This is the input to
+`exists_measure_symmDiff_lt_of_generateFrom_isSetSemiring`, which is what makes finite-rank
+kernels dense in `L²(μ ⊗ ν)`. -/
+
+/-- The measurable rectangles of `α × β`. -/
+def measurableRectangles (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] :
+    Set (Set (α × β)) :=
+  {s | ∃ a b, MeasurableSet a ∧ MeasurableSet b ∧ s = a ×ˢ b}
+
+theorem isSetSemiring_measurableRectangles (α β : Type*) [MeasurableSpace α]
+    [MeasurableSpace β] : IsSetSemiring (measurableRectangles α β) := by
+  classical
+  refine ⟨⟨∅, ∅, MeasurableSet.empty, MeasurableSet.empty, by simp⟩, ?_, ?_⟩
+  · rintro _ ⟨a, b, ha, hb, rfl⟩ _ ⟨a', b', ha', hb', rfl⟩
+    exact ⟨a ∩ a', b ∩ b', ha.inter ha', hb.inter hb', Set.prod_inter_prod⟩
+  · rintro _ ⟨a, b, ha, hb, rfl⟩ _ ⟨a', b', ha', hb', rfl⟩
+    refine ⟨{(a ∩ a') ×ˢ (b \ b'), (a \ a') ×ˢ b}, ?_, ?_, ?_⟩
+    · intro s hs
+      simp only [Finset.coe_insert, Finset.coe_singleton, Set.mem_insert_iff,
+        Set.mem_singleton_iff] at hs
+      rcases hs with rfl | rfl
+      · exact ⟨a ∩ a', b \ b', ha.inter ha', hb.diff hb', rfl⟩
+      · exact ⟨a \ a', b, ha.diff ha', hb, rfl⟩
+    · intro s hs t ht hst
+      simp only [Finset.coe_insert, Finset.coe_singleton, Set.mem_insert_iff,
+        Set.mem_singleton_iff] at hs ht
+      -- The two pieces are separated by membership of the first coordinate in `a'`.
+      have hdisj : Disjoint ((a ∩ a') ×ˢ (b \ b')) ((a \ a') ×ˢ b) := by
+        rw [Set.disjoint_left]
+        rintro ⟨x, y⟩ hx hy
+        exact hy.1.2 hx.1.2
+      rcases hs with rfl | rfl <;> rcases ht with rfl | rfl
+      · exact absurd rfl hst
+      · exact hdisj
+      · exact hdisj.symm
+      · exact absurd rfl hst
+    · ext ⟨x, y⟩
+      simp only [Set.mem_sdiff, Set.mem_prod, Finset.coe_insert, Finset.coe_singleton,
+        Set.sUnion_insert, Set.sUnion_singleton, Set.mem_union]
+      constructor
+      · rintro ⟨⟨hxa, hyb⟩, hnot⟩
+        by_cases hxa' : x ∈ a'
+        · exact Or.inl ⟨⟨hxa, hxa'⟩, hyb, fun hyb' => hnot ⟨hxa', hyb'⟩⟩
+        · exact Or.inr ⟨⟨hxa, hxa'⟩, hyb⟩
+      · rintro (⟨⟨hxa, hxa'⟩, hyb, hyb'⟩ | ⟨⟨hxa, hxa'⟩, hyb⟩)
+        · exact ⟨⟨hxa, hyb⟩, fun h => hyb' h.2⟩
+        · exact ⟨⟨hxa, hyb⟩, fun h => hxa' h.1⟩
+
 /-! ### Rank-one operators are compact
 
 Mathlib has no "finite rank implies compact" lemma: it has `IsCompactOperator.add`,
