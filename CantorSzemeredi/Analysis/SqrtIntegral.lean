@@ -42,7 +42,7 @@ theorem abs_integral_mul_le {f g : γ → ℝ} (hf : MemLp f 2 ρ) (hg : MemLp g
 
 /-- `∫ f²` is non-negative. -/
 theorem integral_sq_nonneg (f : γ → ℝ) : 0 ≤ ∫ z, f z ^ 2 ∂ρ :=
-  integral_nonneg fun z => sq_nonneg _
+  integral_nonneg fun _ => sq_nonneg _
 
 /-- Minkowski: `√(∫ (f+g)²) ≤ √(∫ f²) + √(∫ g²)`. -/
 theorem sqrt_integral_add_sq_le {f g : γ → ℝ} (hf : MemLp f 2 ρ) (hg : MemLp g 2 ρ) :
@@ -91,5 +91,19 @@ theorem sqrt_integral_const_mul_sq (c : ℝ) (f : γ → ℝ) :
   have hrw : ∀ z, (c * f z) ^ 2 = c ^ 2 * f z ^ 2 := fun z => by ring
   simp_rw [hrw]
   rw [integral_const_mul, Real.sqrt_mul (sq_nonneg c), Real.sqrt_sq_eq_abs]
+
+
+/-- `L²` membership as finiteness of a single `lintegral`, with a natural number exponent so
+that statements at different measures are literally the same expression. -/
+theorem memLp_two_iff_lintegral {F : Type*} [NormedAddCommGroup F] {g : γ → F}
+    (hg : AEStronglyMeasurable g ρ) :
+    MemLp g 2 ρ ↔ (∫⁻ z, ‖g z‖ₑ ^ (2 : ℕ) ∂ρ) ≠ ⊤ := by
+  rw [memLp_iff, eLpNorm_eq_lintegral_rpow_enorm_toReal (by norm_num) (by norm_num) hg]
+  norm_num
+  constructor
+  · intro h hcon
+    rw [hcon] at h
+    simp [ENNReal.top_rpow_of_pos] at h
+  · exact fun h => ENNReal.rpow_lt_top_of_nonneg (by norm_num) h
 
 end SqrtIntegral

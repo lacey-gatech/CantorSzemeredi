@@ -305,6 +305,52 @@ theorem condCompact_of_kernel_net (D E : Factor S) {f a : S.X → ℝ} {C : ℝ}
         nlinarith
 
 
+
+/-! ### Discharging the regularity hypotheses
+
+The measurability obligations in `IsFibreReg` and `IsFibreHS` are not extra assumptions on the
+kernel: they follow from joint measurability of `H`, through Mathlib's measurability of a
+Bochner integral against a kernel.  And `rowL2`, a condition on almost every fibre, reduces
+to a single `L²(m)` condition on the base, by the disintegration. -/
+
+/-- The disintegration, for `ℝ≥0∞`-valued integrals. -/
+theorem lintegral_condKernel (D : Factor S) {g : S.X → ENNReal} (hg : Measurable g) :
+    ∫⁻ z, g z ∂S.m = ∫⁻ x, (∫⁻ z, g z ∂(condKernel D x)) ∂S.m := by
+  conv_lhs => rw [← condKernel_comp_measure D]
+  exact lintegral_kernel_comp_measure _ _ hg
+
+/-- A function square integrable on the base is square integrable on almost every fibre. -/
+theorem ae_memLp_condKernel (D : Factor S) {g : S.X → ℝ} (hg : StronglyMeasurable g)
+    (hmem : MemLp g 2 S.m) :
+    ∀ᵐ x ∂S.m, MemLp g 2 (condKernel D x) := by
+  have hmeas : Measurable fun z => ‖g z‖ₑ ^ (2 : ℕ) := hg.measurable.enorm.pow_const _
+  have htot : (∫⁻ x, (∫⁻ z, ‖g z‖ₑ ^ (2 : ℕ) ∂(condKernel D x)) ∂S.m) ≠ ⊤ := by
+    rw [← lintegral_condKernel D hmeas]
+    exact (memLp_two_iff_lintegral hmem.aestronglyMeasurable).mp hmem
+  have hmi : Measurable fun x => ∫⁻ z, ‖g z‖ₑ ^ (2 : ℕ) ∂(condKernel D x) :=
+    hmeas.lintegral_kernel
+  filter_upwards [(ae_lt_top hmi htot).mono fun x hx => hx.ne] with x hx
+  exact (memLp_two_iff_lintegral hg.aestronglyMeasurable).mpr hx
+
+/-- **The row norms are measurable.**  `x ↦ ‖H(x,·)‖_{L²(m_x)}` is a square root of a Bochner
+integral against the kernel, and those are measurable in the base point. -/
+theorem measurable_hsRow (D : Factor S) {H : S.X × S.X → ℝ} (hH : StronglyMeasurable H) :
+    Measurable (hsRow D H) := by
+  have h1 : StronglyMeasurable fun p : S.X × S.X => H p ^ 2 := by
+    simp_rw [sq]
+    exact hH.mul hH
+  have h2 : StronglyMeasurable fun x => ∫ y, H (x, y) ^ 2 ∂(condKernel D x) :=
+    h1.integral_kernel_prod_right' (κ := condKernel D)
+  exact Real.continuous_sqrt.measurable.comp h2.measurable
+
+/-- **The image of the operator is measurable.** -/
+theorem measurable_condIntegralOp (D : Factor S) {H : S.X × S.X → ℝ} {a : S.X → ℝ}
+    (hH : StronglyMeasurable H) (ha : StronglyMeasurable a) :
+    Measurable (condIntegralOp D H a) := by
+  have h1 : StronglyMeasurable fun p : S.X × S.X => H p * a p.2 :=
+    hH.mul (ha.comp_measurable measurable_snd)
+  exact (h1.integral_kernel_prod_right' (κ := condKernel D)).measurable
+
 /-! ### Scaling and the triangle inequality for the fibre norms -/
 
 /-- Fibre regularity: what a kernel needs for the fibre norms to behave. -/
@@ -392,8 +438,35 @@ theorem IsFibreReg.const_mul {D : Factor S} {H : S.X × S.X → ℝ} (h : IsFibr
     rw [hrow]
     exact hx.const_mul _
 
+/-- **Fibre regularity, with the measurability discharged.**  What is left to supply is a
+condition on the rows and a single `L²(m)` bound on the row norms. -/
+theorem isFibreReg_of_memLp_hsRow (D : Factor S) {H : S.X × S.X → ℝ}
+    (hH : StronglyMeasurable H)
+    (hrow : ∀ᵐ z ∂S.m, MemLp (fun y => H (z, y)) 2 (condKernel D z))
+    (hL2 : MemLp (hsRow D H) 2 S.m) :
+    IsFibreReg D H :=
+  ⟨hrow, measurable_hsRow D hH,
+    ae_memLp_condKernel D (measurable_hsRow D hH).stronglyMeasurable hL2⟩
+
+/-- **`IsFibreHS` with the measurability discharged.**  What is left to supply is a condition
+on the rows and two `L²(m)` bounds on the base: everything fibrewise follows. -/
+theorem isFibreHS_of_memLp (D : Factor S) {H : S.X × S.X → ℝ} {a : S.X → ℝ}
+    (hH : StronglyMeasurable H) (ha : StronglyMeasurable a)
+    (hrow : ∀ᵐ z ∂S.m, MemLp (fun y => H (z, y)) 2 (condKernel D z))
+    (hL2row : MemLp (hsRow D H) 2 S.m) (hL2op : MemLp (condIntegralOp D H a) 2 S.m) :
+    IsFibreHS D a H := by
+  refine ⟨hrow, measurable_hsRow D hH, measurable_condIntegralOp D hH ha, hL2op, ?_, ?_⟩
+  · filter_upwards [ae_memLp_condKernel D (measurable_hsRow D hH).stronglyMeasurable hL2row]
+      with x hx
+    simp_rw [sq]
+    exact hx.integrable_mul hx
+  · filter_upwards [ae_memLp_condKernel D
+      (measurable_condIntegralOp D hH ha).stronglyMeasurable hL2op] with x hx
+    simp_rw [sq]
+    exact hx.integrable_mul hx
+
 /-- The fibre Hilbert–Schmidt norm is Lipschitz in the parameter. -/
-theorem hsFibre_kerComb_le (D : Factor S) {H₀ H₁ : S.X × S.X → ℝ} {M : ℝ} (hM : 0 ≤ M)
+theorem hsFibre_kerComb_le (D : Factor S) {H₀ H₁ : S.X × S.X → ℝ} {M : ℝ}
     (hreg0 : IsFibreReg D H₀) (hreg1 : IsFibreReg D H₁)
     (hreg : ∀ v : ℝ × ℝ, IsFibreReg D (kerComb H₀ H₁ v))
     (hb0 : ∀ᵐ x ∂S.m, hsFibre D H₀ x ≤ M) (hb1 : ∀ᵐ x ∂S.m, hsFibre D H₁ x ≤ M)
@@ -447,7 +520,7 @@ theorem exists_kernel_net (D : Factor S) {H₀ H₁ : S.X × S.X → ℝ} {M : �
       exact le_max_right _ _
     simp only [Prod.fst_sub, Prod.snd_sub]
     linarith
-  filter_upwards [hsFibre_kerComb_le D hM hreg0 hreg1 hreg hb0 hb1 (u n - y)] with x hx
+  filter_upwards [hsFibre_kerComb_le D hreg0 hreg1 hreg hb0 hb1 (u n - y)] with x hx
   calc hsFibre D (kerComb H₀ H₁ (u n - y)) x ≤ (|(u n - y).1| + |(u n - y).2|) * M := hx
     _ ≤ (2 * η) * M := by gcongr
     _ < δ := by
