@@ -1696,17 +1696,28 @@ and still bounded, since `uₙ` is a scalar pair in the unit ball.  So one appli
 `kerComb_sub_kerComb` and `hsFibre_kerComb_le` supply the matching bound on
 `H n - K n`.
 
-What remains is the final wiring, in two steps.
+Both hypotheses of `condCompact_of_kernel_approx` are now available as theorems:
+`exists_finiteRank_cutoff` for the kernel approximation, `exists_net_of_finiteRank` for the
+net.  What remains is to combine them, and there is one wrinkle worth recording before
+anyone tries.
 
-1. **Instantiate.**  Feed `exists_finiteRank_cutoff` and the net above into
-   `condCompact_of_kernel_approx`, with `H n = H ∘ Rⁿ` from `condIntegralOp_comp_iterate`.
-   Every input now exists; this is bookkeeping over the `IsFibreHS` fields and the
-   coefficient bounds (conditional Cauchy–Schwarz against `condNorm_indicator_le_one`).
+**The cutoff set is not `T`-invariant.**  `exists_finiteRank_cutoff` produces a `D`-set `B`
+and the kernel cut to it.  Since `B ∈ D`, the indicator pulls out of the fibre integral,
+`Φ_{1_B · H}(b) = 1_B · Φ_H(b)`, so the cut operator is `1_B · Φ_H a`.  But conditional
+compactness of that function concerns *its* orbit,
+`(1_B · Φ_H a) ∘ Tⁿ = 1_{T^{-n}B} · Φ_{H ∘ Rⁿ}(a ∘ Tⁿ)`,
+and `T^{-n}B` moves.  So one cannot cut once and forget it.
 
-2. **Discharge the exceptional set.**  The cutoff gives conditional compactness of
-   `1_B · Φ_H a`, not of `Φ_H a`.  Since `m(Bᶜ)` is small and `Φ_H a ∈ L²`, absolute
-   continuity of the integral makes `‖Φ_H a - 1_B · Φ_H a‖₂` small, which is exactly what
-   the density in `CompactExtension` absorbs.  Then the factor `𝔈` can be assembled. -/
+What saves the argument is that `D` is `T`-invariant, so each `1_{T^{-n}B}` is again
+`D`-measurable and bounded by `1`.  The coefficients handed to
+`exists_net_of_finite_span` become `1_{T^{-n}B}(x) · c_i · ⟨1_{B_i}, b n⟩_D(x)` — still
+`D`-measurable, still bounded by `M · C` — so the grid-rounding absorbs the moving indicator
+exactly as it absorbs the circle.  The care needed is in the kernel-error term, where the
+bound must be taken for the cut kernel at each `n`.
+
+After that: the cutoff gives conditional compactness of `1_B · Φ_H a`, absolute continuity
+of the integral makes `‖Φ_H a - 1_B · Φ_H a‖₂` small, and the density in `CompactExtension`
+absorbs it.  Then the factor `𝔈` can be assembled. -/
 
 end MPS
 
