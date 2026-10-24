@@ -19,4 +19,5 @@ import CantorSzemeredi.Dynamics.VanDerCorput
 import CantorSzemeredi.Dynamics.CondHS
 import CantorSzemeredi.Dynamics.Localize
 import CantorSzemeredi.Dynamics.Unfortunate
+import CantorSzemeredi.Dynamics.CondJensenPow
 import CantorSzemeredi.Dynamics.Fibre
