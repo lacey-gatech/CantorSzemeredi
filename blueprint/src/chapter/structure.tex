@@ -119,13 +119,25 @@
   followed by dominated convergence against the kernel $\abs{\mathrm{ces}_N(\alpha-\theta)} ^2$
   --- shows the limit has squared norm $\sigma(\{\theta\}) \neq 0$.
 
-  What remains is the second half: viewing the eigenfunction $H \in L^2(\lambda)$ as a kernel on
-  the fibres and passing to the conditionally compact functions it generates, then assembling
-  the factor $\Ebb$.  \textbf{This is blocked on Mathlib}, which has no theory of
-  Hilbert--Schmidt operators --- only Gram--Schmidt orthogonalization, which is unrelated.
-  Supplying that theory (Hilbert--Schmidt operators, their compactness, and the correspondence
-  between kernels in $L^2(\mu\otimes\mu)$ and operators on $L^2(\mu)$) is a Mathlib contribution
-  in its own right, and is the real obstacle to finishing Lemma~\ref{lem:dichotomy}.
+  The missing theory has since been supplied.  Mathlib has no Hilbert--Schmidt operators ---
+  only Gram--Schmidt orthogonalization, which is unrelated --- so
+  \texttt{CantorSzemeredi/Analysis/HilbertSchmidt.lean} develops them from scratch, written so
+  that it can be upstreamed: the operator $T_k f(x) = \int k(x,y) f(y)\,d\nu(y)$ attached to a
+  kernel $k \in L^2(\mu\otimes\nu)$, the bound $\norm{T_k f}_2 \le \norm{k}_2 \norm{f}_2$
+  (\texttt{eLpNorm\_integralKernel\_le}), its packaging as a continuous linear map
+  (\texttt{integralKernelL}), and the theorem that these operators are compact
+  (\texttt{isCompactOperator\_integralKernelL}).  The compactness proof has no analogue in
+  Mathlib either: a tensor product $g \otimes h$ gives a rank-one operator, and rank-one
+  operators are compact (\texttt{isCompactOperator\_rankOne}, also absent upstream, which has
+  the closure properties but no base case); the tensor products are total in
+  $L^2(\mu\otimes\nu)$ because a function orthogonal to every one of them integrates to zero
+  over every measurable rectangle, hence over every measurable set by Dynkin's lemma; and
+  $k \mapsto T_k$ is continuous by the Hilbert--Schmidt bound, so compactness passes to the
+  closure.
+
+  What remains for Lemma~\ref{lem:dichotomy} is the second half proper: viewing the
+  eigenfunction $H \in L^2(\lambda)$ as a kernel on the fibres and passing to the conditionally
+  compact functions it generates, then assembling the factor $\Ebb$.
 \end{remark}
 
 \section{The structure theorem for ergodic systems}
