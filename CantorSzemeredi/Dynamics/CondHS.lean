@@ -890,6 +890,7 @@ theorem stronglyMeasurable_hsFibre (D : Factor S) {H : S.X × S.X → ℝ}
   exact Real.continuous_sqrt.comp_stronglyMeasurable h2
 
 
+
 /-! ### The cutoff
 
 `L²(λ)` density of finite-rank kernels gives `hsFibre (H - K)` small *in `L²` of the base*,
@@ -1219,6 +1220,168 @@ theorem condNorm_add_le (D : Factor S) {u v : S.X → ℝ}
       ≤ Real.sqrt ((condNorm D u x + condNorm D v x) ^ 2) := Real.sqrt_le_sqrt hle
     _ = condNorm D u x + condNorm D v x :=
         Real.sqrt_sq (add_nonneg (condNorm_nonneg D u x) (condNorm_nonneg D v x))
+
+/-! ### The conditional norm of a `D`-linear combination
+
+A `D`-measurable scalar pulls out of the conditional norm, and the conditional norm is
+subadditive over a finite sum.  Together these say that a finitely generated submodule of the
+Hilbert module behaves, fibrewise, like a finite-dimensional normed space — which is what
+makes a finite net possible. -/
+
+omit [StandardBorelSpace S.X] in
+/-- **Pull-out.**  A `D`-measurable scalar comes out of the conditional norm in absolute
+value. -/
+theorem condNorm_mul_left (D : Factor S) {γ u : S.X → ℝ} (hγ : StronglyMeasurable[D.σ] γ)
+    (hγu : Integrable ((fun x => γ x * u x) * fun x => γ x * u x) S.m)
+    (hu : Integrable (u * u) S.m) :
+    ∀ᵐ x ∂S.m, condNorm D (fun y => γ y * u y) x = |γ x| * condNorm D u x := by
+  have hrw : ((fun x => γ x * u x) * fun x => γ x * u x)
+      = (fun x => γ x * γ x) * (u * u) := by
+    funext x
+    simp only [Pi.mul_apply]
+    ring
+  have hγ2 : StronglyMeasurable[D.σ] fun x => γ x * γ x := hγ.mul hγ
+  have hpull : S.m[(fun x => γ x * γ x) * (u * u)|D.σ]
+      =ᵐ[S.m] (fun x => γ x * γ x) * S.m[u * u|D.σ] :=
+    condExp_mul_of_stronglyMeasurable_left hγ2 (hrw ▸ hγu) hu
+  filter_upwards [hpull, condInner_self_nonneg D u] with x hx hnn
+  rw [condNorm, condInner, hrw, hx]
+  change Real.sqrt ((γ x * γ x) * condInner D u u x) = |γ x| * condNorm D u x
+  rw [Real.sqrt_mul (mul_self_nonneg _), condNorm]
+  congr 1
+  rw [← sq, Real.sqrt_sq_eq_abs]
+
+omit [StandardBorelSpace S.X] in
+/-- **Subadditivity over a finite sum.** -/
+theorem condNorm_sum_le (D : Factor S) {ι : Type*} (t : Finset ι) {u : ι → S.X → ℝ}
+    (hu : ∀ i ∈ t, MemLp (u i) 2 S.m) :
+    ∀ᵐ x ∂S.m, condNorm D (∑ i ∈ t, u i) x ≤ ∑ i ∈ t, condNorm D (u i) x := by
+  classical
+  induction t using Finset.induction with
+  | empty =>
+    have h0 : ((0 : S.X → ℝ) * (0 : S.X → ℝ)) = 0 := by
+      funext x
+      simp
+    have hz : S.m[(0 : S.X → ℝ) * (0 : S.X → ℝ)|D.σ] =ᵐ[S.m] 0 := by
+      rw [h0]
+      exact Filter.EventuallyEq.of_eq (condExp_zero ..)
+    filter_upwards [hz] with x hx
+    simp only [Finset.sum_empty]
+    rw [condNorm, condInner, hx]
+    simp
+  | insert j t hj ih =>
+    have hmem : ∀ i ∈ t, MemLp (u i) 2 S.m := fun i hi => hu i (Finset.mem_insert_of_mem hi)
+    have hsum : MemLp (∑ i ∈ t, u i) 2 S.m := memLp_finsetSum' t hmem
+    filter_upwards [ih hmem,
+      condNorm_add_le D (hu j (Finset.mem_insert_self j t)) hsum] with x h1 h2
+    rw [Finset.sum_insert hj, Finset.sum_insert hj]
+    linarith
+
+omit [StandardBorelSpace S.X] in
+/-- The conditional norm of a `D`-linear combination is bounded by the combination of the
+conditional norms, with the coefficients taken in absolute value. -/
+theorem condNorm_comb_le (D : Factor S) {k : ℕ} (u γ : Fin k → S.X → ℝ)
+    (hγ : ∀ i, StronglyMeasurable[D.σ] (γ i))
+    (hprod : ∀ i, MemLp (fun y => γ i y * u i y) 2 S.m)
+    (hmem : ∀ i, MemLp (u i) 2 S.m) :
+    ∀ᵐ x ∂S.m, condNorm D (∑ i, fun y => γ i y * u i y) x
+      ≤ ∑ i, |γ i x| * condNorm D (u i) x := by
+  have hpull : ∀ i, ∀ᵐ x ∂S.m,
+      condNorm D (fun y => γ i y * u i y) x = |γ i x| * condNorm D (u i) x := by
+    intro i
+    exact condNorm_mul_left D (hγ i) ((hprod i).integrable_mul (hprod i))
+      ((hmem i).integrable_mul (hmem i))
+  filter_upwards [condNorm_sum_le D Finset.univ (fun i _ => hprod i),
+    ae_all_iff.mpr hpull] with x h1 h2
+  refine h1.trans (le_of_eq ?_)
+  exact Finset.sum_congr rfl fun i _ => h2 i
+
+
+omit [StandardBorelSpace S.X] in
+/-- **A finitely generated submodule is conditionally totally bounded.**
+
+Given finitely many elements `u i` of `L²(E)` with conditional norm at most `1`, the
+`D`-linear combinations `∑ γ i · u i` with `|γ i| ≤ M` are covered, to within `ε`, by the
+finitely many combinations with *constant* coefficients drawn from a grid.  The approximant
+is found by rounding `γ(x)` to the grid, so its index depends on `x` — which is exactly what
+Moreira's form of `CondCompact` permits, and what the earlier, stronger form forbade.
+
+This is the step that makes the finite-rank case of conditional compactness work. -/
+theorem exists_net_of_finite_span (D E : Factor S) {k : ℕ} (u : Fin k → S.X → ℝ)
+    (hu : ∀ i, MemL2 E (u i)) (hu1 : ∀ i, ∀ᵐ x ∂S.m, condNorm D (u i) x ≤ 1)
+    {M ε : ℝ} (hM : 0 ≤ M) (hε : 0 < ε) :
+    ∃ (r : ℕ) (v : Fin r → Fin k → ℝ),
+      ∀ γ : Fin k → S.X → ℝ, (∀ i, StronglyMeasurable[D.σ] (γ i)) →
+        (∀ i, MemLp (fun y => γ i y * u i y) 2 S.m) →
+        (∀ᵐ x ∂S.m, ∀ i, |γ i x| ≤ M) →
+        ∀ᵐ x ∂S.m, ∃ q : Fin r,
+          condNorm D ((∑ i, fun y => γ i y * u i y) - ∑ i, fun y => v q i * u i y) x < ε := by
+  classical
+  set η : ℝ := ε / (k + 1) with hηdef
+  have hη : 0 < η := by rw [hηdef]; positivity
+  -- A finite `η`-net of the sup-ball in `ℝ^k`.
+  obtain ⟨t, htfin, hcover⟩ := Metric.totallyBounded_iff.mp
+    (isCompact_closedBall (0 : Fin k → ℝ) M).totallyBounded η hη
+  set T := htfin.toFinset with hT
+  refine ⟨T.card, fun q => (T.equivFin.symm q : Fin k → ℝ), fun γ hγ hprod hγM => ?_⟩
+  -- The estimate, for every grid point at once.
+  have hcomb : ∀ q : Fin T.card, ∀ᵐ x ∂S.m,
+      condNorm D (∑ i, fun y => (γ i y - (T.equivFin.symm q : Fin k → ℝ) i) * u i y) x
+        ≤ ∑ i, |γ i x - (T.equivFin.symm q : Fin k → ℝ) i| * condNorm D (u i) x := by
+    intro q
+    refine condNorm_comb_le D u _ (fun i => (hγ i).sub stronglyMeasurable_const) ?_
+      (fun i => (hu i).memLp)
+    intro i
+    have h1 : MemLp (fun y => γ i y * u i y) 2 S.m := hprod i
+    have h2 : MemLp (fun y => (T.equivFin.symm q : Fin k → ℝ) i * u i y) 2 S.m :=
+      (hu i).memLp.const_mul _
+    have hsub := h1.sub h2
+    have heq : ((fun y => γ i y * u i y) - fun y => (T.equivFin.symm q : Fin k → ℝ) i * u i y)
+        = fun y => (γ i y - (T.equivFin.symm q : Fin k → ℝ) i) * u i y := by
+      funext y
+      simp only [Pi.sub_apply]
+      ring
+    rwa [heq] at hsub
+  rw [← ae_all_iff] at hcomb
+  filter_upwards [hcomb, hγM, ae_all_iff.mpr hu1] with x hx hxM hx1
+  -- Round `γ(x)` to the grid.
+  have hmem : (fun i => γ i x) ∈ Metric.closedBall (0 : Fin k → ℝ) M := by
+    simp only [Metric.mem_closedBall, dist_zero_right]
+    refine (pi_norm_le_iff_of_nonneg hM).mpr fun i => ?_
+    simpa [Real.norm_eq_abs] using hxM i
+  obtain ⟨w, hwt, hw⟩ : ∃ w ∈ t, (fun i => γ i x) ∈ Metric.ball w η := by
+    simpa only [Set.mem_iUnion, exists_prop] using hcover hmem
+  have hwT : w ∈ T := by rwa [hT, Set.Finite.mem_toFinset]
+  refine ⟨T.equivFin ⟨w, hwT⟩, ?_⟩
+  simp only [Equiv.symm_apply_apply]
+  -- Rewrite the difference as a single combination.
+  have hfun : ((∑ i, fun y => γ i y * u i y) - ∑ i, fun y => w i * u i y)
+      = ∑ i, fun y => (γ i y - w i) * u i y := by
+    funext y
+    simp only [Pi.sub_apply, Finset.sum_apply]
+    rw [← Finset.sum_sub_distrib]
+    exact Finset.sum_congr rfl fun i _ => by ring
+  rw [hfun]
+  -- Each coefficient is within `η`, and each generator has conditional norm at most `1`.
+  have hco : ∀ i, |γ i x - w i| ≤ η := by
+    intro i
+    have := (pi_norm_le_iff_of_nonneg hη.le).mp
+      (le_of_lt (by simpa [dist_eq_norm] using hw)) i
+    simpa [Real.norm_eq_abs] using this
+  have hbound : ∑ i, |γ i x - w i| * condNorm D (u i) x ≤ ∑ _i : Fin k, η := by
+    refine Finset.sum_le_sum fun i _ => ?_
+    calc |γ i x - w i| * condNorm D (u i) x ≤ η * 1 := by
+          refine mul_le_mul (hco i) (hx1 i) (condNorm_nonneg D (u i) x) hη.le
+      _ = η := mul_one η
+  have hfin : ∑ _i : Fin k, η = (k : ℝ) * η := by simp
+  have hqx := hx (T.equivFin ⟨w, hwT⟩)
+  simp only [Equiv.symm_apply_apply] at hqx
+  calc condNorm D (∑ i, fun y => (γ i y - w i) * u i y) x
+      ≤ ∑ i, |γ i x - w i| * condNorm D (u i) x := hqx
+    _ ≤ (k : ℝ) * η := hbound.trans (le_of_eq hfin)
+    _ < ε := by
+        rw [hηdef, mul_div_assoc', div_lt_iff₀ (by positivity)]
+        nlinarith [hε]
 
 /-- **A rank-one kernel.**  `Φ_{g ⊗ h} b = g · ⟨h, b⟩_D`. -/
 theorem condIntegralOp_tensor (D : Factor S) (g h b : S.X → ℝ) (x : S.X) :
