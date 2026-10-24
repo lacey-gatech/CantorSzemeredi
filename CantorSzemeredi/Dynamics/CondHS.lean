@@ -799,6 +799,17 @@ theorem kerComb_sub (H₀ H₁ : S.X × S.X → ℝ) (v w : ℝ × ℝ) :
   simp only [kerComb, Prod.fst_sub, Prod.snd_sub]
   ring
 
+omit [StandardBorelSpace S.X] in
+/-- Replacing both generators of a two-parameter family: the difference is again a member of
+the family, for the *same* parameter.  So approximating `H₀` and `H₁` approximates the whole
+circle at once, with `hsFibre_kerComb_le` supplying the bound. -/
+theorem kerComb_sub_kerComb (H₀ H₁ K₀ K₁ : S.X × S.X → ℝ) (v : ℝ × ℝ) :
+    (fun p => kerComb H₀ H₁ v p - kerComb K₀ K₁ v p)
+      = kerComb (fun p => H₀ p - K₀ p) (fun p => H₁ p - K₁ p) v := by
+  funext p
+  simp only [kerComb]
+  ring
+
 theorem IsFibreReg.const_mul {D : Factor S} {H : S.X × S.X → ℝ} (h : IsFibreReg D H) (c : ℝ) :
     IsFibreReg D (fun p => c * H p) := by
   have hrow : hsRow D (fun p => c * H p) = fun x => |c| * hsRow D H x :=
@@ -1404,6 +1415,20 @@ theorem exists_net_of_finite_span (D E : Factor S) {k : ℕ} (u : Fin k → S.X 
         rw [hηdef, mul_div_assoc', div_lt_iff₀ (by positivity)]
         nlinarith [hε]
 
+/-- The operator is linear in the kernel parameter: a two-parameter kernel family gives a
+two-term combination of the operators, with *constant* coefficients. -/
+theorem condIntegralOp_kerComb (D : Factor S) (H₀ H₁ : S.X × S.X → ℝ) (v : ℝ × ℝ)
+    (b : S.X → ℝ) {x : S.X}
+    (h0 : Integrable (fun y => H₀ (x, y) * b y) (condKernel D x))
+    (h1 : Integrable (fun y => H₁ (x, y) * b y) (condKernel D x)) :
+    condIntegralOp D (kerComb H₀ H₁ v) b x
+      = v.1 * condIntegralOp D H₀ b x + v.2 * condIntegralOp D H₁ b x := by
+  rw [condIntegralOp, condIntegralOp, condIntegralOp, ← integral_const_mul,
+    ← integral_const_mul, ← integral_add (h0.const_mul _) (h1.const_mul _)]
+  refine integral_congr_ae (Filter.Eventually.of_forall fun y => ?_)
+  simp only [kerComb]
+  ring
+
 /-- **A rank-one kernel.**  `Φ_{g ⊗ h} b = g · ⟨h, b⟩_D`. -/
 theorem condIntegralOp_tensor (D : Factor S) (g h b : S.X → ℝ) (x : S.X) :
     condIntegralOp D (fun p => g p.1 * h p.2) b x
@@ -1438,29 +1463,36 @@ theorem condIntegralOp_sum_tensor (D : Factor S) {k : ℕ} (g h : Fin k → S.X 
 
 /-- **Reduction to finite-rank kernels.**
 
-Suppose the orbit of `f` is `Φ_H (b n)` for a family `b n` with conditional norms bounded by
-`C` — this is the shape `condIntegralOp_comp_iterate` produces, with `b n = a ∘ Tⁿ`.  If for
-every `δ` the kernel `H` can be replaced, to within `δ` in the essential fibre
-Hilbert–Schmidt norm, by a kernel `K` whose images `Φ_K (b n)` already admit a finite net of
-module elements, then `f` is conditionally compact.
+Suppose the orbit of `f` is `Φ_{H n}(b n)`, with the conditional norms of `b n` bounded by
+`C`.  Both the kernel *and* the function are allowed to move with `n` — which is what
+`condIntegralOp_comp_iterate` produces, `H n = H ∘ Rⁿ` and `b n = a ∘ Tⁿ`.  If for every `δ`
+each `H n` can be replaced, to within `δ` in the essential fibre Hilbert–Schmidt norm, by a
+kernel `K n` whose images `Φ_{K n}(b n)` already admit a finite net, then `f` is
+conditionally compact.
+
+Nothing in the argument needs the kernel to be fixed: the Hilbert–Schmidt bound is applied
+at each `n` separately.  For an eigenfunction the kernels `H n` run around a circle in the
+real span of `Re H` and `Im H`, and `condIntegralOp_kerComb` turns `Φ_{K n}(b n)` into a
+combination of finitely many fixed generators with scalar coefficients — so the moving
+kernel is absorbed into the coefficients that `exists_net_of_finite_span` rounds.
 
 The Hilbert–Schmidt bound transports the approximation of kernels to the functions, and the
 two errors add.  So conditional compactness along the orbit reduces to the finite-rank
 case. -/
 theorem condCompact_of_kernel_approx (D E : Factor S) {f : S.X → ℝ} {b : ℤ → S.X → ℝ}
-    {H : S.X × S.X → ℝ} {C : ℝ} (hC : 0 ≤ C) (hf : MemLp f 2 S.m)
+    {H : ℤ → S.X × S.X → ℝ} {C : ℝ} (hC : 0 ≤ C) (hf : MemLp f 2 S.m)
     (hbC : ∀ n, ∀ᵐ z ∂S.m, fibreNorm D (b n) z ≤ C)
     (hbmem : ∀ n, ∀ᵐ z ∂S.m, MemLp (b n) 2 (condKernel D z))
-    (hrowH : ∀ᵐ z ∂S.m, MemLp (fun y => H (z, y)) 2 (condKernel D z))
-    (horbit : ∀ n : ℤ, f ∘ S.iter n =ᵐ[S.m] condIntegralOp D H (b n))
-    (happrox : ∀ δ : ℝ, 0 < δ → ∃ K : S.X × S.X → ℝ,
-      (∀ᵐ z ∂S.m, MemLp (fun y => K (z, y)) 2 (condKernel D z)) ∧
-      (∀ n : ℤ, MemLp (condIntegralOp D K (b n)) 2 S.m) ∧
-      (∀ n : ℤ, IsFibreHS D (b n) (fun p => H p - K p)) ∧
-      (∀ᵐ x ∂S.m, hsFibre D (fun p => H p - K p) x ≤ δ) ∧
+    (hrowH : ∀ n, ∀ᵐ z ∂S.m, MemLp (fun y => H n (z, y)) 2 (condKernel D z))
+    (horbit : ∀ n : ℤ, f ∘ S.iter n =ᵐ[S.m] condIntegralOp D (H n) (b n))
+    (happrox : ∀ δ : ℝ, 0 < δ → ∃ K : ℤ → S.X × S.X → ℝ,
+      (∀ n : ℤ, ∀ᵐ z ∂S.m, MemLp (fun y => K n (z, y)) 2 (condKernel D z)) ∧
+      (∀ n : ℤ, MemLp (condIntegralOp D (K n) (b n)) 2 S.m) ∧
+      (∀ n : ℤ, IsFibreHS D (b n) (fun p => H n p - K n p)) ∧
+      (∀ n : ℤ, ∀ᵐ x ∂S.m, hsFibre D (fun p => H n p - K n p) x ≤ δ) ∧
       (∃ (r : ℕ) (g : Fin r → S.X → ℝ), (∀ q, MemL2 E (g q)) ∧
         ∀ n : ℤ, ∀ᵐ x ∂S.m, ∃ q : Fin r,
-          condNorm D (condIntegralOp D K (b n) - g q) x < δ)) :
+          condNorm D (condIntegralOp D (K n) (b n) - g q) x < δ)) :
     CondCompact D E f := by
   intro ε hε
   have hCpos : (0 : ℝ) < 2 * (C + 1) := by linarith
@@ -1468,35 +1500,36 @@ theorem condCompact_of_kernel_approx (D E : Factor S) {f : S.X → ℝ} {b : ℤ
   have hδ : 0 < δ := by rw [hδdef]; positivity
   obtain ⟨K, hrowK, hKL2, hHS, hsmall, r, g, hgmod, hgnet⟩ := happrox δ hδ
   refine ⟨r, g, hgmod, fun n => ?_⟩
-  -- Error one: replacing `H` by `K`.
+  -- Error one: replacing `H n` by `K n`.
   have hmid : ∀ᵐ x ∂S.m,
-      condNorm D (f ∘ S.T^[n] - condIntegralOp D K (b (n : ℤ))) x ≤ C * δ := by
-    have hsub : f ∘ S.T^[n] - condIntegralOp D K (b (n : ℤ))
-        =ᵐ[S.m] condIntegralOp D (fun p => H p - K p) (b (n : ℤ)) := by
-      filter_upwards [horbit (n : ℤ), condIntegralOp_sub_ae D hrowH hrowK (hbmem (n : ℤ))]
+      condNorm D (f ∘ S.T^[n] - condIntegralOp D (K (n : ℤ)) (b (n : ℤ))) x ≤ C * δ := by
+    have hsub : f ∘ S.T^[n] - condIntegralOp D (K (n : ℤ)) (b (n : ℤ))
+        =ᵐ[S.m] condIntegralOp D (fun p => H (n : ℤ) p - K (n : ℤ) p) (b (n : ℤ)) := by
+      filter_upwards [horbit (n : ℤ),
+        condIntegralOp_sub_ae D (hrowH (n : ℤ)) (hrowK (n : ℤ)) (hbmem (n : ℤ))]
         with x h1 h2
-      have h1' : (f ∘ S.T^[n]) x = condIntegralOp D H (b (n : ℤ)) x := h1
+      have h1' : (f ∘ S.T^[n]) x = condIntegralOp D (H (n : ℤ)) (b (n : ℤ)) x := h1
       rw [Pi.sub_apply, h1']
       exact h2.symm
     filter_upwards [condNorm_congr_ae D hsub,
       condNorm_condIntegralOp_le D hC (hHS (n : ℤ)) (hbmem (n : ℤ)) (hbC (n : ℤ)),
-      hsmall] with x h1 h2 h3
+      hsmall (n : ℤ)] with x h1 h2 h3
     rw [h1]
     exact h2.trans (mul_le_mul_of_nonneg_left h3 hC)
-  -- Error two: the net for `K`.  The two add, for every index at once.
+  -- Error two: the net for `K n`.  The two add, for every index at once.
   have hfL2 : MemLp (f ∘ S.T^[n]) 2 S.m :=
     hf.comp_measurePreserving (S.measurePreserving_iter (n : ℤ))
-  have hu : MemLp (f ∘ S.T^[n] - condIntegralOp D K (b (n : ℤ))) 2 S.m :=
+  have hu : MemLp (f ∘ S.T^[n] - condIntegralOp D (K (n : ℤ)) (b (n : ℤ))) 2 S.m :=
     hfL2.sub (hKL2 (n : ℤ))
   have htri : ∀ᵐ x ∂S.m, ∀ q : Fin r,
       condNorm D (f ∘ S.T^[n] - g q) x
-        ≤ condNorm D (f ∘ S.T^[n] - condIntegralOp D K (b (n : ℤ))) x
-          + condNorm D (condIntegralOp D K (b (n : ℤ)) - g q) x := by
+        ≤ condNorm D (f ∘ S.T^[n] - condIntegralOp D (K (n : ℤ)) (b (n : ℤ))) x
+          + condNorm D (condIntegralOp D (K (n : ℤ)) (b (n : ℤ)) - g q) x := by
     refine ae_all_iff.mpr fun q => ?_
-    have hv : MemLp (condIntegralOp D K (b (n : ℤ)) - g q) 2 S.m :=
+    have hv : MemLp (condIntegralOp D (K (n : ℤ)) (b (n : ℤ)) - g q) 2 S.m :=
       (hKL2 (n : ℤ)).sub (hgmod q).memLp
-    have hsum : (f ∘ S.T^[n] - condIntegralOp D K (b (n : ℤ)))
-        + (condIntegralOp D K (b (n : ℤ)) - g q) = f ∘ S.T^[n] - g q := by
+    have hsum : (f ∘ S.T^[n] - condIntegralOp D (K (n : ℤ)) (b (n : ℤ)))
+        + (condIntegralOp D (K (n : ℤ)) (b (n : ℤ)) - g q) = f ∘ S.T^[n] - g q := by
       funext x
       simp only [Pi.add_apply, Pi.sub_apply]
       ring
@@ -1506,8 +1539,8 @@ theorem condCompact_of_kernel_approx (D E : Factor S) {f : S.X → ℝ} {b : ℤ
   obtain ⟨q, hq⟩ := h3
   refine ⟨q, ?_⟩
   calc condNorm D (f ∘ S.T^[n] - g q) x
-      ≤ condNorm D (f ∘ S.T^[n] - condIntegralOp D K (b (n : ℤ))) x
-        + condNorm D (condIntegralOp D K (b (n : ℤ)) - g q) x := h1 q
+      ≤ condNorm D (f ∘ S.T^[n] - condIntegralOp D (K (n : ℤ)) (b (n : ℤ))) x
+        + condNorm D (condIntegralOp D (K (n : ℤ)) (b (n : ℤ)) - g q) x := h1 q
     _ < C * δ + δ := by linarith
     _ ≤ ε := by
         have hid : C * (ε / (2 * (C + 1))) + ε / (2 * (C + 1))
@@ -1518,39 +1551,40 @@ theorem condCompact_of_kernel_approx (D E : Factor S) {f : S.X → ℝ} {b : ℤ
 
 /-! ### What is left, precisely
 
-The two obstructions to `condCompact_of_kernel_approx` are both resolved.
+Both obstructions to `condCompact_of_kernel_approx` are resolved, and the reduction itself
+now allows the kernel to move with `n`, which is the shape the orbit actually has.
 
-*(i)* is `exists_finiteRank_cutoff`: `L²(λ)` density of rectangle indicators, Chebyshev
-through `lintegral_hsFibre_sq`, and a cutoff to a `D`-set, giving a finite-rank kernel within
-`δ` in the fibre Hilbert–Schmidt norm *everywhere*, at the cost of a base set of measure `η`.
+*(i)* `exists_finiteRank_cutoff`: `L²(λ)` density of rectangle indicators, Chebyshev through
+`lintegral_hsFibre_sq`, and a cutoff to a `D`-set — a finite-rank kernel within `δ` in the
+fibre Hilbert–Schmidt norm everywhere, at the cost of a base set of measure `η`.
 
-*(ii)* is `exists_net_of_finite_span`: the `D`-linear combinations of finitely many
-generators of conditional norm at most `1`, with coefficients bounded by `M`, are covered to
-within `ε` by the finitely many combinations with grid coefficients.  Indicators are
-admissible generators by `condNorm_indicator_le_one`, and `condIntegralOp_sum_tensor` puts a
-finite-rank image in exactly that form, with coefficients
-`c_i ⟨1_{B_i}, b⟩_D` — `D`-measurable, and bounded by `|c_i| · C` by conditional
-Cauchy–Schwarz.
+*(ii)* `exists_net_of_finite_span`: `D`-linear combinations of finitely many generators of
+conditional norm at most `1`, with coefficients bounded by `M`, are covered to within `ε` by
+the finitely many combinations with grid coefficients.  Indicators are admissible generators
+(`condNorm_indicator_le_one`), and `condIntegralOp_sum_tensor` puts a finite-rank image in
+exactly that form.
 
-What remains is wiring, in three steps.
+*The moving kernel* is absorbed rather than handled separately.  For an eigenfunction,
+`H ∘ Rⁿ = kerComb H₀ H₁ (uₙ)` with `uₙ` on the unit circle, and `condIntegralOp_kerComb`
+splits `Φ_{K n}(b n)` into `uₙ.1 · Φ_{K₀}(b n) + uₙ.2 · Φ_{K₁}(b n)`.  Expanding each by
+`condIntegralOp_sum_tensor` gives a combination of the *fixed* generators `1_{A_i}` coming
+from `K₀` and `K₁`, with coefficients `uₙ.j · c_i · ⟨1_{B_i}, b n⟩_D` — still `D`-measurable
+and still bounded, since `uₙ` is a scalar pair in the unit ball.  So one application of
+`exists_net_of_finite_span` covers the whole circle orbit; no two-term net is needed.
+`kerComb_sub_kerComb` and `hsFibre_kerComb_le` supply the matching bound on
+`H n - K n`.
 
-1. **Finite-rank images are covered.**  Combine `condIntegralOp_sum_tensor` with
-   `exists_net_of_finite_span`, taking `u i = 1_{A_i}` and
-   `γ i = c i · ⟨1_{B_i}, b n⟩_D`.  This produces the net hypothesis of
-   `condCompact_of_kernel_approx` directly.
+What remains is the final wiring, in two steps.
 
-2. **The orbit has a moving kernel as well as a moving function.**
-   `condIntegralOp_comp_iterate` gives `Φ_{H ∘ Rⁿ}(a ∘ Tⁿ)`, while
-   `condCompact_of_kernel_approx` is stated for a fixed `H`.  For an eigenfunction the kernel
-   moves only inside the two-dimensional real span of `Re H` and `Im H`, so the reduction
-   needs a two-term version — or `exists_kernel_net` applied to the kernel orbit first, the
-   two errors then adding as usual.
+1. **Instantiate.**  Feed `exists_finiteRank_cutoff` and the net above into
+   `condCompact_of_kernel_approx`, with `H n = H ∘ Rⁿ` from `condIntegralOp_comp_iterate`.
+   Every input now exists; this is bookkeeping over the `IsFibreHS` fields and the
+   coefficient bounds (conditional Cauchy–Schwarz against `condNorm_indicator_le_one`).
 
-3. **From the cut kernel back to `H`.**  `exists_finiteRank_cutoff` yields conditional
-   compactness of the operator with kernel cut to `B`, hence of `1_B · Φ_H a`, not of
-   `Φ_H a`.  Since `m(Bᶜ)` is small and `Φ_H a ∈ L²`, absolute continuity of the integral
-   makes `‖Φ_H a - 1_B · Φ_H a‖₂` small, which is what the density in `CompactExtension`
-   absorbs.  This is where the exceptional set is finally discharged. -/
+2. **Discharge the exceptional set.**  The cutoff gives conditional compactness of
+   `1_B · Φ_H a`, not of `Φ_H a`.  Since `m(Bᶜ)` is small and `Φ_H a ∈ L²`, absolute
+   continuity of the integral makes `‖Φ_H a - 1_B · Φ_H a‖₂` small, which is exactly what
+   the density in `CompactExtension` absorbs.  Then the factor `𝔈` can be assembled. -/
 
 end MPS
 
