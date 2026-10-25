@@ -6,6 +6,7 @@ Authors: Alex Burgin, Anastasios Fragkos, Michael T. Lacey, Dario Mena, Maria Ca
 -/
 import CantorSzemeredi.Dynamics.Localize
 import CantorSzemeredi.Dynamics.CompactExtensionCSZ
+import CantorSzemeredi.Dynamics.CSZ
 
 /-!
 # Compact systems are compact extensions of the trivial factor
@@ -126,7 +127,7 @@ theorem compactExtension_of_compactSystem (hcs : S.CompactSystem) :
 /-- **Corollary `cor:wm-compact-are-csz`, the compact part.**  A compact system is CSZ: it is a
 compact extension of the trivial factor, which is CSZ. -/
 theorem CSZ_of_compactSystem (hcs : S.CompactSystem) : (Factor.top S).CSZ :=
-  csz_sets_of_compactExtension (Factor.trivial S) (Factor.top S) (trivial_CSZ S)
+  csz_sets_of_compactExtension (Factor.trivial S) (Factor.top S) (Factor.trivial_CSZ S)
     (compactExtension_of_compactSystem hcs)
 
 end MPS
