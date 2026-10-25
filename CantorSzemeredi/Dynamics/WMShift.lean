@@ -18,7 +18,7 @@ factor.
 
 namespace CantorSzemeredi
 
-open MeasureTheory Finset
+open MeasureTheory Finset Filter Topology
 
 namespace MPS
 
@@ -110,6 +110,88 @@ theorem wmHyp_pow {S : MPS.{0}} {D E : Factor S} (hWM : S.WMHyp D E) {k : ℕ} (
     (S.pow k).WMHyp (D.toPow k) (E.toPow k) := by
   intro g hg hK hmean
   exact CondWeaklyMixing.pow (hWM g hg hK hmean) hk
+
+/-- `T` is measurable for the sub-σ-algebra `E.σ`, by invariance of the factor. -/
+theorem measurable_T_factor {S : MPS.{0}} (E : Factor S) : Measurable[E.σ, E.σ] S.T :=
+  fun s hs => (E.invariant s).2 hs
+
+/-- Composition with an iterate preserves `E`-measurability. -/
+theorem measurable_comp_iter {S : MPS.{0}} (E : Factor S) {f : S.X → ℝ}
+    (hf : Measurable[E.σ] f) (n : ℕ) : Measurable[E.σ] (f ∘ S.T^[n]) := by
+  induction n with
+  | zero => simpa using hf
+  | succ n ih =>
+    rw [Function.iterate_succ, ← Function.comp_assoc]
+    exact ih.comp (measurable_T_factor E)
+
+/-- Clipping to `[-K, K]` keeps a bound by `K ≥ 0`. -/
+theorem abs_clip_le {K : ℝ} (hK0 : 0 ≤ K) (y : ℝ) : |max (-K) (min K y)| ≤ K :=
+  abs_le.2 ⟨le_max_left _ _, max_le (by linarith) (min_le_left _ _)⟩
+
+/-- Clipping does not change a function that is a.e. bounded by `K`. -/
+theorem clip_ae_eq {α : Type*} [MeasurableSpace α] {μ : Measure α} {K : ℝ} {u : α → ℝ}
+    (h : ∀ᵐ x ∂μ, |u x| ≤ K) :
+    (fun x => max (-K) (min K (u x))) =ᵐ[μ] u := by
+  filter_upwards [h] with x hx
+  rw [min_eq_right (abs_le.1 hx).2, max_eq_right (abs_le.1 hx).1]
+
+/-- **Step 1, the induction hypothesis on the re-indexed tuple.**  The tuple `i ↦ F_{i+1} ∘
+T^{(s_{i+1} - s_0) k_c}` on the system `S.pow (b^ℓ)` with exponents `s_{i+1} - s_0` satisfies
+the difference form at `t`, against its clipped conditional expectations.  This is the
+hypothesis `(IH-a)` of `lem:wm-main`, obtained from `DiffForm C t` (the induction hypothesis
+`P(t)` for the power system). -/
+theorem reindexed_diff (C : CantorData) (t : ℕ) (hIH : DiffForm C t) (S : MPS.{0})
+    (s : ℕ → ℕ) (hs : GoodExp s (t + 1)) (D E : Factor S) (hDE : D.σ ≤ E.σ)
+    (hWM : S.WMHyp D E) (m : ℕ) (hm : 1 ≤ m) (c : ℕ) (F : ℕ → S.X → ℝ) (K : ℝ) (hK0 : 0 ≤ K)
+    (hFm : ∀ j, j < t + 1 → Measurable[E.σ] (F j))
+    (hFb : ∀ j, j < t + 1 → ∀ x, |F j x| ≤ K) :
+    Tendsto (fun p : ℕ × ℕ => eLpNorm
+        (avgProd (S := S.pow m) C (fun i => s (i + 1) - s 0) t
+            (fun i x => F (i + 1) (S.T^[(s (i + 1) - s 0) * C.enum c] x)) p
+          - avgProd (S := S.pow m) C (fun i => s (i + 1) - s 0) t
+            (fun i x => max (-K) (min K (S.m[fun y => F (i + 1) (S.T^[(s (i + 1) - s 0)
+              * C.enum c] y) | D.σ] x))) p) 2 S.m)
+      uniformFilter (𝓝 0) := by
+  have hs' : GoodExp (fun i => s (i + 1) - s 0) t := by
+    refine ⟨fun i hi => ?_, fun i j hij hj => ?_⟩
+    · have := hs.2 0 (i + 1) (by omega) (by omega)
+      show 1 ≤ s (i + 1) - s 0
+      omega
+    · have h1 := hs.2 0 (i + 1) (by omega) (by omega)
+      have h2 := hs.2 (i + 1) (j + 1) (by omega) (by omega)
+      show s (i + 1) - s 0 < s (j + 1) - s 0
+      omega
+  have hH : ∀ i, i < t → Measurable[E.σ] (fun x => F (i + 1) (S.T^[(s (i + 1) - s 0)
+      * C.enum c] x)) := fun i hi => measurable_comp_iter E (hFm (i + 1) (by omega)) _
+  have hHb : ∀ i, i < t → ∀ x, |F (i + 1) (S.T^[(s (i + 1) - s 0) * C.enum c] x)| ≤ K :=
+    fun i hi x => hFb (i + 1) (by omega) _
+  have hint : ∀ i, i < t → Integrable (fun x => F (i + 1) (S.T^[(s (i + 1) - s 0)
+      * C.enum c] x)) S.m := fun i hi =>
+    integrable_of_bdd_const ((hH i hi).mono E.le le_rfl) (fun x => hHb i hi x)
+  have hmemL : ∀ i, i < t → MemLp (fun x => F (i + 1) (S.T^[(s (i + 1) - s 0)
+      * C.enum c] x)) 2 S.m := fun i hi =>
+    MemLp.of_bound ((hH i hi).mono E.le le_rfl).aestronglyMeasurable K
+      (Filter.Eventually.of_forall fun x => by rw [Real.norm_eq_abs]; exact hHb i hi x)
+  have hcond : ∀ i, i < t → ∀ᵐ x ∂S.m,
+      |S.m[fun y => F (i + 1) (S.T^[(s (i + 1) - s 0) * C.enum c] y) | D.σ] x| ≤ K :=
+    fun i hi => (condExp_facts D (hint i hi) (hHb i hi) (hmemL i hi) 0).1
+  have hgm : ∀ i, i < t → Measurable[D.σ] (fun x => max (-K) (min K
+      (S.m[fun y => F (i + 1) (S.T^[(s (i + 1) - s 0) * C.enum c] y) | D.σ] x))) :=
+    fun i _ => Measurable.max measurable_const
+      (Measurable.min measurable_const stronglyMeasurable_condExp.measurable)
+  have hEg : ∀ i, i < t → S.m[fun y => F (i + 1) (S.T^[(s (i + 1) - s 0) * C.enum c] y) | D.σ]
+      =ᵐ[S.m] fun x => max (-K) (min K
+        (S.m[fun y => F (i + 1) (S.T^[(s (i + 1) - s 0) * C.enum c] y) | D.σ] x)) :=
+    fun i hi => (clip_ae_eq (hcond i hi)).symm
+  have hB : ∃ B : ℝ, ∀ i, i < t → ∀ x, |F (i + 1) (S.T^[(s (i + 1) - s 0) * C.enum c] x)| ≤ B
+      ∧ |max (-K) (min K (S.m[fun y => F (i + 1) (S.T^[(s (i + 1) - s 0) * C.enum c] y)
+          | D.σ] x))| ≤ B :=
+    ⟨K, fun i hi x => ⟨hHb i hi x, abs_clip_le hK0 _⟩⟩
+  exact hIH (S.pow m) (D.toPow m) (E.toPow m) hDE (wmHyp_pow hWM hm) (fun i => s (i + 1) - s 0)
+    hs' (fun i x => F (i + 1) (S.T^[(s (i + 1) - s 0) * C.enum c] x))
+    (fun i x => max (-K) (min K (S.m[fun y => F (i + 1) (S.T^[(s (i + 1) - s 0) * C.enum c] y)
+      | D.σ] x)))
+    (fun i hi => hH i hi) (fun i hi => hgm i hi) hB hEg
 
 end MPS
 
