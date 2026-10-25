@@ -256,7 +256,9 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
 \begin{lemma}[Properties of $\lambda$]
   \label{lem:joining}
   \lean{CantorSzemeredi.MPS.joining_invariant, CantorSzemeredi.MPS.joining_prod_apply,
-    CantorSzemeredi.MPS.condKernel_comp, CantorSzemeredi.MPS.prodMap}
+    CantorSzemeredi.MPS.condKernel_comp, CantorSzemeredi.MPS.prodMap,
+    CantorSzemeredi.MPS.integral_joining}
+  \leanok
   \uses{def:joining, lem:condexp-commutes}
   For $a, a' \in L^\infty(X)$,
   \begin{equation}
@@ -288,11 +290,12 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
   for standard Borel spaces --- exactly the standing assumption that $X$ is compact metric with
   its Borel $\sigma$-algebra.
 
-  What is \emph{not} yet formalized is \eqref{eq:joining} for general bounded $a,a'$, as opposed
-  to indicators: that needs the Bochner integral against a measure composed with a kernel, which
-  Mathlib does not currently provide, and so requires the usual approximation by simple
-  functions.  It is used only in Lemma~\ref{lem:atomless}, which is in any case blocked on the
-  spectral measure (Definition~\ref{def:spectral-measure}).
+  The general bounded form \eqref{eq:joining} is \texttt{integral\_joining}.  Mathlib has no
+  Bochner integral against a measure composed with a kernel, so the proof routes through
+  \texttt{ProbabilityTheory.Kernel.integral\_comp} (via \texttt{integral\_kernel\_comp\_measure}),
+  which gives $\int F\,d(\kappa\circ\mu) = \int(\int F\,d\kappa_x)\,d\mu(x)$ for integrable $F$;
+  the inner integrals are the conditional expectations by the disintegration.  No approximation by
+  simple functions is needed.
 \end{remark}
 
 \begin{lemma}[Conditional weak mixing gives atomless spectral measures]
