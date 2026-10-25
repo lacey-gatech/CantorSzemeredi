@@ -77,10 +77,8 @@ specific point and should be stated once.
 
 \begin{lemma}[Weakly mixing extensions: main estimate]
   \label{lem:wm-main}
-  % Formal status: the case $t = 1$ is formalized (\texttt{wm\_main\_one}, with the mean-zero
-  % case \texttt{tendsto\_avg\_of\_condWeaklyMixing}).  The induction on $t$ is not yet
-  % formalized, so this lemma is not yet marked as formalized.
-  \lean{CantorSzemeredi.wm_extension_tendsto}
+  \lean{CantorSzemeredi.MPS.wm_extension_tendsto}
+  \leanok
   \uses{def:cwm, lem:atomless, lem:uniform-spectral, lem:vdc, lem:differences, lem:powers, lem:condexp-facts, lem:telescoping}
   Let $\Dbb \subset \Ebb$ satisfy \eqref{eq:WM}, let $0 < s_1 < \cdots < s_t$ be integers, and
   let $f_1,\dots,f_t \in L^{\infty}(\Ebb)$.  Then

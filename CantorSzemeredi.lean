@@ -41,5 +41,6 @@ import CantorSzemeredi.Dynamics.WMSpectral
 import CantorSzemeredi.Dynamics.WMAverageShift
 import CantorSzemeredi.Dynamics.WMVdC
 import CantorSzemeredi.Dynamics.WMStar
+import CantorSzemeredi.Dynamics.WMMainFinal
 import CantorSzemeredi.Dynamics.WMCorr
 import CantorSzemeredi.Dynamics.Fibre
