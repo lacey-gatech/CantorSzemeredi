@@ -105,11 +105,13 @@ def WeaklyMixing (S : MPS) : Prop :=
 /-- **Definition `def:compact-system`.**  `f` is *compact* if its `ℤ`-orbit is totally bounded
 in `L²`, which in the complete space `L²` is precompactness of the orbit closure.
 
-Stated as total boundedness rather than `IsCompact (closure ...)` to avoid coercing the orbit
-into `Lp`; this is also the form in which compactness is used.  Note that compact *systems*
-play no role in the proof of the main theorem — only compact *extensions* do. -/
+Stated as total boundedness by elements of `L²` (so the approximants are measurable, as
+elements of `L²` are) rather than `IsCompact (closure ...)` to avoid coercing the orbit into
+`Lp`.  Note that compact *systems* play no role in the proof of the main theorem — only compact
+*extensions* do. -/
 def CompactFunction (S : MPS) (f : S.X → ℝ) : Prop :=
   ∀ ε : ℝ, 0 < ε → ∃ (r : ℕ) (g : Fin r → S.X → ℝ),
+    (∀ q, AEStronglyMeasurable (g q) S.m ∧ MemLp (g q) 2 S.m) ∧
     ∀ n : ℤ, ∃ q : Fin r, eLpNorm (f ∘ S.iter n - g q) 2 S.m ≤ ENNReal.ofReal ε
 
 /-- The system is *compact* if every square integrable `f` is. -/
