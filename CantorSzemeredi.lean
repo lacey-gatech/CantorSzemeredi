@@ -32,4 +32,5 @@ import CantorSzemeredi.Dynamics.WMMain
 import CantorSzemeredi.Dynamics.WMInduction
 import CantorSzemeredi.Dynamics.WMShift
 import CantorSzemeredi.Dynamics.WMClass
+import CantorSzemeredi.Dynamics.WMTransfer
 import CantorSzemeredi.Dynamics.Fibre
