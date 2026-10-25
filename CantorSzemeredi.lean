@@ -27,4 +27,5 @@ import CantorSzemeredi.Dynamics.UniformErgodic
 import CantorSzemeredi.Dynamics.WienerAtoms
 import CantorSzemeredi.Dynamics.CompactSystem
 import CantorSzemeredi.Dynamics.CondExpFacts
+import CantorSzemeredi.Dynamics.Telescoping
 import CantorSzemeredi.Dynamics.Fibre
