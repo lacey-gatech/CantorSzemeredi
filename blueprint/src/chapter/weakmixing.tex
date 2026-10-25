@@ -30,7 +30,10 @@ specific point and should be stated once.
 
 \begin{lemma}[Conditional expectation: bounds, pairing, equivariance]
   \label{lem:condexp-facts}
-  \lean{CantorSzemeredi.MPS.abs_condExp_le, CantorSzemeredi.MPS.condExp_comp}
+  \lean{CantorSzemeredi.MPS.condExp_facts, CantorSzemeredi.MPS.integral_mul_eq_condExp,
+    CantorSzemeredi.MPS.abs_condExp_le, CantorSzemeredi.MPS.condExp_comp_iterate,
+    CantorSzemeredi.MPS.condNorm_comp_iterate}
+  \leanok
   \uses{def:factor, def:hilbert-module, lem:condexp-commutes}
   Let $\Dbb$ be a factor and $u, v \in L^{\infty}(\Abb)$.
   \begin{enumerate}

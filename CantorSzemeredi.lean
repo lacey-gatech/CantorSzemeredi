@@ -26,4 +26,5 @@ import CantorSzemeredi.Dynamics.CompactRoots
 import CantorSzemeredi.Dynamics.UniformErgodic
 import CantorSzemeredi.Dynamics.WienerAtoms
 import CantorSzemeredi.Dynamics.CompactSystem
+import CantorSzemeredi.Dynamics.CondExpFacts
 import CantorSzemeredi.Dynamics.Fibre
