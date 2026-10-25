@@ -209,22 +209,27 @@ theorem avg_subsample_le {φ : ℕ → ℝ} (hφ : ∀ n, 0 ≤ φ n) {k : ℕ} 
   rw [show (k : ℝ) * ((k : ℝ) * (N : ℝ))⁻¹ = (N : ℝ)⁻¹ by field_simp]
   exact mul_le_mul_of_nonneg_left hsub (by positivity)
 
-/-- **Lemma `lem:powers`(2).**  Conditional weak mixing for `T` gives conditional weak mixing
-for `T^k`. -/
-theorem CondWeaklyMixing.pow {D : Factor S} {f : S.X → ℝ} (h : CondWeaklyMixing D f)
-    {k : ℕ} (hk : 1 ≤ k) : CondWeaklyMixing (D.toPow k) (S := S.pow k) f := by
+/-- **Lemma `lem:powers`(2), for a pair.**  If the Cesàro means of `|⟨T^n f, g⟩_{E|D}|` tend to
+`0` in `L²(D)`, then the same holds for `T^k`. -/
+theorem tendsto_pow_pair {D : Factor S} {f g : S.X → ℝ}
+    (h : Filter.Tendsto (fun N : ℕ => eLpNorm
+        (fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, |condInner D (f ∘ S.T^[n]) g x|) 2 S.m)
+      atTop (𝓝 0))
+    {k : ℕ} (hk : 1 ≤ k) : Filter.Tendsto (fun N : ℕ => eLpNorm
+        (fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, |condInner D (f ∘ (S.T^[k])^[n]) g x|) 2 S.m)
+      atTop (𝓝 0) := by
   -- `(S.pow k).m`, `(S.pow k).T` and `(D.toPow k).σ` are definitionally `S.m`, `S.T^[k]` and
   -- `D.σ`; retype the goal once, so no `pow` friction remains.
   change Filter.Tendsto (fun N : ℕ => eLpNorm (fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N,
-      |condInner D (f ∘ (S.T^[k])^[n]) f x|) 2 S.m) atTop (𝓝 0)
-  set φ : ℕ → S.X → ℝ := fun n x => |condInner D (f ∘ S.T^[n]) f x| with hφdef
+      |condInner D (f ∘ (S.T^[k])^[n]) g x|) 2 S.m) atTop (𝓝 0)
+  set φ : ℕ → S.X → ℝ := fun n x => |condInner D (f ∘ S.T^[n]) g x| with hφdef
   have hφ : ∀ n x, 0 ≤ φ n x := fun n x => abs_nonneg _
   -- The `T^k` averages, rewritten in terms of the `T` orbit.
   have hiter : ∀ n : ℕ, (S.T^[k])^[n] = S.T^[k * n] := fun n =>
     (Function.iterate_mul S.T k n).symm
   have hrewrite : ∀ N : ℕ,
       (fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N,
-          |condInner D (f ∘ (S.T^[k])^[n]) f x|)
+          |condInner D (f ∘ (S.T^[k])^[n]) g x|)
         = fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N, φ (k * n) x := by
     intro N
     funext x
@@ -248,9 +253,9 @@ theorem CondWeaklyMixing.pow {D : Factor S} {f : S.X → ℝ} (h : CondWeaklyMix
   -- Measurability of the averaged quantities, needed for `eLpNorm_mono_ae`.
   have hmeasφ : ∀ n : ℕ, AEStronglyMeasurable (φ n) S.m := by
     intro n
-    have hsm : StronglyMeasurable (condInner D (f ∘ S.T^[n]) f) :=
+    have hsm : StronglyMeasurable (condInner D (f ∘ S.T^[n]) g) :=
       stronglyMeasurable_condExp.mono D.le
-    have habs : StronglyMeasurable fun x => |condInner D (f ∘ S.T^[n]) f x| := by
+    have habs : StronglyMeasurable fun x => |condInner D (f ∘ S.T^[n]) g x| := by
       simpa [Real.norm_eq_abs] using hsm.norm
     exact habs.aestronglyMeasurable
   have hmeasavg : ∀ N : ℕ,
@@ -261,7 +266,7 @@ theorem CondWeaklyMixing.pow {D : Factor S} {f : S.X → ℝ} (h : CondWeaklyMix
   -- Take `L²` norms.
   have hsq : ∀ N : ℕ,
       eLpNorm (fun x => (N : ℝ)⁻¹ * ∑ n ∈ Finset.range N,
-          |condInner D (f ∘ (S.T^[k])^[n]) f x|) 2 S.m
+          |condInner D (f ∘ (S.T^[k])^[n]) g x|) 2 S.m
         ≤ (‖(k : ℝ)‖ₑ) * eLpNorm (G (k * N)) 2 S.m := by
     intro N
     rw [hrewrite N]
@@ -279,6 +284,13 @@ theorem CondWeaklyMixing.pow {D : Factor S} {f : S.X → ℝ} (h : CondWeaklyMix
     simpa using hmul
   refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hbound
     (Eventually.of_forall fun N => by simp) (Eventually.of_forall hsq)
+
+
+/-- **Lemma `lem:powers`(2).**  Conditional weak mixing for `T` gives conditional weak mixing
+for `T^k`. -/
+theorem CondWeaklyMixing.pow {D : Factor S} {f : S.X → ℝ} (h : CondWeaklyMixing D f)
+    {k : ℕ} (hk : 1 ≤ k) : CondWeaklyMixing (D.toPow k) (S := S.pow k) f :=
+  tendsto_pow_pair h hk
 
 end MPS
 
