@@ -87,13 +87,15 @@ def CondUnfortunate (D : Factor S) (f : S.X → ℝ) (t : ℕ) (ε : ℝ) (F : F
   ∀ a ∈ F, ∀ a' ∈ F, a ≠ a' → ∃ s ≤ t, ε ≤ condNorm D (f ∘ S.T^[s * a] - f ∘ S.T^[s * a']) x
 
 /-- **Lemma `lem:maximal-unfortunate`.**  Almost every point is maximally unfortunate for some
-finite set of indices of size below `M = r^(t+1) + 1`: `x ∈ Q(F)`. -/
+finite set of indices of size below `M = r^(t+1) + 1`, the maximum being taken over finite sets
+of indices in a given set `K ∋ 0` (the Cantor set in the application): `x ∈ Q(F)`. -/
 theorem exists_maximal_unfortunate (D : Factor S) {f : S.X → ℝ} (hf : MemLp f 2 S.m)
     {t r : ℕ} {g : Fin r → S.X → ℝ} (hg : ∀ q, MemLp (g q) 2 S.m) {ε : ℝ}
-    (hnet : ∀ n : ℕ, ∀ᵐ x ∂S.m, ∃ q : Fin r, condNorm D (f ∘ S.T^[n] - g q) x < ε / 2) :
-    ∀ᵐ x ∂S.m, ∃ F : Finset ℕ, 1 ≤ F.card ∧ F.card < r ^ (t + 1) + 1 ∧
+    (hnet : ∀ n : ℕ, ∀ᵐ x ∂S.m, ∃ q : Fin r, condNorm D (f ∘ S.T^[n] - g q) x < ε / 2)
+    (K : Set ℕ) (hK0 : 0 ∈ K) :
+    ∀ᵐ x ∂S.m, ∃ F : Finset ℕ, (↑F : Set ℕ) ⊆ K ∧ 1 ≤ F.card ∧ F.card < r ^ (t + 1) + 1 ∧
       CondUnfortunate D f t ε F x ∧
-      ∀ G : Finset ℕ, F.card < G.card → ¬ CondUnfortunate D f t ε G x := by
+      ∀ G : Finset ℕ, (↑G : Set ℕ) ⊆ K → F.card < G.card → ¬ CondUnfortunate D f t ε G x := by
   -- Almost surely no set of size at least `M` is unfortunate.
   have hpig : ∀ᵐ x ∂S.m, ∀ G : Finset ℕ, r ^ (t + 1) + 1 ≤ G.card →
       ∃ a ∈ G, ∃ a' ∈ G, a ≠ a' ∧ ∀ s ≤ t,
@@ -110,21 +112,22 @@ theorem exists_maximal_unfortunate (D : Factor S) {f : S.X → ℝ} (hf : MemLp 
     obtain ⟨a, ha, a', ha', hne, hgood⟩ := hx G (by omega)
     obtain ⟨s, hs, hle⟩ := hG a ha a' ha' hne
     exact absurd (hgood s hs) (not_lt.2 hle)
-  -- The set of sizes of unfortunate sets is non-empty and bounded; its maximum is attained.
-  set U : Set ℕ := {k | ∃ G : Finset ℕ, G.card = k ∧ CondUnfortunate D f t ε G x} with hU
-  have h1 : 1 ∈ U := ⟨{0}, by simp, fun a ha a' ha' hne => by
+  -- The sizes of unfortunate sets in `K` form a non-empty bounded set; its maximum is attained.
+  set U : Set ℕ := {k | ∃ G : Finset ℕ, (↑G : Set ℕ) ⊆ K ∧ G.card = k ∧
+    CondUnfortunate D f t ε G x} with hU
+  have h1 : 1 ∈ U := ⟨{0}, by simpa using hK0, by simp, fun a ha a' ha' hne => by
     simp only [Finset.mem_singleton] at ha ha'
     exact absurd (ha.trans ha'.symm) hne⟩
-  have hUbdd : BddAbove U := ⟨r ^ (t + 1), fun k ⟨G, hk, hG⟩ => by
+  have hUbdd : BddAbove U := ⟨r ^ (t + 1), fun k ⟨G, _, hk, hG⟩ => by
     rw [← hk]; exact Nat.lt_succ_iff.1 (hbound G hG)⟩
-  obtain ⟨F, hFcard, hF⟩ := Nat.sSup_mem ⟨1, h1⟩ hUbdd
-  refine ⟨F, ?_, ?_, hF, ?_⟩
+  obtain ⟨F, hFK, hFcard, hF⟩ := Nat.sSup_mem ⟨1, h1⟩ hUbdd
+  refine ⟨F, hFK, ?_, ?_, hF, ?_⟩
   · have := le_csSup hUbdd h1
     omega
   · have := hbound F hF
     omega
-  · intro G hG hcon
-    have hmem : G.card ∈ U := ⟨G, rfl, hcon⟩
+  · intro G hGK hG hcon
+    have hmem : G.card ∈ U := ⟨G, hGK, rfl, hcon⟩
     have := le_csSup hUbdd hmem
     omega
 
@@ -137,8 +140,10 @@ theorem exists_good_translate (D : Factor S) {f : S.X → ℝ} (hf : MemLp f 2 S
     (hqt : ∀ a a', q a a' ≤ t)
     (hE : ∀ y ∈ E, ∀ a ∈ F, ∀ a' ∈ F, a ≠ a' →
       ε ≤ condNorm D (f ∘ S.T^[q a a' * a] - f ∘ S.T^[q a a' * a']) y)
-    (hEQ : ∀ y ∈ E, ∀ G : Finset ℕ, F.card < G.card → ¬ CondUnfortunate D f t ε G y)
-    {n : ℕ} (hFn : ∀ a ∈ F, a < n) :
+    {n : ℕ} (K : Set ℕ) (hK0 : 0 ∈ K) (hK : ∀ a ∈ F, n + a ∈ K)
+    (hEQ : ∀ y ∈ E, ∀ G : Finset ℕ, (↑G : Set ℕ) ⊆ K → F.card < G.card →
+      ¬ CondUnfortunate D f t ε G y)
+    (hFn : ∀ a ∈ F, a < n) :
     ∀ᵐ x ∂S.m, x ∈ E → (∀ s ≤ t, S.T^[s * n] x ∈ E) →
       ∃ a ∈ F, ∀ s ≤ t, condNorm D (f ∘ S.T^[s * (n + a)] - f) x < ε := by
   -- Equivariance of the conditional norm under the shift `T^{s0 n}`, for all indices at once.
@@ -169,7 +174,14 @@ theorem exists_good_translate (D : Factor S) {f : S.X → ℝ} (hf : MemLp f 2 S
   have hcardG : (insert 0 (F.image (fun b => n + b))).card = F.card + 1 := by
     rw [Finset.card_insert_of_notMem hzero, Finset.card_image_of_injective _
       (add_right_injective n)]
-  have hG := hEQ x hxE (insert 0 (F.image (fun b => n + b))) (by omega)
+  have hGK : (↑(insert 0 (F.image (fun b => n + b))) : Set ℕ) ⊆ K := by
+    intro y hy
+    simp only [Finset.coe_insert, Finset.coe_image, Set.mem_insert_iff, Set.mem_image,
+      Finset.mem_coe] at hy
+    rcases hy with rfl | ⟨b, hb, rfl⟩
+    · exact hK0
+    · exact hK b hb
+  have hG := hEQ x hxE (insert 0 (F.image (fun b => n + b))) hGK (by omega)
   unfold CondUnfortunate at hG
   push Not at hG
   obtain ⟨a, ha, a', ha', hne, hlt⟩ := hG
