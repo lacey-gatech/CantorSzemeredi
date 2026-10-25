@@ -29,4 +29,5 @@ import CantorSzemeredi.Dynamics.CompactSystem
 import CantorSzemeredi.Dynamics.CondExpFacts
 import CantorSzemeredi.Dynamics.Telescoping
 import CantorSzemeredi.Dynamics.WMMain
+import CantorSzemeredi.Dynamics.WMInduction
 import CantorSzemeredi.Dynamics.Fibre
