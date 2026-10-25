@@ -43,5 +43,6 @@ import CantorSzemeredi.Dynamics.WMVdC
 import CantorSzemeredi.Dynamics.WMStar
 import CantorSzemeredi.Dynamics.WMMainFinal
 import CantorSzemeredi.Dynamics.WMSetsToFunctions
+import CantorSzemeredi.Dynamics.WMPartW
 import CantorSzemeredi.Dynamics.WMCorr
 import CantorSzemeredi.Dynamics.Fibre
