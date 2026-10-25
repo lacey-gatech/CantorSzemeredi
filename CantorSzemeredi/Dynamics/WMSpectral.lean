@@ -129,6 +129,14 @@ theorem sum_psi_le_spectral (C : CantorData) {s : ℕ} (hs : 1 ≤ s) (σ : Meas
           (hPhiInt.const_mul _) (Filter.Eventually.of_forall hpt)
     _ = (H : ℝ) * ((N - M : ℕ) : ℝ) * ∫ α, C.PhiCircle H (s • α) ∂σ := integral_const_mul _ _
 
+/-- As `exists_H_small`, with `H` at least any prescribed bound `K`. -/
+theorem exists_H_small_ge (C : CantorData) {s : ℕ} (hs : 1 ≤ s) (σ : Measure Torus)
+    [IsFiniteMeasure σ] [NullSingletonClass σ] (ε : ℝ) (hε : 0 < ε) (K : ℕ) :
+    ∃ H : ℕ, K ≤ H ∧ 0 < H ∧ ∫ α, C.PhiCircle H (s • α) ∂σ < ε := by
+  have h := C.tendsto_integral_Phi_zero hs σ
+  obtain ⟨L0, hL0⟩ := Filter.eventually_atTop.1 ((tendsto_order.1 h).2 ε hε)
+  exact ⟨L0 + K + 1, by omega, by omega, hL0 (L0 + K + 1) (by omega)⟩
+
 namespace MPS
 
 /-- The Fourier coefficients of the spectral measure of the relative product are the squared

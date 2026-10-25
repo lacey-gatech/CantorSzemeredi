@@ -127,6 +127,7 @@ theorem ae_diff_block {S : MPS.{0}} (C : CantorData) (s : ℕ → ℕ) (t ℓ c 
 for the induction, the averages of `W_n = ∏ F_{i+1}∘T^{e_i k_n} - ∏ Exp(F_{i+1}|D)∘T^{e_i k_n}`
 over the residue class `n ≡ c mod δ^ℓ` tend to zero along the uniform filter. -/
 theorem tendsto_wClass (C : CantorData) (t : ℕ) (hIH : DiffForm C t) (S : MPS.{0})
+    [StandardBorelSpace S.X]
     (s : ℕ → ℕ) (hs : GoodExp s (t + 1)) (D E : Factor S) (hDE : D.σ ≤ E.σ)
     (hWM : S.WMHyp D E) (ℓ c : ℕ) (hc : c < C.delta ^ ℓ) (F : ℕ → S.X → ℝ) (K : ℝ)
     (hK0 : 0 ≤ K) (hFm : ∀ j, j < t + 1 → Measurable[E.σ] (F j))

@@ -105,7 +105,7 @@ def WMHyp (S : MPS.{0}) (D E : Factor S) : Prop :=
 /-- The star form of the estimate: one factor of conditional expectation zero, all factors
 bounded by one. -/
 def StarForm (C : CantorData) (t : ℕ) : Prop :=
-  ∀ (S : MPS.{0}) (D E : Factor S), D.σ ≤ E.σ → WMHyp S D E → ∀ s : ℕ → ℕ, GoodExp s t →
+  ∀ (S : MPS.{0}) [StandardBorelSpace S.X] (D E : Factor S), D.σ ≤ E.σ → WMHyp S D E → ∀ s : ℕ → ℕ, GoodExp s t →
     ∀ f : ℕ → S.X → ℝ, (∀ j, j < t → Measurable[E.σ] (f j)) →
       (∀ j, j < t → ∀ x, |f j x| ≤ 1) → ∀ j₀, j₀ < t → (S.m[f j₀ | D.σ]) =ᵐ[S.m] 0 →
       Tendsto (fun p : ℕ × ℕ => eLpNorm (avgProd C s t f p) 2 S.m) uniformFilter (𝓝 0)
@@ -113,7 +113,7 @@ def StarForm (C : CantorData) (t : ℕ) : Prop :=
 /-- The difference form of the estimate: a product minus the product of the conditional
 expectations. -/
 def DiffForm (C : CantorData) (t : ℕ) : Prop :=
-  ∀ (S : MPS.{0}) (D E : Factor S), D.σ ≤ E.σ → WMHyp S D E → ∀ s : ℕ → ℕ, GoodExp s t →
+  ∀ (S : MPS.{0}) [StandardBorelSpace S.X] (D E : Factor S), D.σ ≤ E.σ → WMHyp S D E → ∀ s : ℕ → ℕ, GoodExp s t →
     ∀ f g : ℕ → S.X → ℝ, (∀ j, j < t → Measurable[E.σ] (f j)) →
       (∀ j, j < t → Measurable[D.σ] (g j)) → (∃ B : ℝ, ∀ j, j < t → ∀ x,
         abs (f j x) ≤ B ∧ abs (g j x) ≤ B) → (∀ j, j < t → (S.m[f j | D.σ]) =ᵐ[S.m] g j) →
@@ -141,7 +141,7 @@ variable {S : MPS}
 telescoping the difference of products into one term per factor, and rescaling each term so
 that its factors lie in `[-1, 1]`. -/
 theorem diff_of_star (C : CantorData) (t : ℕ) (hstar : StarForm C t) : DiffForm C t := by
-  intro S D E hDE hWM s hs f g hfE hgD hB hEg
+  intro S _ D E hDE hWM s hs f g hfE hgD hB hEg
   obtain ⟨B, hB⟩ := hB
   obtain ⟨B', hB'⟩ : ∃ B' : ℝ, B' = max B 0 := ⟨_, rfl⟩
   obtain ⟨Dc, hDc⟩ : ∃ Dc : ℝ, Dc = 2 * B' + 1 := ⟨_, rfl⟩

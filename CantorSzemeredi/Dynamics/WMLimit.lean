@@ -62,6 +62,7 @@ theorem measurable_classSum {S : MPS.{0}} (C : CantorData) (s : ℕ → ℕ) (t 
 /-- **The `W`-term tends to zero in `L¹`.**  The `L¹` norms of the class averages of the
 blueprint's `W_n` tend to zero along the uniform filter. -/
 theorem tendsto_integral_abs_wClass (C : CantorData) (t : ℕ) (hIH : DiffForm C t) (S : MPS.{0})
+    [StandardBorelSpace S.X]
     (s : ℕ → ℕ) (hs : GoodExp s (t + 1)) (D E : Factor S) (hDE : D.σ ≤ E.σ)
     (hWM : S.WMHyp D E) (ℓ c : ℕ) (hc : c < C.delta ^ ℓ) (F : ℕ → S.X → ℝ) (K : ℝ)
     (hK0 : 0 ≤ K) (hFm : ∀ j, j < t + 1 → Measurable[E.σ] (F j))

@@ -141,6 +141,7 @@ the difference form at `t`, against its clipped conditional expectations.  This 
 hypothesis `(IH-a)` of `lem:wm-main`, obtained from `DiffForm C t` (the induction hypothesis
 `P(t)` for the power system). -/
 theorem reindexed_diff (C : CantorData) (t : ℕ) (hIH : DiffForm C t) (S : MPS.{0})
+    [StandardBorelSpace S.X]
     (s : ℕ → ℕ) (hs : GoodExp s (t + 1)) (D E : Factor S) (hDE : D.σ ≤ E.σ)
     (hWM : S.WMHyp D E) (m : ℕ) (hm : 1 ≤ m) (c : ℕ) (F : ℕ → S.X → ℝ) (K : ℝ) (hK0 : 0 ≤ K)
     (hFm : ∀ j, j < t + 1 → Measurable[E.σ] (F j))
@@ -187,7 +188,8 @@ theorem reindexed_diff (C : CantorData) (t : ℕ) (hIH : DiffForm C t) (S : MPS.
       ∧ |max (-K) (min K (S.m[fun y => F (i + 1) (S.T^[(s (i + 1) - s 0) * C.enum c] y)
           | D.σ] x))| ≤ B :=
     ⟨K, fun i hi x => ⟨hHb i hi x, abs_clip_le hK0 _⟩⟩
-  exact hIH (S.pow m) (D.toPow m) (E.toPow m) hDE (wmHyp_pow hWM hm) (fun i => s (i + 1) - s 0)
+  exact @hIH (S.pow m) (show StandardBorelSpace (S.pow m).X from ‹StandardBorelSpace S.X›)
+    (D.toPow m) (E.toPow m) hDE (wmHyp_pow hWM hm) (fun i => s (i + 1) - s 0)
     hs' (fun i x => F (i + 1) (S.T^[(s (i + 1) - s 0) * C.enum c] x))
     (fun i x => max (-K) (min K (S.m[fun y => F (i + 1) (S.T^[(s (i + 1) - s 0) * C.enum c] y)
       | D.σ] x)))

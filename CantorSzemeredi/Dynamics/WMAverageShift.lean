@@ -155,7 +155,7 @@ theorem shift_average_bound (C : CantorData) (t : ℕ) (hIH : DiffForm C t) {S :
     (hfE : ∀ j, j < t + 1 → Measurable[E.σ] (f j))
     (hfb : ∀ j, j < t + 1 → ∀ x, |f j x| ≤ 1) (j0 : ℕ) (hj0 : j0 < t + 1)
     (hmean : S.m[f j0 | D.σ] =ᵐ[S.m] 0) (ε : ℝ) (hε0 : 0 < ε) (hε1 : ε ≤ 1) :
-    ∃ H : ℕ, 0 < H ∧ ∀ ℓ : ℕ, (H : ℝ) < ε * ((C.delta ^ ℓ : ℕ) : ℝ) →
+    ∃ H : ℕ, 0 < H ∧ 1 / ε ≤ (H : ℝ) ∧ ∀ ℓ : ℕ, (H : ℝ) < ε * ((C.delta ^ ℓ : ℕ) : ℝ) →
       ∃ L : ℕ, ∀ M N : ℕ, L ≤ N - M →
         (H : ℝ)⁻¹ * ∑ h ∈ range H,
             |((N - (h + 1) - M : ℕ) : ℝ)⁻¹ * ∑ n ∈ Ico M (N - (h + 1)),
@@ -171,8 +171,9 @@ theorem shift_average_bound (C : CantorData) (t : ℕ) (hIH : DiffForm C t) {S :
   set σ := specMeasure (prodSystem D).koopman
     (toLpC (prodSystem D) (measurable_tensorSq hfj0m) (abs_tensorSq_le hfj0b)) with hσ
   haveI : IsFiniteMeasure σ := (hasSpectralMeasure_specMeasure _ _).isFinite
-  obtain ⟨H, hH, hI⟩ := exists_H_small C hs1 σ ε hε0
-  refine ⟨H, hH, fun ℓ hℓ => ?_⟩
+  obtain ⟨H, hHK, hH, hI⟩ := exists_H_small_ge C hs1 σ ε hε0 ⌈1 / ε⌉₊
+  have hHε : 1 / ε ≤ (H : ℝ) := le_trans (Nat.le_ceil _) (by exact_mod_cast hHK)
+  refine ⟨H, hH, hHε, fun ℓ hℓ => ?_⟩
   set q : ℝ := (C.delta : ℝ) ^ ℓ with hqdef
   have hδpos : (0 : ℝ) < (C.delta : ℝ) := by
     have := C.two_le_delta

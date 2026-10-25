@@ -247,7 +247,8 @@ theorem assemble_bound (q h M N : ℕ) (hh : h < q) (hMN : M ≤ N) (g Φ : ℕ 
 /-- **The per-shift estimate** (blueprint `per-shift`).  For a fixed shift `1 ≤ h < δ^ℓ`, the
 averages over windows `[M,N)` of the correlations `⟨u_{n+h}, u_n⟩` are bounded by the averages of
 `φ(s_{j0}(k_{n+h} - k_n))` plus `η`, `h/δ^ℓ`, and `δ^ℓ/(N-M)`, once `N - M` is large. -/
-theorem perShift (C : CantorData) (t : ℕ) (hIH : DiffForm C t) {S : MPS.{0}} (D E : Factor S)
+theorem perShift (C : CantorData) (t : ℕ) (hIH : DiffForm C t) {S : MPS.{0}}
+    [StandardBorelSpace S.X] (D E : Factor S)
     (hDE : D.σ ≤ E.σ) (hWM : S.WMHyp D E) (s : ℕ → ℕ) (hs : GoodExp s (t + 1))
     (f : ℕ → S.X → ℝ) (hfE : ∀ j, j < t + 1 → Measurable[E.σ] (f j))
     (hfb : ∀ j, j < t + 1 → ∀ x, |f j x| ≤ 1) (j0 : ℕ) (hj0 : j0 < t + 1)
