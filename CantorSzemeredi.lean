@@ -31,4 +31,5 @@ import CantorSzemeredi.Dynamics.Telescoping
 import CantorSzemeredi.Dynamics.WMMain
 import CantorSzemeredi.Dynamics.WMInduction
 import CantorSzemeredi.Dynamics.WMShift
+import CantorSzemeredi.Dynamics.WMClass
 import CantorSzemeredi.Dynamics.Fibre
