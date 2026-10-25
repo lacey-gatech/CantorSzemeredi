@@ -21,4 +21,5 @@ import CantorSzemeredi.Dynamics.Localize
 import CantorSzemeredi.Dynamics.Unfortunate
 import CantorSzemeredi.Dynamics.CondJensenPow
 import CantorSzemeredi.Dynamics.CompactCSZ
+import CantorSzemeredi.Dynamics.CompactExtensionCSZ
 import CantorSzemeredi.Dynamics.Fibre

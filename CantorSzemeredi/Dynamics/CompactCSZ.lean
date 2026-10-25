@@ -477,4 +477,361 @@ theorem uniformLiminf_ge_of_blocks {a : ℕ → ℝ} (ha0 : ∀ n, 0 ≤ a n) (h
     field_simp
     ring
   nlinarith [hsum_lower, hF1W, hF2, hexp, hc2θ0]
+namespace CantorData
+
+/-- `0` lies in the Cantor set. -/
+theorem zero_mem_set (C : CantorData) : 0 ∈ C.set := ⟨0, by simp [CantorData.enum]⟩
+
+/-- Enumeration values are positive after the initial term. -/
+theorem enum_pos_of_pos (C : CantorData) {u : ℕ} (hu : 0 < u) : 0 < C.enum u := by
+  have := C.enum_strictMono hu
+  have h0 : C.enum 0 = 0 := by simp [CantorData.enum]
+  omega
+
+end CantorData
+
+namespace MPS
+
+variable {S : MPS}
+
+/-- The unfortunate sets are `D`-measurable. -/
+theorem measurableSet_condUnfortunate (D : Factor S) (f : S.X → ℝ) (t : ℕ) (ε : ℝ)
+    (F : Finset ℕ) : MeasurableSet[D.σ] {x | CondUnfortunate D f t ε F x} := by
+  have hcn : ∀ s a a', MeasurableSet[D.σ]
+      {x | ε ≤ condNorm D (f ∘ S.T^[s * a] - f ∘ S.T^[s * a']) x} :=
+    fun s a a' => measurable_condNorm D _ measurableSet_Ici
+  have hpair : ∀ a a' : ℕ, MeasurableSet[D.σ]
+      {x | a ≠ a' → ∃ s ∈ Finset.range (t + 1),
+        ε ≤ condNorm D (f ∘ S.T^[s * a] - f ∘ S.T^[s * a']) x} := by
+    intro a a'
+    by_cases h : a ≠ a'
+    · have : {x | a ≠ a' → ∃ s ∈ Finset.range (t + 1),
+          ε ≤ condNorm D (f ∘ S.T^[s * a] - f ∘ S.T^[s * a']) x}
+          = ⋃ s ∈ Finset.range (t + 1),
+            {x | ε ≤ condNorm D (f ∘ S.T^[s * a] - f ∘ S.T^[s * a']) x} := by
+        ext x
+        simp [h]
+      rw [this]
+      exact Finset.measurableSet_biUnion _ fun s _ => hcn s a a'
+    · have : {x | a ≠ a' → ∃ s ∈ Finset.range (t + 1),
+          ε ≤ condNorm D (f ∘ S.T^[s * a] - f ∘ S.T^[s * a']) x} = Set.univ := by
+        ext x
+        simp [h]
+      rw [this]
+      exact MeasurableSet.univ
+  have hset : {x | CondUnfortunate D f t ε F x}
+      = ⋂ a ∈ F, ⋂ a' ∈ F, {x | a ≠ a' → ∃ s ∈ Finset.range (t + 1),
+          ε ≤ condNorm D (f ∘ S.T^[s * a] - f ∘ S.T^[s * a']) x} := by
+    ext x
+    simp [CondUnfortunate]
+  rw [hset]
+  exact Finset.measurableSet_biInter _ fun a _ => Finset.measurableSet_biInter _ fun a' _ =>
+    hpair a a'
+
+/-- The set `Q(F)` of maximally unfortunate points for `F` is `D`-measurable. -/
+theorem measurableSet_Qs (D : Factor S) (f : S.X → ℝ) (t : ℕ) (ε : ℝ) (K : Set ℕ)
+    (F : Finset ℕ) : MeasurableSet[D.σ]
+      {x | CondUnfortunate D f t ε F x ∧
+        ∀ G : Finset ℕ, (↑G : Set ℕ) ⊆ K → F.card < G.card → ¬ CondUnfortunate D f t ε G x} := by
+  have hset : {x | CondUnfortunate D f t ε F x ∧
+        ∀ G : Finset ℕ, (↑G : Set ℕ) ⊆ K → F.card < G.card → ¬ CondUnfortunate D f t ε G x}
+      = {x | CondUnfortunate D f t ε F x} ∩ ⋂ G : Finset ℕ,
+          {x | ((↑G : Set ℕ) ⊆ K ∧ F.card < G.card) → ¬ CondUnfortunate D f t ε G x} := by
+    ext x
+    simp only [Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_iInter]
+    exact ⟨fun h => ⟨h.1, fun G hP => h.2 G hP.1 hP.2⟩,
+      fun h => ⟨h.1, fun G hGK hGc => h.2 G ⟨hGK, hGc⟩⟩⟩
+  rw [hset]
+  refine (measurableSet_condUnfortunate D f t ε F).inter (MeasurableSet.iInter fun G => ?_)
+  by_cases hP : (↑G : Set ℕ) ⊆ K ∧ F.card < G.card
+  · have : {x | ((↑G : Set ℕ) ⊆ K ∧ F.card < G.card) → ¬ CondUnfortunate D f t ε G x}
+        = {x | CondUnfortunate D f t ε G x}ᶜ := by
+      ext x
+      simp [hP]
+    rw [this]
+    exact (measurableSet_condUnfortunate D f t ε G).compl
+  · have : {x | ((↑G : Set ℕ) ⊆ K ∧ F.card < G.card) → ¬ CondUnfortunate D f t ε G x}
+        = Set.univ := by
+      ext x
+      simp [hP]
+    rw [this]
+    exact MeasurableSet.univ
+
+/-- **Choice of the good set.**  Let `A` be a `D`-set of positive measure.  Almost every point is
+maximally unfortunate for some admissible `F`, so some admissible `F` has `Q(F) ∩ A` of positive
+measure.  Then there are an exponent assignment `q` on pairs of `F` and a `D`-set `E ⊆ Q(F) ∩ A`
+of positive measure on which every pair of `F` is bad at the exponent `q`. -/
+theorem exists_good_set (D : Factor S) {f : S.X → ℝ} {t : ℕ} {ε : ℝ} {K : Set ℕ} {M : ℕ}
+    (hmax : ∀ᵐ x ∂S.m, ∃ F : Finset ℕ, (↑F : Set ℕ) ⊆ K ∧ 1 ≤ F.card ∧ F.card < M ∧
+      CondUnfortunate D f t ε F x ∧
+      ∀ G : Finset ℕ, (↑G : Set ℕ) ⊆ K → F.card < G.card → ¬ CondUnfortunate D f t ε G x)
+    {A : Set S.X} (hA : MeasurableSet[D.σ] A) (hApos : 0 < S.m A) :
+    ∃ F : Finset ℕ, (↑F : Set ℕ) ⊆ K ∧ 1 ≤ F.card ∧ ∃ q : ℕ → ℕ → ℕ, (∀ a a', q a a' ≤ t) ∧
+      ∃ E : Set S.X, MeasurableSet[D.σ] E ∧ 0 < S.m E ∧ E ⊆ A ∧
+        (∀ y ∈ E, ∀ G : Finset ℕ, (↑G : Set ℕ) ⊆ K → F.card < G.card →
+          ¬ CondUnfortunate D f t ε G y) ∧
+        (∀ y ∈ E, ∀ a ∈ F, ∀ a' ∈ F, a ≠ a' →
+          ε ≤ condNorm D (f ∘ S.T^[q a a' * a] - f ∘ S.T^[q a a' * a']) y) := by
+  set Q : Finset ℕ → Set S.X := fun F => {x | CondUnfortunate D f t ε F x ∧
+    ∀ G : Finset ℕ, (↑G : Set ℕ) ⊆ K → F.card < G.card → ¬ CondUnfortunate D f t ε G x}
+    with hQ_def
+  have hQmeas : ∀ F, MeasurableSet[D.σ] (Q F) := fun F => measurableSet_Qs D f t ε K F
+  -- Some admissible `F` has `Q(F) ∩ A` of positive outer measure.
+  set ι := {F : Finset ℕ // (↑F : Set ℕ) ⊆ K ∧ 1 ≤ F.card ∧ F.card < M} with hι
+  have hsome : ∃ F : ι, 0 < S.m (Q F.1 ∩ A) := by
+    by_contra hcon
+    push Not at hcon
+    have hae : ∀ᵐ x ∂S.m, ∃ F : ι, x ∈ Q F.1 := by
+      filter_upwards [hmax] with x hx
+      obtain ⟨F, h1, h2, h3, h4, h5⟩ := hx
+      exact ⟨⟨F, h1, h2, h3⟩, h4, h5⟩
+    have hN : S.m {x | ¬ ∃ F : ι, x ∈ Q F.1} = 0 := ae_iff.1 hae
+    have hsub : A ⊆ {x | ¬ ∃ F : ι, x ∈ Q F.1} ∪ ⋃ F : ι, (Q F.1 ∩ A) := by
+      intro x hxA
+      by_cases h : ∃ F : ι, x ∈ Q F.1
+      · obtain ⟨F, hF⟩ := h
+        exact Or.inr (Set.mem_iUnion.2 ⟨F, hF, hxA⟩)
+      · exact Or.inl h
+    have hU : S.m (⋃ F : ι, (Q F.1 ∩ A)) = 0 :=
+      measure_iUnion_null fun F => le_antisymm (hcon F) (by positivity)
+    have hA0 : S.m A = 0 :=
+      le_antisymm (le_of_le_of_eq (measure_mono hsub |>.trans (measure_union_le _ _))
+        (by rw [hN, hU, add_zero])) (by positivity)
+    exact absurd hA0 hApos.ne'
+  obtain ⟨F0, hF0⟩ := hsome
+  set F : Finset ℕ := F0.1 with hF_def
+  -- Each point of `Q(F) ∩ A` has an exponent assignment on the pairs of `F`.
+  have hqx : ∀ x ∈ Q F ∩ A, ∃ q : ℕ → ℕ → ℕ, ∀ a ∈ F, ∀ a' ∈ F, a ≠ a' →
+      q a a' ≤ t ∧ ε ≤ condNorm D (f ∘ S.T^[q a a' * a] - f ∘ S.T^[q a a' * a']) x := by
+    intro x hx
+    have hU : ∀ a ∈ F, ∀ a' ∈ F, a ≠ a' → ∃ s ≤ t,
+        ε ≤ condNorm D (f ∘ S.T^[s * a] - f ∘ S.T^[s * a']) x := hx.1.1
+    choose! s hs using hU
+    exact ⟨s, fun a ha a' ha' hne => hs a ha a' ha' hne⟩
+  -- The finitely many exponent patterns on the pairs of `F`.
+  set P := ↥(F ×ˢ F) with hP_def
+  let qfun : (P → Fin (t + 1)) → ℕ → ℕ → ℕ := fun φ a a' =>
+    if h : (a, a') ∈ F ×ˢ F then ((φ ⟨(a, a'), h⟩ : Fin (t + 1)) : ℕ) else 0
+  have hqfun_le : ∀ φ a a', qfun φ a a' ≤ t := by
+    intro φ a a'
+    simp only [qfun]
+    split_ifs with h
+    · exact Nat.lt_succ_iff.1 (φ _).2
+    · exact Nat.zero_le _
+  let Eset : (P → Fin (t + 1)) → Set S.X := fun φ =>
+    Q F ∩ A ∩ {x | ∀ a ∈ F, ∀ a' ∈ F, a ≠ a' →
+      ε ≤ condNorm D (f ∘ S.T^[qfun φ a a' * a] - f ∘ S.T^[qfun φ a a' * a']) x}
+  have hEmeas : ∀ φ, MeasurableSet[D.σ] (Eset φ) := by
+    intro φ
+    refine ((hQmeas F).inter hA).inter ?_
+    have : {x | ∀ a ∈ F, ∀ a' ∈ F, a ≠ a' →
+        ε ≤ condNorm D (f ∘ S.T^[qfun φ a a' * a] - f ∘ S.T^[qfun φ a a' * a']) x}
+        = ⋂ a ∈ F, ⋂ a' ∈ F, {x | a ≠ a' →
+          ε ≤ condNorm D (f ∘ S.T^[qfun φ a a' * a] - f ∘ S.T^[qfun φ a a' * a']) x} := by
+      ext x
+      simp
+    rw [this]
+    refine Finset.measurableSet_biInter _ fun a _ => Finset.measurableSet_biInter _ fun a' _ => ?_
+    by_cases h : a ≠ a'
+    · have : {x | a ≠ a' →
+          ε ≤ condNorm D (f ∘ S.T^[qfun φ a a' * a] - f ∘ S.T^[qfun φ a a' * a']) x}
+          = {x | ε ≤ condNorm D (f ∘ S.T^[qfun φ a a' * a] - f ∘ S.T^[qfun φ a a' * a']) x} := by
+        ext x
+        simp [h]
+      rw [this]
+      exact measurable_condNorm D _ measurableSet_Ici
+    · have : {x | a ≠ a' →
+          ε ≤ condNorm D (f ∘ S.T^[qfun φ a a' * a] - f ∘ S.T^[qfun φ a a' * a']) x}
+          = Set.univ := by
+        ext x
+        simp [h]
+      rw [this]
+      exact MeasurableSet.univ
+  -- The sets `E_φ` cover `Q(F) ∩ A`.
+  have hcover : Q F ∩ A ⊆ ⋃ φ : P → Fin (t + 1), Eset φ := by
+    intro x hx
+    obtain ⟨q, hq⟩ := hqx x hx
+    refine Set.mem_iUnion.2 ⟨fun p => ⟨min (q p.1.1 p.1.2) t, by
+      exact Nat.lt_succ_of_le (min_le_right _ _)⟩, hx, ?_⟩
+    intro a ha a' ha' hne
+    have hqa : qfun (fun p => ⟨min (q p.1.1 p.1.2) t, by
+        exact Nat.lt_succ_of_le (min_le_right _ _)⟩) a a' = q a a' := by
+      simp only [qfun]
+      rw [dif_pos (Finset.mem_product.2 ⟨ha, ha'⟩)]
+      exact min_eq_left (hq a ha a' ha' hne).1
+    rw [hqa]
+    exact (hq a ha a' ha' hne).2
+  -- Some `E_φ` has positive measure.
+  have hEpos : ∃ φ : P → Fin (t + 1), 0 < S.m (Eset φ) := by
+    by_contra hcon
+    push Not at hcon
+    have hU : S.m (⋃ φ : P → Fin (t + 1), Eset φ) = 0 :=
+      measure_iUnion_null fun φ => le_antisymm (hcon φ) (by positivity)
+    have := hF0
+    have h0 : S.m (Q F ∩ A) = 0 := le_antisymm
+      (le_of_le_of_eq (measure_mono hcover) hU) (by positivity)
+    exact absurd h0 (ne_of_gt this)
+  obtain ⟨φ, hφpos⟩ := hEpos
+  refine ⟨F, F0.2.1, F0.2.2.1, qfun φ, hqfun_le φ, Eset φ, hEmeas φ, hφpos, ?_, ?_, ?_⟩
+  · intro y hy
+    obtain ⟨⟨_, hAy⟩, _⟩ := hy
+    exact hAy
+  · intro y hy G hGK hGc
+    obtain ⟨⟨⟨_, hQy⟩, _⟩, _⟩ := hy
+    exact hQy G hGK hGc
+  · intro y hy a ha a' ha' hne
+    exact hy.2 a ha a' ha' hne
+
+end MPS
+
+namespace MPS
+
+variable {S : MPS}
+
+/-- The product of `t+1` copies of a `[0,1]`-valued function has integral at most `1`. -/
+theorem integral_prod_le_one {f : S.X → ℝ} (hm : Measurable f) (h0 : ∀ x, 0 ≤ f x)
+    (h1 : ∀ x, f x ≤ 1) (t d : ℕ) :
+    ∫ x, ∏ s ∈ Finset.range (t + 1), f (S.T^[s * d] x) ∂S.m ≤ 1 := by
+  have hPm : Measurable (fun x => ∏ s ∈ Finset.range (t + 1), f (S.T^[s * d] x)) :=
+    Finset.measurable_prod _ fun s _ => hm.comp (S.measurable_T.iterate _)
+  have hP : Integrable (fun x => ∏ s ∈ Finset.range (t + 1), f (S.T^[s * d] x)) S.m :=
+    integrable_of_unit_bound hPm (fun x => Finset.prod_nonneg fun s _ => h0 _)
+      (fun x => Finset.prod_le_one₀ (fun s _ => h0 _) fun s _ => h1 _)
+  calc ∫ x, ∏ s ∈ Finset.range (t + 1), f (S.T^[s * d] x) ∂S.m
+      ≤ ∫ _x, (1 : ℝ) ∂S.m :=
+        integral_mono hP (integrable_const _) fun x =>
+          Finset.prod_le_one₀ (fun s _ => h0 _) fun s _ => h1 _
+    _ = 1 := by simp
+
+/-- **The core of the compact-extension theorem.**  Let `D` be a CSZ factor, and let `f` be a
+`[0,1]`-valued function which is conditionally compact over `D`, with positive integral.  Then
+the uniform `liminf` of the averages of `∏_{s ≤ t} T^{s k_n} f` is positive. -/
+theorem compact_core (C : CantorData) (D E : Factor S) {t : ℕ}
+    (hD : ∀ A : Set S.X, MeasurableSet[D.σ] A → 0 < S.m A → ∀ i : ℕ,
+      0 < uniformLiminf (fun n => S.multiCorr A t (C.base ^ i * C.enum n)))
+    {f : S.X → ℝ}
+    (hm : Measurable f) (h0 : ∀ x, 0 ≤ f x) (h1 : ∀ x, f x ≤ 1) (hf : MemLp f 2 S.m)
+    (ht : 1 ≤ t) (hδ : 0 < ∫ x, f x ∂S.m) (hfc : CondCompact D E f) :
+    0 < uniformLiminf (fun n => ∫ x, ∏ s ∈ Finset.range (t + 1), f (S.T^[s * C.enum n] x) ∂S.m) := by
+  classical
+  set δ0 := ∫ x, f x ∂S.m with hδ0_def
+  set ε : ℝ := (δ0 / 2) ^ (t + 1) / (2 * (t + 1)) with hε_def
+  have hεpos : 0 < ε := by positivity
+  set c1 : ℝ := (δ0 / 2) ^ (t + 1) - (t + 1) * ε with hc1_def
+  have hc1pos : 0 < c1 := by
+    have : (t + 1 : ℝ) * ε = (δ0 / 2) ^ (t + 1) / 2 := by
+      rw [hε_def]; field_simp
+    have hpos : 0 < (δ0 / 2) ^ (t + 1) := by positivity
+    rw [hc1_def, this]
+    linarith
+  -- the net for `f`
+  obtain ⟨r, g, hgE, hnet⟩ := hfc (ε / 2) (by positivity)
+  have hg : ∀ q, MemLp (g q) 2 S.m := fun q => (hgE q).memLp
+  -- the set `A = {E(f|D) > δ0/2}`
+  set A : Set S.X := {x | δ0 / 2 < S.m[f | D.σ] x} with hA_def
+  have hAD : MeasurableSet[D.σ] A :=
+    (stronglyMeasurable_condExp (m := D.σ)).measurable measurableSet_Ioi
+  have hApos : 0 < S.m A := by
+    by_contra hcon
+    have hA0 : S.m A = 0 := le_antisymm (not_lt.1 hcon) (by positivity)
+    have hae : ∀ᵐ x ∂S.m, S.m[f | D.σ] x ≤ δ0 / 2 := by
+      rw [ae_iff]
+      simpa [hA_def, not_le] using hA0
+    have hint : ∫ x, S.m[f | D.σ] x ∂S.m ≤ ∫ _x, δ0 / 2 ∂S.m :=
+      integral_mono_ae integrable_condExp (integrable_const _) hae
+    rw [integral_condExp D.le, integral_const] at hint
+    simp at hint
+    linarith
+  -- the maximally unfortunate sets, and the good set
+  have hmax := exists_maximal_unfortunate (t := t) D hf hg hnet C.set (CantorData.zero_mem_set C)
+  obtain ⟨F, hFK, hF1, q, hqt, E', hE'D, hE'pos, hE'A, hE'Q, hE'q⟩ :=
+    exists_good_set D hmax hAD hApos
+  -- the scale `i`, so that every element of `F` is below `b^i`
+  have hb1 : 1 < C.base := by have := C.three_le_base; omega
+  set i : ℕ := F.sup id with hi_def
+  have hFscale : ∀ a ∈ F, a < C.base ^ i := fun a ha =>
+    lt_of_le_of_lt (Finset.le_sup (f := id) ha) (Nat.lt_pow_self hb1)
+  have hFK' : ∀ a ∈ F, a ∈ C.set := fun a ha => hFK (Finset.mem_coe.2 ha)
+  have hFne : F.Nonempty := Finset.card_pos.1 (by omega)
+  have hFpos : (0 : ℝ) < F.card := by exact_mod_cast (show 0 < F.card by omega)
+  -- the CSZ property of `D` at the set `E'`, at dilation `i`
+  have hcsz_E := hD E' hE'D hE'pos i
+  set a1 : ℕ → ℝ := fun n => S.multiCorr E' t (C.base ^ i * C.enum n) with ha1_def
+  set c0 : ℝ := uniformLiminf a1 with hc0_def
+  have hc0pos : 0 < c0 := hcsz_E
+  have ha1_0 : ∀ n, 0 ≤ a1 n := fun n => MPS.multiCorr_nonneg S E' t _
+  have ha1_1 : ∀ n, a1 n ≤ 1 := fun n => by
+    simp only [a1, MPS.multiCorr]
+    exact ENNReal.toReal_le_of_le_ofReal zero_le_one (by
+      rw [ENNReal.ofReal_one]
+      exact prob_le_one)
+  have hB : ∀ θ : ℝ, 0 < θ → ∃ L : ℕ, ∀ M N : ℕ, L ≤ N - M →
+      c0 / 2 - θ ≤ ((((Finset.Ico M N).filter (fun u => 1 ≤ u ∧ c0 / 2 < a1 u)).card : ℝ)
+        / ((N - M : ℕ) : ℝ)) :=
+    fun θ hθ => density_of_uniformLiminf ha1_0 ha1_1 rfl hc0pos hθ
+  -- the constant `c2` and the choice of a block point for each good `u`
+  set c2 : ℝ := c1 * (c0 / 2) / F.card with hc2_def
+  have hc2pos : 0 < c2 := div_pos (mul_pos hc1pos (by linarith)) hFpos
+  have hblock : ∀ u, (1 ≤ u ∧ c0 / 2 < a1 u) → ∃ v, C.delta ^ i * u ≤ v ∧
+      v < C.delta ^ i * (u + 1) ∧
+      c2 ≤ ∫ x, ∏ s ∈ Finset.range (t + 1), f (S.T^[s * C.enum v] x) ∂S.m := by
+    rintro u ⟨hu1, hu2⟩
+    set n : ℕ := C.base ^ i * C.enum u with hn_def
+    have hen : 0 < C.enum u := C.enum_pos_of_pos hu1
+    have hFn : ∀ a ∈ F, a < n := fun a ha =>
+      lt_of_lt_of_le (hFscale a ha) (Nat.le_mul_of_pos_right _ hen)
+    have hK' : ∀ a ∈ F, n + a ∈ C.set := fun a ha => C.pow_mul_enum_add_mem (hFK' a ha)
+      (hFscale a ha) u
+    have hRT := exists_good_translate (n := n) D hf hqt hE'q C.set
+      (CantorData.zero_mem_set C) hK' hE'Q hFn
+    set I : Set S.X := ⋂ s ∈ Finset.range (t + 1), (S.T^[s * n]) ⁻¹' E' with hI_def
+    have hI_D : MeasurableSet[D.σ] I :=
+      Finset.measurableSet_biInter _ fun s _ => (Factor.measurableSet_iterate_preimage_iff D
+        (s * n) E').2 hE'D
+    have hcov : ∀ᵐ x ∂S.m, x ∈ I → ∃ a ∈ F, x ∈
+        {x | ∀ s ≤ t, condNorm D (f ∘ S.T^[s * (n + a)] - f) x < ε} := by
+      filter_upwards [hRT] with x hx hxI
+      have hxT : ∀ s ≤ t, S.T^[s * n] x ∈ E' := fun s hs =>
+        Set.mem_iInter₂.1 hxI s (Finset.mem_range.2 (Nat.lt_succ_of_le hs))
+      have hx0 : x ∈ E' := by simpa using hxT 0 (Nat.zero_le t)
+      obtain ⟨a, ha, hWa⟩ := hx hx0 hxT
+      exact ⟨a, ha, hWa⟩
+    obtain ⟨a, ha, hmass⟩ := exists_mass_index (W := fun a =>
+      {x | ∀ s ≤ t, condNorm D (f ∘ S.T^[s * (n + a)] - f) x < ε}) hFne hcov
+    have hIc : ∀ x ∈ I, δ0 / 2 ≤ S.m[f | D.σ] x := fun x hx => by
+      have hx0 : x ∈ E' := by
+        have := Set.mem_iInter₂.1 hx 0 (Finset.mem_range.2 (Nat.succ_pos t))
+        simpa using this
+      exact le_of_lt (hE'A hx0)
+    have hlow := integral_prod_ge_of_mem D hm h0 h1 hf t (n + a) (ε := ε) hI_D hIc
+      (c := δ0 / 2) (by positivity)
+    have hmass_u : c0 / 2 / F.card ≤ (S.m I).toReal / F.card :=
+      div_le_div_of_nonneg_right (le_of_lt hu2) hFpos.le
+    have hkey : c2 ≤ ∫ x, ∏ s ∈ Finset.range (t + 1), f (S.T^[s * (n + a)] x) ∂S.m := by
+      have h1' : c2 = c1 * (c0 / 2 / F.card) := by rw [hc2_def]; ring
+      rw [h1']
+      refine le_trans (mul_le_mul_of_nonneg_left (le_trans hmass_u hmass) hc1pos.le) ?_
+      exact le_trans (mul_le_mul_of_nonneg_left le_rfl hc1pos.le) hlow
+    obtain ⟨v, hv1, hv2, hvenum⟩ := C.enum_add_mem_block (hFK' a ha) (hFscale a ha) u
+    have hvn : C.enum v = n + a := hvenum
+    refine ⟨v, hv1, hv2, ?_⟩
+    rw [hvn]
+    exact hkey
+  -- the blocks: choose `v u` for each good `u`, and apply the counting lemma
+  choose! v hv1 hv2 hv_int using hblock
+  have hδ1 : 1 ≤ C.delta ^ i := Nat.pos_of_ne_zero
+    (pow_ne_zero _ (by have := C.two_le_delta; omega))
+  have hfinal := uniformLiminf_ge_of_blocks (a := fun n =>
+      ∫ x, ∏ s ∈ Finset.range (t + 1), f (S.T^[s * C.enum n] x) ∂S.m)
+    (fun n => integral_nonneg fun x => Finset.prod_nonneg fun s _ => h0 _)
+    (fun n => integral_prod_le_one hm h0 h1 t (C.enum n))
+    hδ1 (B := fun u => 1 ≤ u ∧ c0 / 2 < a1 u) (κ := c0 / 2) (by linarith) hB
+    (v := v) (fun u hu => ⟨hv1 u hu, hv2 u hu⟩) hc2pos.le hv_int
+  have hδR : (0 : ℝ) < ((C.delta ^ i : ℕ) : ℝ) := by exact_mod_cast hδ1
+  exact lt_of_lt_of_le (div_pos (mul_pos hc2pos (by linarith)) hδR) hfinal
+
+end MPS
+
+
+
 end CantorSzemeredi

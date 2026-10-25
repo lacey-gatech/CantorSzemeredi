@@ -7,7 +7,9 @@ everywhere, and every identity between conditional norms below holds almost ever
 
 \begin{theorem}[Part (K) of the extension principles]
   \label{thm:compact-extension}
-  \lean{CantorSzemeredi.MPS.CSZ_of_compactExtension}
+  \lean{CantorSzemeredi.MPS.CSZ_of_compactExtension, CantorSzemeredi.MPS.compact_core,
+    CantorSzemeredi.MPS.csz_sets_of_compactExtension, CantorSzemeredi.MPS.csz_functions_of_csz}
+  \leanok
   \uses{def:csz, def:compact-extension, lem:localize, lem:unfortunate, lem:return-time, cor:absorb, lem:diff, lem:csz-functions, lem:powers}
   Let $\Dbb$ be a CSZ factor of $(X,\Abb,m,T)$ and let $\Ebb$ be a compact extension of $\Dbb$.
   Then $\Ebb$ is CSZ: for all integers $t \geq 1$, $i \geq 0$, and all non-zero
@@ -173,7 +175,8 @@ conditionally compact, $0 \leq f \leq 1$, and
 Fix $\epsilon > 0$ so small that
 \begin{equation}
   \label{eq:eps-choice}
-  c_1 \coloneqq (\delta_0/2)^{t+1} - t\epsilon > 0 .
+  c_1 \coloneqq (\delta_0/2)^{t+1} - (t+1)\epsilon > 0 .
+  % The telescoping sum below has t+1 terms, the s = 0 term being zero; bounding all t+1 by epsilon is the form used in Lean.
 \end{equation}
 
 \emph{The net.}  By conditional compactness at tolerance $\epsilon/2$ there are $r \in \NN$ and
@@ -351,6 +354,7 @@ $E \coloneqq E_q$.
 
 \begin{proof}[Proof of Theorem~\ref{thm:compact-extension}]
   \proves{thm:compact-extension}
+  \leanok
   \uses{lem:return-time, lem:unfortunate, lem:localize, def:csz, lem:diff, cor:absorb, lem:cond-cs, lem:cond-jensen-power, lem:telescoping, lem:condexp-facts}
   We continue in the setting of the core lemma.
 
@@ -399,8 +403,8 @@ $E \coloneqq E_q$.
   \begin{equation}
     \label{eq:cond-lower}
     \Exp\Bigl[ \prod_{s=0}^{t} T^{s(n+a)}f \;\Big\vert\; \Dbb \Bigr](x)
-      \geq \Exp(f^{t+1}\mid\Dbb)(x) - t\epsilon \geq g(x)^{t+1} - t\epsilon
-      \geq (\delta_0/2)^{t+1} - t\epsilon = c_1 > 0 .
+      \geq \Exp(f^{t+1}\mid\Dbb)(x) - (t+1)\epsilon \geq g(x)^{t+1} - (t+1)\epsilon
+      \geq (\delta_0/2)^{t+1} - (t+1)\epsilon = c_1 > 0 .
   \end{equation}
   All inequalities hold for a.e.\ $x$ in the set where \eqref{eq:good0} holds with this $a$,
   the relevant null sets being those of finitely many conditional expectation identities for
