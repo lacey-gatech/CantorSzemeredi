@@ -257,8 +257,10 @@ theorem uniformLiminf_const_mul_pos {a : ℕ → ℝ} (ha0 : ∀ n, 0 ≤ a n) (
 /-- **Lemma `lem:csz-functions`** (one direction, in the form needed).  If `E` is CSZ, then for an
 `E`-measurable `0 ≤ f ≤ 1` with positive integral, the uniform `liminf` of the averages of
 `∏_{s ≤ t} T^{s b^i k_n} f` is positive. -/
-theorem csz_functions_of_csz (E : Factor S) (hEcsz : E.CSZ) (C : CantorData) {t : ℕ}
-    (ht : 1 ≤ t) (i : ℕ) {f : S.X → ℝ} (hfm : Measurable[E.σ] f) (h0 : ∀ x, 0 ≤ f x)
+theorem csz_functions_of_csz (E : Factor S) {t : ℕ} (C : CantorData) (i : ℕ)
+    (hEcsz : ∀ A : Set S.X, MeasurableSet[E.σ] A → 0 < S.m A →
+      0 < uniformLiminf (fun n => S.multiCorr A t (C.base ^ i * C.enum n)))
+    {f : S.X → ℝ} (hfm : Measurable[E.σ] f) (h0 : ∀ x, 0 ≤ f x)
     (h1 : ∀ x, f x ≤ 1) (hpos : 0 < ∫ x, f x ∂S.m) :
     0 < uniformLiminf (fun n => ∫ x, ∏ s ∈ Finset.range (t + 1),
       f (S.T^[s * (C.base ^ i * C.enum n)] x) ∂S.m) := by
@@ -283,7 +285,7 @@ theorem csz_functions_of_csz (E : Factor S) (hEcsz : E.CSZ) (C : CantorData) {t 
   have hAE : MeasurableSet[E.σ] A := hfm measurableSet_Ioi
   have hAm : MeasurableSet A := E.le A hAE
   -- the set form gives positivity for the indicator of `A`
-  have hcsz := hEcsz C A hAE hAc t ht i
+  have hcsz := hEcsz A hAE hAc
   have hb_eq : ∀ n, S.multiCorr A t (C.base ^ i * C.enum n)
       = ∫ x, ∏ s ∈ Finset.range (t + 1), A.indicator (1 : S.X → ℝ)
           (S.T^[s * (C.base ^ i * C.enum n)] x) ∂S.m :=
@@ -367,7 +369,76 @@ theorem CSZ_of_compactExtension (D E : Factor S) (hD : D.CSZ) (hE : CompactExten
     (h0 : ∀ x, 0 ≤ f x) (h1 : ∀ x, f x ≤ 1) (hpos : 0 < ∫ x, f x ∂S.m) :
     0 < uniformLiminf (fun n => ∫ x, ∏ s ∈ Finset.range (t + 1),
       f (S.T^[s * (C.base ^ i * C.enum n)] x) ∂S.m) :=
-  csz_functions_of_csz E (csz_sets_of_compactExtension D E hD hE) C ht i hfm h0 h1 hpos
+  csz_functions_of_csz E C i (fun A hA hp => csz_sets_of_compactExtension D E hD hE C A hA hp t ht i)
+    hfm h0 h1 hpos
+
+/-- **Lemma `lem:csz-functions`.**  For a factor `D`, a Cantor set `C`, `t ≥ 1` and `i`, the set
+form of the CSZ property on `D` (for `A ∈ D` with `m(A) > 0`) is equivalent to the function form
+(for bounded `D`-measurable `f ≥ 0` which is not a.e. zero). -/
+theorem csz_functions_iff (D : Factor S) (C : CantorData) {t : ℕ} (ht : 1 ≤ t) (i : ℕ) :
+    (∀ A : Set S.X, MeasurableSet[D.σ] A → 0 < S.m A →
+      0 < uniformLiminf (fun n => S.multiCorr A t (C.base ^ i * C.enum n))) ↔
+    (∀ f : S.X → ℝ, Measurable[D.σ] f → (∀ x, 0 ≤ f x) → (∃ K : ℝ, ∀ x, f x ≤ K) →
+      0 < ∫ x, f x ∂S.m → 0 < uniformLiminf (fun n => ∫ x, ∏ s ∈ Finset.range (t + 1),
+        f (S.T^[s * (C.base ^ i * C.enum n)] x) ∂S.m)) := by
+  constructor
+  · intro ha f hfm h0 hK hpos
+    obtain ⟨K, hKf⟩ := hK
+    set K' : ℝ := max K 1 with hK'_def
+    have hK'pos : 0 < K' := lt_of_lt_of_le one_pos (le_max_right _ _)
+    set g : S.X → ℝ := fun x => f x / K' with hg_def
+    have hgm : Measurable[D.σ] g := hfm.div_const K'
+    have hgmA : Measurable g := hgm.mono D.le le_rfl
+    have hg0 : ∀ x, 0 ≤ g x := fun x => div_nonneg (h0 x) hK'pos.le
+    have hg1 : ∀ x, g x ≤ 1 := fun x => by
+      rw [hg_def]
+      simp only
+      rw [div_le_one hK'pos]
+      exact le_trans (hKf x) (le_max_left _ _)
+    have hgpos : 0 < ∫ x, g x ∂S.m := by
+      have : ∫ x, g x ∂S.m = (∫ x, f x ∂S.m) / K' := by
+        rw [hg_def, integral_div]
+      rw [this]
+      exact div_pos hpos hK'pos
+    have hcpos := csz_functions_of_csz D C i (t := t) (fun A hA hp => ha A hA hp) hgm hg0 hg1 hgpos
+    have hfun : (fun n => ∫ x, ∏ s ∈ Finset.range (t + 1),
+        f (S.T^[s * (C.base ^ i * C.enum n)] x) ∂S.m)
+        = fun n => K' ^ (t + 1) * ∫ x, ∏ s ∈ Finset.range (t + 1),
+          g (S.T^[s * (C.base ^ i * C.enum n)] x) ∂S.m := by
+      funext n
+      rw [← integral_const_mul]
+      refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+      have hf : ∀ y, f y = K' * g y := fun y => by
+        rw [hg_def]
+        simp only
+        field_simp
+      simp only [hf, Finset.prod_mul_distrib, Finset.prod_const, Finset.card_range]
+    rw [hfun]
+    refine uniformLiminf_const_mul_pos (fun n => integral_nonneg fun x =>
+      Finset.prod_nonneg fun s _ => hg0 _)
+      (fun n => integral_prod_le_one (S := S) hgmA hg0 hg1 t (C.base ^ i * C.enum n))
+      (pow_pos hK'pos _) hcpos
+  · intro hb A hA hpos
+    have hAamb : MeasurableSet A := D.le A hA
+    have hind : 0 < ∫ x, A.indicator (1 : S.X → ℝ) x ∂S.m := by
+      rw [integral_indicator_one hAamb, measureReal_def]
+      exact ENNReal.toReal_pos hpos.ne' (measure_ne_top _ _)
+    have hmeas : Measurable[D.σ] (A.indicator (1 : S.X → ℝ)) :=
+      measurable_const.indicator hA
+    have h := hb (A.indicator (1 : S.X → ℝ)) hmeas
+      (fun x => Set.indicator_nonneg (fun _ _ => zero_le_one) x)
+      ⟨1, fun x => by
+        by_cases hx : x ∈ A
+        · rw [Set.indicator_of_mem hx]
+          exact le_of_eq (Pi.one_apply x)
+        · rw [Set.indicator_of_notMem hx]
+          exact zero_le_one⟩ hind
+    have hfun : (fun n => ∫ x, ∏ s ∈ Finset.range (t + 1),
+        A.indicator (1 : S.X → ℝ) (S.T^[s * (C.base ^ i * C.enum n)] x) ∂S.m)
+        = fun n => S.multiCorr A t (C.base ^ i * C.enum n) :=
+      funext fun n => (multiCorr_eq_integral S hAamb t _).symm
+    rw [hfun] at h
+    exact h
 
 end MPS
 
