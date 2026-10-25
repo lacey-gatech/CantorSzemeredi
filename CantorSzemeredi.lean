@@ -34,4 +34,5 @@ import CantorSzemeredi.Dynamics.WMShift
 import CantorSzemeredi.Dynamics.WMClass
 import CantorSzemeredi.Dynamics.WMTransfer
 import CantorSzemeredi.Dynamics.WMPair
+import CantorSzemeredi.Dynamics.WMAverage
 import CantorSzemeredi.Dynamics.Fibre
