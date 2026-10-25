@@ -108,12 +108,16 @@
 
 \begin{lemma}[Extension principles]
   \label{lem:extensions}
+  \lean{CantorSzemeredi.MPS.csz_sets_of_compactExtension}
   \uses{def:csz, def:cwm, def:compact-extension, lem:wm-extension, thm:compact-extension}
   Let $\Dbb \subset \Ebb$ be factors of $(X,\Abb,m,T)$ with $\Dbb$ CSZ.
   \begin{enumerate}
     \item[(W)] If $\Ebb$ is a weakly mixing extension of $\Dbb$, then $\Ebb$ is CSZ.
     \item[(K)] If $\Ebb$ is a compact extension of $\Dbb$, then $\Ebb$ is CSZ.
   \end{enumerate}
+  % Formal status: (K) is \texttt{csz\_sets\_of\_compactExtension}, proved in the set form;
+  % (W) is not yet formalized, since it rests on \texttt{lem:wm-extension} and hence on
+  % \texttt{lem:wm-main}.  This lemma is therefore not yet marked as formalized.
 \end{lemma}
 
 \begin{proof}
