@@ -84,6 +84,33 @@ theorem integral_corr_eq_shifted (S : MPS) (s : ℕ → ℕ) (t : ℕ) (hs : Goo
     _ = _ := integral_prod_shift S (fun j y => f j y * f j (S.T^[s j * D] y)) t (s 0 * k)
         (fun j => s j * k) ha
 
+/-- Splitting a shift along a block: `T^{e(BA + C)} x = T^{eC} (T^{B(eA)} x)`, where
+`T^{B·p}` is the `p`-th power of the system `S.pow B`. -/
+theorem iterate_block_comm (S : MPS) (e B A C : ℕ) (x : S.X) :
+    S.T^[e * (B * A + C)] x = S.T^[e * C] ((S.pow B).T^[e * A] x) := by
+  have h : e * (B * A + C) = e * C + B * (e * A) := by ring
+  rw [h, Function.iterate_add_apply, Function.iterate_mul S.T B (e * A)]
+  rfl
+
+/-- **Step 1, re-indexing along a class.**  For `n = δ^ℓ a + c` with `c < δ^ℓ`, the shifted
+product at `k_n` equals the product of the functions `F_j ∘ T^{(s_j - s_0) k_c}` evaluated at
+the shifts by `T^{b^ℓ}` (the system `S.pow (b^ℓ)`) with exponents `(s_j - s_0) k_a`. -/
+theorem prod_reindex (C : CantorData) (S : MPS) (s : ℕ → ℕ) (t ℓ c a : ℕ)
+    (hc : c < C.delta ^ ℓ) (F : ℕ → S.X → ℝ) (x : S.X) :
+    ∏ j ∈ range t, F j (S.T^[(s j - s 0) * C.enum (C.delta ^ ℓ * a + c)] x)
+      = ∏ j ∈ range t,
+          (fun y => F j (S.T^[(s j - s 0) * C.enum c] y))
+            ((S.pow (C.base ^ ℓ)).T^[(s j - s 0) * C.enum a] x) := by
+  refine Finset.prod_congr rfl fun j _ => ?_
+  rw [C.enum_block ℓ a hc, iterate_block_comm]
+
+/-- The weak-mixing hypothesis passes to the power system `S.pow k` with the factors `D.toPow k`,
+`E.toPow k` (blueprint `lem:powers`(2), via `CondWeaklyMixing.pow`). -/
+theorem wmHyp_pow {S : MPS.{0}} {D E : Factor S} (hWM : S.WMHyp D E) {k : ℕ} (hk : 1 ≤ k) :
+    (S.pow k).WMHyp (D.toPow k) (E.toPow k) := by
+  intro g hg hK hmean
+  exact CondWeaklyMixing.pow (hWM g hg hK hmean) hk
+
 end MPS
 
 end CantorSzemeredi
