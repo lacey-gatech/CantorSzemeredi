@@ -155,13 +155,10 @@
 
 \begin{corollary}
   \label{cor:wm-compact-are-csz}
-  \lean{CantorSzemeredi.MPS.CSZ_of_compactSystem}
+  \lean{CantorSzemeredi.MPS.CSZ_of_compactSystem, CantorSzemeredi.MPS.CSZ_of_weaklyMixing}
+  \leanok
   \uses{lem:extensions, lem:trivial-csz, lem:wm-sets-to-functions, lem:compact-system-extension}
   Weakly mixing systems and compact systems are CSZ.
-  % Formal status: the compact-system part is \texttt{CSZ\_of\_compactSystem}.  The
-  % weakly-mixing part (\texttt{CSZ\_of\_weaklyMixing}) is not yet formalized: it rests on
-  % \texttt{lem:wm-sets-to-functions} and \texttt{lem:wm-extension}.  So this corollary is not
-  % yet marked as formalized.
 \end{corollary}
 
 \begin{proof}

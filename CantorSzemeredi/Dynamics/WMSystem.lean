@@ -70,6 +70,14 @@ theorem weaklyMixing_tendsto_prod {S : MPS.{0}} [StandardBorelSpace S.X] (hWM : 
   funext x
   exact hcongr p hp x
 
+/-- **Corollary `cor:wm-compact-are-csz`, the weakly mixing part.**  A weakly mixing system is CSZ:
+it is a weakly mixing extension of the trivial factor, which is CSZ, and the top factor is the
+system itself. -/
+theorem CSZ_of_weaklyMixing {S : MPS.{0}} [StandardBorelSpace S.X] (hWM : S.WeaklyMixing) :
+    (Factor.top S).CSZ :=
+  CSZ_of_weaklyMixingExtension (Factor.trivial S) (Factor.top S) bot_le (Factor.trivial_CSZ S)
+    (weaklyMixingExtension_of_weaklyMixing hWM)
+
 end MPS
 
 end CantorSzemeredi
