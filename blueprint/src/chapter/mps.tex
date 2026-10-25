@@ -77,7 +77,9 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 \begin{lemma}[Wiener's lemma]
   \label{lem:wiener}
   \lean{CantorSzemeredi.cesaroChar, CantorSzemeredi.tendsto_cesaroChar_of_ne_zero,
-    CantorSzemeredi.norm_cesaroChar_le_one, CantorSzemeredi.cesaroChar_zero}
+    CantorSzemeredi.norm_cesaroChar_le_one, CantorSzemeredi.cesaroChar_zero,
+    CantorSzemeredi.tendsto_cesaro_sq_atoms, CantorSzemeredi.noAtoms_iff_tendsto_cesaro_zero}
+  \leanok
   For a finite positive measure $\sigma$ on $\TT$,
   $\sum_{\theta} \sigma(\{\theta\})^2 = \lim_N \avg{1 \leq n \leq N} \abs{\widehat\sigma(n)}^2$.
   In particular $\sigma$ is atomless iff $\avg{1 \leq n \leq N} \abs{\widehat\sigma(n)}^2 \to 0$.
