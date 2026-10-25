@@ -38,5 +38,6 @@ import CantorSzemeredi.Dynamics.WMAverage
 import CantorSzemeredi.Dynamics.WMLimit
 import CantorSzemeredi.Dynamics.WMPerShift
 import CantorSzemeredi.Dynamics.WMSpectral
+import CantorSzemeredi.Dynamics.WMAverageShift
 import CantorSzemeredi.Dynamics.WMCorr
 import CantorSzemeredi.Dynamics.Fibre
