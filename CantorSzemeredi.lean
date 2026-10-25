@@ -48,3 +48,4 @@ import CantorSzemeredi.Dynamics.WMSystem
 import CantorSzemeredi.Dynamics.WMCorr
 import CantorSzemeredi.Dynamics.Fibre
 import CantorSzemeredi.VdW.Finitary
+import CantorSzemeredi.Dynamics.Structure

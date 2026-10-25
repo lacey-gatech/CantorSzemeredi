@@ -21,11 +21,11 @@ Status as of the handoff (git HEAD `6c9969b`, "Van der Waerden chapter formalize
 
 ### 1. Structure chapter (`structure.tex`), in document order
 
-None of these names exist in Lean yet (checked by grep; no `\leanok` on any item).
+The first item is done; the rest are not started.
 
 | Label | Lean name in blueprint | Status |
 |---|---|---|
-| `lem:sSup-factor` | `CantorSzemeredi.MPS.Factor.sSup` | not started |
+| `lem:sSup-factor` | `CantorSzemeredi.MPS.Factor.sSup` | **done** (`Structure.lean`) |
 | `lem:chain-approx` | `CantorSzemeredi.MPS.Factor.exists_mem_chain_symmDiff_lt` | not started |
 | `lem:chain-comparison` | `CantorSzemeredi.MPS.multiCorr_ge_half_of_condExp` | not started |
 | `lem:chain` | `CantorSzemeredi.MPS.CSZ_sSup_chain` | not started |
@@ -50,4 +50,4 @@ Notes:
 
 ## Next step
 
-Start at `lem:sSup-factor` in `structure.tex`. Read the blueprint proof, check which Mathlib lemmas on `Factor` and suprema of chains apply, write the Lean declaration, build the module, check axioms, update the blueprint, and commit.
+Start at `lem:chain-approx` in `structure.tex`. Read the blueprint proof, check which Mathlib lemmas on approximation from a chain apply (`exists_measure_symmDiff_lt_of_generateFrom_isSetSemiring`), write the Lean declaration in `Structure.lean`, build the module, check axioms, update the blueprint, and commit.
