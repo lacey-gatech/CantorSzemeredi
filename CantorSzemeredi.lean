@@ -22,4 +22,5 @@ import CantorSzemeredi.Dynamics.Unfortunate
 import CantorSzemeredi.Dynamics.CondJensenPow
 import CantorSzemeredi.Dynamics.CompactCSZ
 import CantorSzemeredi.Dynamics.CompactExtensionCSZ
+import CantorSzemeredi.Dynamics.CompactRoots
 import CantorSzemeredi.Dynamics.Fibre

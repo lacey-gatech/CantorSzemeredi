@@ -514,7 +514,8 @@ This section is independent of the main theorem and may be skipped.
 
 \begin{theorem}
   \label{thm:compact-roots-of-unity}
-  \lean{CantorSzemeredi.syndetic_of_rootsOfUnity_spectrum}
+  \lean{CantorSzemeredi.MPS.syndetic_of_rootsOfUnity_spectrum}
+  \leanok
   \uses{lem:syndetic-residues, def:syndetic, lem:telescoping}
   Let $(X,\Abb,m,T)$ be a measure preserving system in which the functions $h \in L^2(X)$
   satisfying $T^q h = h$ for some integer $q \geq 1$ are dense in $L^2(X)$.  Then for every
@@ -529,6 +530,11 @@ This section is independent of the main theorem and may be skipped.
 
 \begin{proof}
   \uses{lem:syndetic-residues, lem:telescoping}
+  \leanok
+  % Formal note: the L^1 bound for the clipped approximant is obtained from the pointwise
+  % inequality |w| <= (w^2 + eta^2)/(2 eta), not from ||w||_1 <= ||w||_2, so that no square root
+  % is taken; the integrals along the shifts are equal to the integral of |f - g| by invariance
+  % of m under T^k.
   Let $\eta \coloneqq \epsilon/(2(t+1))$ and choose $h \in L^2(X)$, $q \geq 1$ with $T^q h = h$
   (as elements of $L^2$, i.e.\ $h \circ T^q = h$ a.e.) and $\norm{f-h}_2 < \eta$.  Put
   $h' \coloneqq \min(1,\max(0,h))$, i.e.\ $h' = \pi \circ h$ with $\pi$ the projection of $\RR$
