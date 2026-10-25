@@ -47,3 +47,4 @@ import CantorSzemeredi.Dynamics.WMPartW
 import CantorSzemeredi.Dynamics.WMSystem
 import CantorSzemeredi.Dynamics.WMCorr
 import CantorSzemeredi.Dynamics.Fibre
+import CantorSzemeredi.VdW.Finitary

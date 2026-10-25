@@ -20,6 +20,7 @@ slightly different dress.
 \begin{lemma}[Disjoint digit ranges add]
   \label{lem:digit-ranges}
   \lean{CantorSzemeredi.CantorData.pow_mul_add_mem_of_lt_pow}
+  \leanok
   \uses{cor:absorb, cor:self-similar}
   Let $0 \leq h \leq h'$, let $a \in b^h\Cantor$ with $a < b^{h'}$, and let $c \in b^{h'}\Cantor$.
   Then $a + c \in b^h\Cantor$.
@@ -37,7 +38,8 @@ slightly different dress.
 
 \begin{theorem}[Cantor van der Waerden, dynamical form]
   \label{thm:cvdw}
-  \lean{CantorSzemeredi.topological_vdW}
+  \lean{CantorSzemeredi.CantorData.topological_vdW}
+  \leanok
   \uses{cor:self-similar, thm:cvdw-minimal}
   Let $(X,T)$ be a topological dynamical system and $(U_\alpha)_{\alpha \in A}$ an open cover of
   $X$.  Then for every $\ell \geq 1$ and every $h \geq 0$ there is an open set $U_\alpha$
@@ -67,7 +69,8 @@ slightly different dress.
 
 \begin{theorem}[Minimal case]
   \label{thm:cvdw-minimal}
-  \lean{CantorSzemeredi.topological_vdW_minimal}
+  \lean{CantorSzemeredi.CantorData.topological_vdW_minimal}
+  \leanok
   \uses{lem:color-focusing, cor:self-similar}
   Let $(X,T)$ be a minimal topological dynamical system, $U \subset X$ non-empty open,
   $\ell \geq 1$ and $h \geq 0$.  Then there are $y \in X$ and $r \in b^h\Cantor\setminus\{0\}$
@@ -76,6 +79,9 @@ slightly different dress.
 
 \begin{lemma}[Two consequences of minimality]
   \label{lem:minimal-facts}
+  \lean{CantorSzemeredi.IsMinimalSys.surjective, CantorSzemeredi.IsMinimalSys.exists_iterate_mem,
+    CantorSzemeredi.IsMinimalSys.exists_finset_cover}
+  \leanok
   Let $(X,T)$ be minimal.  Then (a) $T$ is onto; (b) for every $x \in X$ and non-empty open
   $U$ there is $n \geq 0$ with $T^nx \in U$; consequently (c) $X = \bigcup_{n \geq 0}T^{-n}U$,
   and by compactness there is a finite set $\{n_1,\dots,n_p\}$ with
@@ -119,7 +125,8 @@ slightly different dress.
 
 \begin{lemma}[Color focusing]
   \label{lem:color-focusing}
-  \lean{CantorSzemeredi.color_focusing}
+  \lean{CantorSzemeredi.CantorData.color_focusing}
+  \leanok
   \uses{cor:self-similar, lem:digit-ranges, lem:minimal-facts}
   In the setting of the proof of Theorem~\ref{thm:cvdw-minimal} --- a minimal $(X,T)$, a
   non-empty open $U$, $\ell \geq 2$, $h \geq 0$, a finite open cover $(U_\alpha)_{\alpha \in A}$
@@ -196,6 +203,7 @@ slightly different dress.
 \begin{corollary}[Finitary form]
   \label{cor:vdw-finitary}
   \lean{CantorSzemeredi.vdW_finitary}
+  \leanok
   \uses{thm:cvdw, lem:vdw-infinite}
   For all integers $L, \ell \geq 1$ there is $W = W(L,\ell)$ such that for every
   $\chi : [W] \to \{1,\dots,L\}$ there are $w_0 \in [W]$ and $r \in \Cantor\setminus\{0\}$ with
@@ -205,6 +213,7 @@ slightly different dress.
 \begin{lemma}[Infinite colourings]
   \label{lem:vdw-infinite}
   \lean{CantorSzemeredi.vdW_infinite}
+  \leanok
   \uses{thm:cvdw}
   Every $\chi : \NN \to \{1,\dots,L\}$ has a monochromatic $\ell$-term progression with common
   difference in $\Cantor\setminus\{0\}$: there are $w_0 \geq 1$ and $r \in \Cantor\setminus\{0\}$
