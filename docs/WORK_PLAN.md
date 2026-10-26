@@ -33,7 +33,7 @@ The first item is done; the rest are not started.
 | `thm:ecsz` | `CantorSzemeredi.MPS.CSZ_of_ergodic` | **proof complete** (`Structure.lean`; depends on `sorry` in `lem:dichotomy`; blueprint `\notready`) |
 | `lem:symbolic-model` | `CantorSzemeredi.MPS.symbolicModel`, `CantorSzemeredi.MPS.multiCorr_symbolicModel` | **done** (`SymbolicModel.lean`) |
 | `lem:ergodic-decomposition` | `CantorSzemeredi.MPS.ergodicKernel`, `ergodicKernel_comp_measure`, `ae_map_ergodicKernel_eq`, `ae_ergodic_ergodicKernel` | **proof complete** (`ErgodicDecomposition.lean`; `sorry` for `@CountablyGenerated S.X I.σ`; blueprint `\notready`) |
-| `lem:fatou-uniform` | `CantorSzemeredi.uniformLiminf_integral_ge` | not started |
+| `lem:fatou-uniform` | `CantorSzemeredi.uniformLiminf_integral_ge` | **done** (`Basic.lean`) |
 | `prop:reduction` | `CantorSzemeredi.MPS.CSZ_of_forall_ergodic_CSZ` | not started |
 | `thm:furstenberg-correspondence` | `CantorSzemeredi.furstenberg_correspondence` | not started |
 
@@ -50,4 +50,4 @@ Notes:
 
 ## Next step
 
-Start at `lem:fatou-uniform` in `structure.tex`.
+Start at `prop:reduction` in `structure.tex`.

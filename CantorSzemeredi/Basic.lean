@@ -111,4 +111,119 @@ theorem syndetic_of_uniformLiminf_pos {a : ℕ → ℝ} (ha : ∀ n, 0 ≤ a n)
   rw [Finset.mem_Ico] at hk
   exact ⟨k, hk0, hk.1, by omega⟩
 
+instance uniformFilter_isCountablyGenerated : IsCountablyGenerated uniformFilter :=
+  uniformFilter_hasBasis.isCountablyGenerated
+
+theorem uniformFilter_hasCountableBasis :
+    uniformFilter.HasCountableBasis (fun _ : ℕ => True)
+      (fun L => {p : ℕ × ℕ | L ≤ p.2 - p.1}) :=
+  ⟨uniformFilter_hasBasis, Set.to_countable _⟩
+
+/-- A uniform average of a sequence bounded above by `1` is at most `1`. -/
+theorem uniformAvg_le_one' {a : ℕ → ℝ} (ha1 : ∀ n, a n ≤ 1) (M N : ℕ) :
+    uniformAvg a M N ≤ 1 := by
+  unfold uniformAvg
+  rcases Nat.eq_zero_or_pos (N - M) with h | h
+  · simp [h]
+  · have hpos : (0 : ℝ) < ((N - M : ℕ) : ℝ) := by exact_mod_cast h
+    rw [div_le_one hpos]
+    calc ∑ n ∈ Finset.Ico M N, a n ≤ ∑ n ∈ Finset.Ico M N, (1 : ℝ) :=
+          Finset.sum_le_sum fun n _ => ha1 n
+      _ = ((N - M : ℕ) : ℝ) := by simp
+
+open MeasureTheory in
+theorem integral_uniformAvg_swap {Y : Type*} [MeasurableSpace Y] {ν : Measure Y}
+    {c : ℕ → Y → ℝ} (hci : ∀ n, Integrable (c n) ν) (M N : ℕ) :
+    uniformAvg (fun n => ∫ y, c n y ∂ν) M N =
+      ∫ y, uniformAvg (fun n => c n y) M N ∂ν := by
+  simp only [uniformAvg]
+  rw [← integral_finsetSum _ (fun n _ => hci n)]
+  exact (integral_div _ _).symm
+
+open MeasureTheory ENNReal Filter in
+/-- **Lemma `lem:fatou-uniform`.**  Fatou's lemma for the uniform liminf: the uniform liminf
+of integrals dominates the integral of the pointwise uniform liminf. -/
+theorem uniformLiminf_integral_ge {Y : Type*} [MeasurableSpace Y] {ν : Measure Y}
+    [IsProbabilityMeasure ν] {c : ℕ → Y → ℝ}
+    (hc0 : ∀ n y, 0 ≤ c n y) (hc1 : ∀ n y, c n y ≤ 1)
+    (hcm : ∀ n, Measurable (c n)) :
+    uniformLiminf (fun n => ∫ y, c n y ∂ν) ≥
+      ∫ y, uniformLiminf (fun n => c n y) ∂ν := by
+  -- Abbreviations
+  set a : ℕ → ℝ := fun n => ∫ y, c n y ∂ν
+  set F : ℕ × ℕ → Y → ℝ := fun p y => uniformAvg (fun n => c n y) p.1 p.2
+  set b : Y → ℝ := fun y => uniformLiminf (fun n => c n y)
+  -- Basic properties
+  have hint : ∀ n, Integrable (c n) ν := fun n =>
+    Integrable.of_bound (hcm n).aestronglyMeasurable 1
+      (ae_of_all _ fun y => by rw [Real.norm_eq_abs, abs_of_nonneg (hc0 n y)]; exact hc1 n y)
+  have ha1 : ∀ n, a n ≤ 1 := fun n => by
+    have h1 : a n ≤ ∫ _y, (1 : ℝ) ∂ν :=
+      integral_mono (hint n) (integrable_const 1) (hc1 n)
+    simp at h1; exact h1
+  have hF0 : ∀ p y, 0 ≤ F p y := fun p y => uniformAvg_nonneg (fun n => hc0 n y) p.1 p.2
+  have hF1 : ∀ p y, F p y ≤ 1 := fun p y => uniformAvg_le_one' (fun n => hc1 n y) p.1 p.2
+  have hFm : ∀ p, Measurable (F p) := fun p =>
+    (Finset.measurable_sum _ fun n _ => hcm n).div_const _
+  have hFi : ∀ p, Integrable (F p) ν := fun p =>
+    Integrable.of_bound (hFm p).aestronglyMeasurable 1
+      (ae_of_all _ fun y => by rw [Real.norm_eq_abs, abs_of_nonneg (hF0 p y)]; exact hF1 p y)
+  -- Measurability of b = uniformLiminf (c · y)
+  have hbm : Measurable b := Measurable.liminf' (fun p => hFm p)
+    uniformFilter_hasCountableBasis (fun _ => Set.to_countable _)
+  have hb0 : ∀ y, 0 ≤ b y := fun y =>
+    le_liminf_of_le (isCoboundedUnder_ge_of_le uniformFilter fun p => hF1 p y)
+      (Eventually.of_forall fun p => hF0 p y)
+  have hb1 : ∀ y, b y ≤ 1 := fun y =>
+    liminf_le_of_le (isBoundedUnder_of ⟨0, fun p => hF0 p y⟩)
+      fun c hc => by obtain ⟨p, hp⟩ := hc.exists; exact hp.trans (hF1 p y)
+  have hbi : Integrable b ν :=
+    Integrable.of_bound hbm.aestronglyMeasurable 1
+      (ae_of_all _ fun y => by rw [Real.norm_eq_abs, abs_of_nonneg (hb0 y)]; exact hb1 y)
+  -- Interchange: ∫ F_p dν = uniformAvg a p.1 p.2
+  have hswap : ∀ p : ℕ × ℕ, ∫ y, F p y ∂ν = uniformAvg a p.1 p.2 :=
+    fun p => (integral_uniformAvg_swap hint p.1 p.2).symm
+  -- Boundedness
+  have hcob : IsCoboundedUnder (· ≥ ·) uniformFilter (fun p => uniformAvg a p.1 p.2) :=
+    isCoboundedUnder_ge_of_le uniformFilter fun p => uniformAvg_le_one' ha1 p.1 p.2
+  have hbdd : IsBoundedUnder (· ≥ ·) uniformFilter (fun p => uniformAvg a p.1 p.2) :=
+    isBoundedUnder_of ⟨0, fun p =>
+      uniformAvg_nonneg (fun n => integral_nonneg (hc0 n)) p.1 p.2⟩
+  -- ENNReal Fatou via lintegral_liminf_le
+  set G : ℕ × ℕ → Y → ℝ≥0∞ := fun p y => ENNReal.ofReal (F p y)
+  have hFatou : ∫⁻ y, liminf (fun p => G p y) uniformFilter ∂ν ≤
+      liminf (fun p => ∫⁻ y, G p y ∂ν) uniformFilter :=
+    lintegral_liminf_le fun p => (hFm p).ennreal_ofReal
+  -- Convert ∫⁻ G_p = ofReal (∫ F_p) = ofReal (uniformAvg a)
+  have hGint : ∀ p, ∫⁻ y, G p y ∂ν = ENNReal.ofReal (uniformAvg a p.1 p.2) := fun p => by
+    rw [← hswap, ← ofReal_integral_eq_lintegral_ofReal (hFi p) (ae_of_all _ (hF0 p))]
+  -- Convert pointwise: ofReal(b y) ≤ liminf G_y (since ofReal is monotone)
+  have h_pt : ∀ y, ENNReal.ofReal (b y) ≤ liminf (fun p => G p y) uniformFilter := fun y =>
+    le_of_eq (ofReal_mono.map_liminf_of_continuousAt (fun p => F p y)
+      continuous_ofReal.continuousAt
+      (isCoboundedUnder_ge_of_le uniformFilter fun p => hF1 p y)
+      (isBoundedUnder_of ⟨0, fun p => hF0 p y⟩))
+  -- Convert global: liminf (ofReal ∘ uniformAvg a) = ofReal(uniformLiminf a)
+  have h_gl : liminf (fun p => ENNReal.ofReal (uniformAvg a p.1 p.2)) uniformFilter =
+      ENNReal.ofReal (uniformLiminf a) :=
+    (ofReal_mono.map_liminf_of_continuousAt _ continuous_ofReal.continuousAt hcob hbdd).symm
+  -- Chain: ofReal(∫ b dν) ≤ ∫⁻ liminf G ≤ liminf ∫⁻ G = ofReal(uniformLiminf a)
+  have hchain : ENNReal.ofReal (∫ y, b y ∂ν) ≤ ENNReal.ofReal (uniformLiminf a) :=
+    calc ENNReal.ofReal (∫ y, b y ∂ν)
+        = ∫⁻ y, ENNReal.ofReal (b y) ∂ν :=
+          ofReal_integral_eq_lintegral_ofReal hbi (ae_of_all _ hb0)
+      _ ≤ ∫⁻ y, liminf (fun p => G p y) uniformFilter ∂ν :=
+          lintegral_mono_ae (ae_of_all _ h_pt)
+      _ ≤ liminf (fun p => ∫⁻ y, G p y ∂ν) uniformFilter := hFatou
+      _ = liminf (fun p => ENNReal.ofReal (uniformAvg a p.1 p.2)) uniformFilter := by
+          congr 1; ext p; exact hGint p
+      _ = ENNReal.ofReal (uniformLiminf a) := h_gl
+  -- Convert back to ℝ
+  have hul0 : 0 ≤ uniformLiminf a :=
+    le_liminf_of_le hcob (Eventually.of_forall fun p =>
+      uniformAvg_nonneg (fun n => integral_nonneg (hc0 n)) p.1 p.2)
+  exact ge_iff_le.mpr (by
+    have := ENNReal.toReal_mono ofReal_ne_top hchain
+    rwa [toReal_ofReal (integral_nonneg hb0), toReal_ofReal hul0] at this)
+
 end CantorSzemeredi
