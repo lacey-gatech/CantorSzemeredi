@@ -50,3 +50,4 @@ import CantorSzemeredi.Dynamics.Fibre
 import CantorSzemeredi.VdW.Finitary
 import CantorSzemeredi.Dynamics.Structure
 import CantorSzemeredi.Dynamics.SymbolicModel
+import CantorSzemeredi.Dynamics.ErgodicDecomposition
