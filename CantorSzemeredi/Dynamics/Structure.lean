@@ -21,6 +21,7 @@ comap characterisation of invariance: `D.σ.comap T = D.σ` for each factor `D`,
 namespace CantorSzemeredi
 
 open MeasureTheory
+open scoped ENNReal symmDiff
 
 namespace MPS
 
@@ -89,6 +90,58 @@ theorem sSup_σ {ι : Type*} (D : ι → Factor S) : (sSup D).σ = ⨆ i, (D i).
 /-- Each member of the family is contained in the supremum. -/
 theorem le_sSup {ι : Type*} (D : ι → Factor S) (i : ι) : (D i).σ ≤ (sSup D).σ :=
   le_iSup (fun i => (D i).σ) i
+
+/-! ### Approximation from a chain -/
+
+/-- **Lemma `lem:chain-approx`.**  Every set in the supremum of a totally ordered chain of
+sub-σ-algebras is approximated in symmetric difference by a set in some member of the chain. -/
+theorem exists_mem_chain_symmDiff_lt {ι : Type*} [Nonempty ι]
+    {D : ι → Factor S}
+    (hchain : ∀ i j, (D i).σ ≤ (D j).σ ∨ (D j).σ ≤ (D i).σ)
+    {E : Set S.X} (hE : MeasurableSet[(sSup D).σ] E)
+    {η : ℝ≥0∞} (hη : 0 < η) :
+    ∃ i, ∃ E' : Set S.X, MeasurableSet[(D i).σ] E' ∧ S.m (E ∆ E') < η := by
+  set U : Set (Set S.X) := {s | ∃ i, @MeasurableSet S.X (D i).σ s}
+  have hle : (sSup D).σ ≤ S.measurableSpace := (sSup D).le
+  have hU_ring : IsSetRing U := by
+    constructor
+    · exact ⟨‹Nonempty ι›.some, @MeasurableSet.empty S.X (D ‹Nonempty ι›.some).σ⟩
+    · rintro s t ⟨i, hi⟩ ⟨j, hj⟩
+      rcases hchain i j with h | h
+      · exact ⟨j, (h s hi).union hj⟩
+      · exact ⟨i, hi.union (h t hj)⟩
+    · rintro s t ⟨i, hi⟩ ⟨j, hj⟩
+      rcases hchain i j with h | h
+      · exact ⟨j, (h s hi).diff hj⟩
+      · exact ⟨i, hi.diff (h t hj)⟩
+  have hgen : (sSup D).σ = MeasurableSpace.generateFrom U := by
+    change (⨆ i, (D i).σ) = MeasurableSpace.generateFrom U
+    apply le_antisymm
+    · exact iSup_le fun i s hs =>
+        MeasurableSpace.measurableSet_generateFrom (show s ∈ U from ⟨i, hs⟩)
+    · exact MeasurableSpace.generateFrom_le fun s ⟨i, hs⟩ =>
+        le_iSup (fun i => (D i).σ) i s hs
+  set μ := S.m.trim hle
+  set_option linter.style.haveILetI false in
+  haveI : @IsProbabilityMeasure S.X (sSup D).σ μ := ⟨by
+    show μ Set.univ = 1
+    change (S.m.trim hle) Set.univ = 1
+    rw [trim_measurableSet_eq hle (@MeasurableSet.univ S.X (sSup D).σ)]
+    exact measure_univ⟩
+  have hcover : ∃ D' : Set (Set S.X), D'.Countable ∧ D' ⊆ U ∧ μ (⋃₀ D')ᶜ = 0 := by
+    refine ⟨{Set.univ}, Set.countable_singleton _, ?_, ?_⟩
+    · intro s hs
+      rw [Set.mem_singleton_iff] at hs; subst hs
+      exact ⟨‹Nonempty ι›.some, @MeasurableSet.univ S.X (D ‹Nonempty ι›.some).σ⟩
+    · simp
+  obtain ⟨t, htU, htε⟩ := @exists_measure_symmDiff_lt_of_generateFrom_isSetRing S.X
+    (sSup D).σ μ inferInstance U hU_ring hcover hgen E hE η hη
+  obtain ⟨i, hti⟩ := htU
+  refine ⟨i, t, hti, ?_⟩
+  have hmeas : @MeasurableSet S.X (sSup D).σ (t ∆ E) :=
+    (le_iSup (fun i => (D i).σ) i t hti).symmDiff hE
+  rw [symmDiff_comm, ← trim_measurableSet_eq hle hmeas]
+  exact htε
 
 end Factor
 
