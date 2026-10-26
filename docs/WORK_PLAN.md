@@ -27,7 +27,7 @@ The first item is done; the rest are not started.
 |---|---|---|
 | `lem:sSup-factor` | `CantorSzemeredi.MPS.Factor.sSup` | **done** (`Structure.lean`) |
 | `lem:chain-approx` | `CantorSzemeredi.MPS.Factor.exists_mem_chain_symmDiff_lt` | **done** (`Structure.lean`) |
-| `lem:chain-comparison` | `CantorSzemeredi.MPS.multiCorr_ge_half_of_condExp` | not started |
+| `lem:chain-comparison` | `CantorSzemeredi.MPS.multiCorr_ge_half_of_condExp` | **done** (`Structure.lean`) |
 | `lem:chain` | `CantorSzemeredi.MPS.CSZ_sSup_chain` | not started |
 | `lem:dichotomy` | `CantorSzemeredi.MPS.weaklyMixingExtension_or_compactExtension` | not started |
 | `thm:ecsz` | `CantorSzemeredi.MPS.CSZ_of_ergodic` | not started |
@@ -50,4 +50,4 @@ Notes:
 
 ## Next step
 
-Start at `lem:chain-comparison` in `structure.tex`. Read the blueprint proof, write the Lean declaration in `Structure.lean`, build the module, check axioms, update the blueprint, and commit.
+Start at `lem:chain` in `structure.tex`. Read the blueprint proof, write the Lean declaration in `Structure.lean`, build the module, check axioms, update the blueprint, and commit.

@@ -71,6 +71,7 @@ the approximating factor.
 \begin{lemma}[Comparison of multiple correlations, one step at a time]
   \label{lem:chain-comparison}
   \lean{CantorSzemeredi.MPS.multiCorr_ge_half_of_condExp}
+  \leanok
   \uses{def:factor, lem:condexp-facts}
   Let $\Dbb_0$ be a factor, $E \in \Abb$, $t \geq 1$, $\kappa \coloneqq 1/(2(t+1))$, and put
   $g \coloneqq \Exp(\one_E\mid\Dbb_0)$ and $H \coloneqq \{g > 1 - \kappa\} \in \Dbb_0$.  Then for
@@ -82,6 +83,7 @@ the approximating factor.
 \end{lemma}
 
 \begin{proof}
+  \leanok
   \uses{lem:condexp-facts}
   Let $H_d \coloneqq \bigcap_{s=0}^{t} T^{-sd}H \in \Dbb_0$ ($\Dbb_0$ is $T$-invariant).  For
   each $s$,

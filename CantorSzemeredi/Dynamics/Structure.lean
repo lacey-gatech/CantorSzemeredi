@@ -5,6 +5,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Alex Burgin, Anastasios Fragkos, Michael T. Lacey, Dario Mena, Maria Carmen Reguera
 -/
 import CantorSzemeredi.Dynamics.System
+import CantorSzemeredi.Dynamics.CSZ
 
 /-!
 # Chains of CSZ factors
@@ -144,6 +145,130 @@ theorem exists_mem_chain_symmDiff_lt {ι : Type*} [Nonempty ι]
   exact htε
 
 end Factor
+
+/-! ### Comparison of multiple correlations -/
+
+variable {S : MPS}
+
+/-- Conditional expectation commutes with every iterate of `T` (local copy). -/
+private theorem condExp_comp_iterate' (D : Factor S) (n : ℕ) :
+    ∀ {a : S.X → ℝ}, Integrable a S.m →
+      S.m[a ∘ S.T^[n] | D.σ] =ᵐ[S.m] (S.m[a | D.σ]) ∘ S.T^[n] := by
+  induction n with
+  | zero => intro a _; simp
+  | succ n ih =>
+    intro a ha
+    have ha' : Integrable (a ∘ S.T) S.m :=
+      (S.measurePreserving.integrable_comp ha.aestronglyMeasurable).2 ha
+    rw [Function.iterate_succ', ← Function.comp_assoc, ← Function.comp_assoc]
+    exact (ih ha').trans
+      ((S.measurePreserving_T_iterate n).quasiMeasurePreserving.ae_eq_comp
+        (D.condExp_comp ha).symm)
+
+/-- **Lemma `lem:chain-comparison`.**  The multiple correlation along `E` is at least half
+that along `H = {E[𝟙_E ∣ D₀] > 1 − κ}`, where `κ = 1/(2(t+1))`. -/
+theorem multiCorr_ge_half_of_condExp (D₀ : Factor S) {E : Set S.X} (hE : MeasurableSet E)
+    {t : ℕ} (ht : 1 ≤ t) (d : ℕ) :
+    let g := S.m[E.indicator (1 : S.X → ℝ) | D₀.σ]
+    let κ : ℝ := 1 / (2 * (↑t + 1))
+    let H := {x : S.X | 1 - κ < g x}
+    S.multiCorr E t d ≥ 1 / 2 * S.multiCorr H t d := by
+  intro g κ H
+  show (S.m (⋂ s ∈ Finset.range (t + 1), (S.T^[s * d]) ⁻¹' E)).toReal ≥
+    1 / 2 * (S.m (⋂ s ∈ Finset.range (t + 1), (S.T^[s * d]) ⁻¹' H)).toReal
+  set IE := ⋂ s ∈ Finset.range (t + 1), (S.T^[s * d]) ⁻¹' E
+  set IH := ⋂ s ∈ Finset.range (t + 1), (S.T^[s * d]) ⁻¹' H
+  -- H is D₀-measurable (super-level set of the conditional expectation)
+  have hH_D : MeasurableSet[D₀.σ] H :=
+    (stronglyMeasurable_condExp (m := D₀.σ)).measurable measurableSet_Ioi
+  have hpreH_D : ∀ n, MeasurableSet[D₀.σ] ((S.T^[n]) ⁻¹' H) :=
+    fun n => D₀.measurable_T.iterate n hH_D
+  have hIH_D : MeasurableSet[D₀.σ] IH :=
+    @Finset.measurableSet_biInter _ _ D₀.σ _ _ fun s _ => hpreH_D (s * d)
+  have hIH : MeasurableSet IH := D₀.le _ hIH_D
+  have hIE : MeasurableSet IE :=
+    Finset.measurableSet_biInter _ fun s _ => (S.measurable_T.iterate _) hE
+  have hind_int : Integrable (E.indicator (1 : S.X → ℝ)) S.m :=
+    (integrable_indicator_iff hE).2 integrableOn_const
+  -- Per-step bound: m(IH \ T^{-sd}E) ≤ κ · m(IH)
+  have per_step : ∀ s ∈ Finset.range (t + 1),
+      (S.m (IH \ (S.T^[s * d]) ⁻¹' E)).toReal ≤ κ * (S.m IH).toReal := by
+    intro s hs
+    have hTsd_E : MeasurableSet ((S.T^[s * d]) ⁻¹' E) := (S.measurable_T.iterate _) hE
+    have hgT_ge : ∀ x ∈ IH, 1 - κ ≤ g (S.T^[s * d] x) :=
+      fun x hx => le_of_lt (Set.mem_iInter₂.1 hx s hs)
+    have hgT_int : Integrable (g ∘ S.T^[s * d]) S.m :=
+      ((S.measurePreserving_T_iterate (s * d)).integrable_comp
+        integrable_condExp.aestronglyMeasurable).2 integrable_condExp
+    have hfT_int : Integrable (E.indicator 1 ∘ S.T^[s * d]) S.m :=
+      ((S.measurePreserving_T_iterate (s * d)).integrable_comp
+        hind_int.aestronglyMeasurable).2 hind_int
+    have hint_eq : ∫ x in IH, E.indicator (1 : S.X → ℝ) (S.T^[s * d] x) ∂S.m
+        = ∫ x in IH, g (S.T^[s * d] x) ∂S.m := by
+      trans ∫ x in IH, S.m[E.indicator 1 ∘ S.T^[s * d] | D₀.σ] x ∂S.m
+      · exact (setIntegral_condExp D₀.le hfT_int hIH_D).symm
+      · exact setIntegral_congr_ae hIH
+          ((condExp_comp_iterate' D₀ (s * d) hind_int).mono fun x hx _ => hx)
+    have hint_meas : ∫ x in IH, E.indicator (1 : S.X → ℝ) (S.T^[s * d] x) ∂S.m
+        = (S.m (IH ∩ (S.T^[s * d]) ⁻¹' E)).toReal := by
+      have hrw : (fun x => E.indicator (1 : S.X → ℝ) (S.T^[s * d] x))
+          = ((S.T^[s * d]) ⁻¹' E).indicator 1 := by
+        ext x; rfl
+      rw [hrw, setIntegral_indicator hTsd_E]
+      simp [smul_eq_mul, measureReal_def]
+    have hint_ge : (1 - κ) * (S.m IH).toReal ≤
+        ∫ x in IH, g (S.T^[s * d] x) ∂S.m := by
+      rw [← measureReal_def]
+      exact setIntegral_ge_of_const_le_real hIH (measure_ne_top _ _) hgT_ge
+        hgT_int.integrableOn
+    have hadd : (S.m (IH ∩ (S.T^[s * d]) ⁻¹' E)).toReal +
+        (S.m (IH \ (S.T^[s * d]) ⁻¹' E)).toReal = (S.m IH).toReal := by
+      rw [← ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _)]
+      congr 1; exact measure_inter_add_sdiff IH hTsd_E
+    have key : (1 - κ) * (S.m IH).toReal ≤ (S.m (IH ∩ (S.T^[s * d]) ⁻¹' E)).toReal :=
+      hint_meas ▸ hint_eq.symm ▸ hint_ge
+    linarith
+  -- Union bound: m(IH \ IE) ≤ ½ m(IH)
+  have hunion : (S.m (IH \ IE)).toReal ≤ 1 / 2 * (S.m IH).toReal := by
+    have hdiff_eq : IH \ IE =
+        ⋃ s ∈ Finset.range (t + 1), (IH \ (S.T^[s * d]) ⁻¹' E) := by
+      ext x
+      simp only [Set.mem_sdiff, IE, Set.mem_iUnion₂, Set.mem_iInter₂]
+      constructor
+      · rintro ⟨hx, h⟩; push Not at h; obtain ⟨i, hi, hni⟩ := h
+        exact ⟨i, hi, hx, hni⟩
+      · rintro ⟨i, hi, hx, hni⟩; exact ⟨hx, fun h => hni (h i hi)⟩
+    rw [hdiff_eq]
+    have hne : (∑ s ∈ Finset.range (t + 1),
+        S.m (IH \ (S.T^[s * d]) ⁻¹' E)) ≠ ⊤ :=
+      (ENNReal.sum_lt_top.2 fun s _ => measure_lt_top _ _).ne
+    calc (S.m (⋃ s ∈ Finset.range (t + 1),
+            (IH \ (S.T^[s * d]) ⁻¹' E))).toReal
+        ≤ (∑ s ∈ Finset.range (t + 1),
+            S.m (IH \ (S.T^[s * d]) ⁻¹' E)).toReal :=
+          ENNReal.toReal_mono hne (measure_biUnion_finset_le _ _)
+      _ = ∑ s ∈ Finset.range (t + 1),
+            (S.m (IH \ (S.T^[s * d]) ⁻¹' E)).toReal :=
+          ENNReal.toReal_sum fun s _ => (measure_ne_top _ _)
+      _ ≤ ∑ _ ∈ Finset.range (t + 1), κ * (S.m IH).toReal :=
+          Finset.sum_le_sum per_step
+      _ = ↑(t + 1) * κ * (S.m IH).toReal := by
+          rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_assoc]
+      _ = 1 / 2 * (S.m IH).toReal := by
+          congr 1
+          show (↑(t + 1) : ℝ) * (1 / (2 * (↑t + 1))) = 1 / 2
+          have : (↑t + (1 : ℝ)) ≠ 0 := by positivity
+          push_cast; field_simp
+  -- m(IE) ≥ m(IH ∩ IE) = m(IH) − m(IH \ IE) ≥ ½ m(IH)
+  have hadd : (S.m (IH ∩ IE)).toReal + (S.m (IH \ IE)).toReal = (S.m IH).toReal := by
+    rw [← ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _)]
+    congr 1; exact measure_inter_add_sdiff IH hIE
+  calc (S.m IE).toReal
+      ≥ (S.m (IH ∩ IE)).toReal :=
+        ENNReal.toReal_mono (measure_ne_top _ _) (measure_mono Set.inter_subset_right)
+    _ = (S.m IH).toReal - (S.m (IH \ IE)).toReal := by linarith
+    _ ≥ (S.m IH).toReal - 1 / 2 * (S.m IH).toReal := by linarith
+    _ = 1 / 2 * (S.m IH).toReal := by ring
 
 end MPS
 
