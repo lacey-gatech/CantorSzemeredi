@@ -30,7 +30,7 @@ The first item is done; the rest are not started.
 | `lem:chain-comparison` | `CantorSzemeredi.MPS.multiCorr_ge_half_of_condExp` | **done** (`Structure.lean`) |
 | `lem:chain` | `CantorSzemeredi.MPS.CSZ_sSup_chain` | **done** (`Structure.lean`) |
 | `lem:dichotomy` | `CantorSzemeredi.MPS.weaklyMixingExtension_or_compactExtension` | **stated with `sorry`** (`Structure.lean`; blueprint `\notready`) |
-| `thm:ecsz` | `CantorSzemeredi.MPS.CSZ_of_ergodic` | not started |
+| `thm:ecsz` | `CantorSzemeredi.MPS.CSZ_of_ergodic` | **proof complete** (`Structure.lean`; depends on `sorry` in `lem:dichotomy`; blueprint `\notready`) |
 | `lem:symbolic-model` | `CantorSzemeredi.MPS.symbolicModel`, `CantorSzemeredi.MPS.multiCorr_symbolicModel` | not started |
 | `lem:ergodic-decomposition` | `CantorSzemeredi.MPS.ergodicDecomposition` | not started |
 | `lem:fatou-uniform` | `CantorSzemeredi.uniformLiminf_integral_ge` | not started |
@@ -50,4 +50,4 @@ Notes:
 
 ## Next step
 
-Start at `thm:ecsz` in `structure.tex`. The dichotomy (`lem:dichotomy`) is stated with `sorry` as the blueprint recommends; `thm:ecsz` can be written against it.
+Start at `lem:symbolic-model` in `structure.tex`.

@@ -8,6 +8,8 @@ import CantorSzemeredi.Dynamics.System
 import CantorSzemeredi.Dynamics.CSZ
 import CantorSzemeredi.Dynamics.CompactExtensionCSZ
 import CantorSzemeredi.Dynamics.CompactSystem
+import CantorSzemeredi.Dynamics.WMPartW
+import Mathlib.Order.Zorn
 
 /-!
 # Chains of CSZ factors
@@ -403,6 +405,53 @@ theorem weaklyMixingExtension_or_compactExtension
     WeaklyMixingExtension D (Factor.top S) ∨
     ∃ E : Factor S, D.σ < E.σ ∧ CompactExtension D E := by
   sorry
+
+/-! ### The structure theorem -/
+
+/-- **Theorem `thm:ecsz`.**  Every ergodic system satisfying the standing assumption is CSZ.
+
+The proof uses Zorn's lemma to find a maximal CSZ factor and then shows it must be the
+whole σ-algebra by applying the Furstenberg dichotomy (`lem:dichotomy`). -/
+theorem CSZ_of_ergodic {S : MPS.{0}} [StandardBorelSpace S.X]
+    (_herg : Ergodic S.T S.m) : (Factor.top S).CSZ := by
+  set K : Set (MeasurableSpace S.X) := {M | ∃ D : Factor S, D.σ = M ∧ D.CSZ}
+  -- Chain condition: every chain in K has an upper bound in K
+  have hchain_bound : ∀ c ⊆ K, IsChain (· ≤ ·) c → ∃ ub ∈ K, ∀ z ∈ c, z ≤ ub := by
+    intro c hcK hchain
+    rcases c.eq_empty_or_nonempty with rfl | hne
+    · exact ⟨(Factor.trivial S).σ, ⟨Factor.trivial S, rfl, Factor.trivial_CSZ S⟩,
+        fun _ hz => hz.elim⟩
+    · -- Nonempty chain: the sSup is CSZ by lem:chain
+      haveI : Nonempty ↥c := hne.to_subtype
+      choose D hDσ hDcsz using fun (x : ↥c) => hcK x.prop
+      have hchain_D : ∀ i j : ↥c, (D i).σ ≤ (D j).σ ∨ (D j).σ ≤ (D i).σ := by
+        intro i j
+        rcases eq_or_ne i.val j.val with heq | hne
+        · exact Or.inl (by rw [hDσ, hDσ, heq])
+        · have := hchain i.prop j.prop hne
+          rwa [← hDσ i, ← hDσ j] at this
+      refine ⟨(Factor.sSup D).σ, ⟨Factor.sSup D, rfl, CSZ_sSup_chain hchain_D hDcsz⟩,
+        fun z hz => ?_⟩
+      have := Factor.le_sSup D ⟨z, hz⟩
+      rwa [hDσ] at this
+  -- Zorn's lemma: get a maximal CSZ factor
+  obtain ⟨M, hMK, hmax⟩ := zorn_le₀ K hchain_bound
+  obtain ⟨D, hDσ, hDcsz⟩ := hMK
+  by_cases hDne : D.σ = S.measurableSpace
+  · -- D is the whole σ-algebra: convert D.CSZ to (Factor.top S).CSZ
+    intro C A hA hpos t ht i
+    exact hDcsz C A (by rwa [hDne]) hpos t ht i
+  · -- D is strictly smaller: apply the dichotomy
+    rcases weaklyMixingExtension_or_compactExtension D hDne with hwm | ⟨E, hDE, hce⟩
+    · -- Weakly mixing extension: top is CSZ
+      exact CSZ_of_weaklyMixingExtension D (Factor.top S) D.le hDcsz hwm
+    · -- Compact extension: E is CSZ and strictly larger, contradicting maximality of D
+      exfalso
+      have hE_csz := csz_sets_of_compactExtension D E hDcsz hce
+      have hle : M ≤ E.σ := by rw [← hDσ]; exact hDE.le
+      have hEM := hmax ⟨E, rfl, hE_csz⟩ hle
+      rw [← hDσ] at hEM
+      exact lt_irrefl _ (lt_of_lt_of_le hDE hEM)
 
 end MPS
 
