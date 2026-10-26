@@ -51,3 +51,4 @@ import CantorSzemeredi.VdW.Finitary
 import CantorSzemeredi.Dynamics.Structure
 import CantorSzemeredi.Dynamics.SymbolicModel
 import CantorSzemeredi.Dynamics.ErgodicDecomposition
+import CantorSzemeredi.Dynamics.Correspondence
