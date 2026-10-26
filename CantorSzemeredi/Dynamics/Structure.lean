@@ -9,6 +9,9 @@ import CantorSzemeredi.Dynamics.CSZ
 import CantorSzemeredi.Dynamics.CompactExtensionCSZ
 import CantorSzemeredi.Dynamics.CompactSystem
 import CantorSzemeredi.Dynamics.WMPartW
+import CantorSzemeredi.Dynamics.SymbolicModel
+import CantorSzemeredi.Dynamics.ErgodicDecomposition
+import CantorSzemeredi.Basic
 import Mathlib.Order.Zorn
 
 /-!
@@ -452,6 +455,140 @@ theorem CSZ_of_ergodic {S : MPS.{0}} [StandardBorelSpace S.X]
       have hEM := hmax ⟨E, rfl, hE_csz⟩ hle
       rw [← hDσ] at hEM
       exact lt_irrefl _ (lt_of_lt_of_le hDE hEM)
+
+/-! ### Reduction to the ergodic case -/
+
+set_option maxHeartbeats 1600000 in
+open MeasureTheory in
+private theorem CSZ_of_forall_ergodic_CSZ_assembly
+    {X : Type*} [MeasurableSpace X] {m : Measure X} [IsProbabilityMeasure m]
+    {c : ℕ → X → ℝ} (hc0 : ∀ n y, 0 ≤ c n y) (hc1 : ∀ n y, c n y ≤ 1)
+    (hcm : ∀ n, Measurable (c n))
+    {g : ℕ → ℝ} (h_decomp : ∀ n, g n = ∫ y, c n y ∂m)
+    {Ypos : Set X} (hY_pos : 0 < m Ypos)
+    (h_fibre_csz : ∀ y ∈ Ypos, 0 < uniformLiminf (fun n => c n y)) :
+    0 < uniformLiminf g := by
+  let b : X → ℝ := fun y => uniformLiminf (fun n => c n y)
+  have hb0 : ∀ y, 0 ≤ b y := fun y =>
+    uniformLiminf_nonneg (fun n => hc0 n y) (fun n => hc1 n y)
+  have hb1 : ∀ y, b y ≤ 1 := fun y =>
+    uniformLiminf_le_one (fun n => hc0 n y) (fun n => hc1 n y)
+  have hbm : Measurable b := Measurable.liminf'
+    (fun ⟨L, N⟩ => (Finset.measurable_sum (Finset.Ico L N) fun n _ => hcm n).div_const _)
+    uniformFilter_hasCountableBasis (fun _ => Set.to_countable _)
+  have hbi : Integrable b m :=
+    Integrable.of_bound hbm.aestronglyMeasurable 1
+      (ae_of_all _ fun y => by rw [Real.norm_eq_abs, abs_of_nonneg (hb0 y)]; exact hb1 y)
+  have h_int_pos : 0 < ∫ y, b y ∂m := by
+    rw [integral_pos_iff_support_of_nonneg_ae (Filter.Eventually.of_forall hb0) hbi]
+    exact lt_of_lt_of_le hY_pos (measure_mono fun y hy =>
+      Function.mem_support.mpr (ne_of_gt (h_fibre_csz y hy)))
+  calc (0 : ℝ) < ∫ y, b y ∂m := h_int_pos
+    _ ≤ uniformLiminf (fun n => ∫ y, c n y ∂m) := uniformLiminf_integral_ge hc0 hc1 hcm
+    _ = uniformLiminf g := by congr 1; ext n; exact (h_decomp n).symm
+
+set_option maxHeartbeats 1600000 in
+open ProbabilityTheory in
+private theorem CSZ_of_forall_ergodic_CSZ_aux
+    (herg : ∀ (R : MPS.{0}) [StandardBorelSpace R.X],
+      Ergodic R.T R.m → (Factor.top R).CSZ)
+    {S : MPS.{0}} [StandardBorelSpace S.X]
+    {A : Set S.X} (hA : MeasurableSet A) (hpos : 0 < S.m A)
+    (C : CantorData) (t : ℕ) (ht : 1 ≤ t) (i : ℕ) :
+    0 < uniformLiminf (fun n => S.multiCorr A t (C.base ^ i * C.enum n)) := by
+  -- Ergodic decomposition kernel
+  let κ := ergodicKernel S
+  -- Measurability of the intersection sets
+  have hE_meas : ∀ d, MeasurableSet (⋂ s ∈ Finset.range (t + 1),
+      (S.T^[s * d]) ⁻¹' A) := fun d =>
+    .biInter (Finset.countable_toSet _) fun s _ =>
+      (S.measurePreserving.measurable.iterate (s * d)) hA
+  -- Fibre correlation c_n(y) = (κ_y (⋂_s T^{−sd} A)).toReal ∈ [0,1]
+  let c : ℕ → S.X → ℝ := fun n y =>
+    ((κ y) (⋂ s ∈ Finset.range (t + 1),
+      (S.T^[s * (C.base ^ i * C.enum n)]) ⁻¹' A)).toReal
+  have hc0 : ∀ n y, 0 ≤ c n y := fun _ _ => ENNReal.toReal_nonneg
+  have hc1 : ∀ n y, c n y ≤ 1 := fun _ y =>
+    (ENNReal.toReal_mono ENNReal.one_ne_top
+      ((measure_mono (Set.subset_univ _)).trans_eq measure_univ)).trans_eq ENNReal.toReal_one
+  have hcm : ∀ n, Measurable (c n) := fun n =>
+    (κ.measurable_coe (hE_meas _)).ennreal_toReal
+  -- Integral decomposition via disintegration: multiCorr = ∫ c
+  have h_decomp : ∀ n, S.multiCorr A t (C.base ^ i * C.enum n) =
+      ∫ y, c n y ∂S.m := by
+    intro n; unfold multiCorr
+    set d := C.base ^ i * C.enum n
+    have h1 : S.m (⋂ s ∈ Finset.range (t + 1), (S.T^[s * d]) ⁻¹' A) =
+        ∫⁻ y, (κ y) (⋂ s ∈ Finset.range (t + 1), (S.T^[s * d]) ⁻¹' A) ∂S.m := by
+      conv_lhs => rw [← ergodicKernel_comp_measure (S := S)]
+      exact Measure.bind_apply (hE_meas d) κ.aemeasurable
+    rw [show (S.m _).toReal = (∫⁻ y, (κ y) _ ∂S.m).toReal from congrArg _ h1]
+    exact (integral_toReal (κ.measurable_coe (hE_meas d)).aemeasurable
+      (ae_of_all _ fun _ => measure_lt_top _ _)).symm
+  -- A has positive S.m-measure among the fibres
+  have h_pos_fibre : 0 < S.m {y | 0 < (κ y) A} := by
+    rw [show {y : S.X | 0 < (κ y) A} =
+        Function.support fun y => (κ y) A from by
+      ext y; simp [Function.support, pos_iff_ne_zero]]
+    rw [← lintegral_pos_iff_support (κ.measurable_coe hA),
+      show ∫⁻ y, (κ y) A ∂S.m = S.m A from by
+        conv_rhs => rw [← ergodicKernel_comp_measure (S := S)]
+        exact (Measure.bind_apply hA κ.aemeasurable).symm]
+    exact hpos
+  -- The good fibre set has positive measure
+  let Ypos : Set S.X := {y | 0 < (κ y) A} ∩
+    {y | Measure.map S.T (κ y) = κ y} ∩ {y | Ergodic S.T (κ y)}
+  have hY_pos : 0 < S.m Ypos := by
+    have hbad : S.m ({y | Measure.map S.T (κ y) = κ y}ᶜ ∪
+        {y | Ergodic S.T (κ y)}ᶜ) = 0 :=
+      measure_union_null_iff.mpr ⟨ae_iff.mp (ae_map_ergodicKernel_eq (S := S)),
+        ae_iff.mp (ae_ergodic_ergodicKernel (S := S))⟩
+    have hsub : {y : S.X | 0 < (κ y) A} ⊆
+        Ypos ∪ ({y | Measure.map S.T (κ y) = κ y}ᶜ ∪ {y | Ergodic S.T (κ y)}ᶜ) := by
+      intro y hy
+      by_cases hinv : Measure.map S.T (κ y) = κ y
+      · by_cases he : Ergodic S.T (κ y)
+        · exact Or.inl ⟨⟨hy, hinv⟩, he⟩
+        · exact Or.inr (Or.inr he)
+      · exact Or.inr (Or.inl hinv)
+    calc 0 < S.m {y | 0 < (κ y) A} := h_pos_fibre
+      _ ≤ S.m Ypos + S.m ({y | Measure.map S.T (κ y) = κ y}ᶜ ∪
+          {y | Ergodic S.T (κ y)}ᶜ) :=
+        (measure_mono hsub).trans (measure_union_le _ _)
+      _ = S.m Ypos := by rw [hbad, add_zero]
+  -- For y ∈ Ypos, the fibrewise uniform liminf is positive
+  have h_fibre_csz : ∀ y ∈ Ypos, 0 < uniformLiminf (fun n => c n y) := by
+    intro y ⟨⟨hpos_y, hinv⟩, herg_y⟩
+    exact @herg
+      { X := S.X
+        m := κ y
+        T := S.T
+        measurableEquiv := S.measurableEquiv
+        coe_measurableEquiv := S.coe_measurableEquiv
+        measurePreserving := ⟨S.measurePreserving.measurable, hinv⟩ }
+      ‹StandardBorelSpace S.X› herg_y C A hA hpos_y t ht i
+  -- Assemble: positivity of integral + Fatou + decomposition
+  exact CSZ_of_forall_ergodic_CSZ_assembly hc0 hc1 hcm h_decomp hY_pos h_fibre_csz
+
+/-- **Proposition `prop:reduction`.**  If every ergodic system on a standard Borel space is CSZ,
+then every MPS is CSZ.
+
+Proof: symbolic model → ergodic decomposition → hypothesis on fibres → Fatou. -/
+theorem CSZ_of_forall_ergodic_CSZ
+    (herg : ∀ (R : MPS.{0}) [StandardBorelSpace R.X],
+      Ergodic R.T R.m → (Factor.top R).CSZ)
+    (S : MPS) : (Factor.top S).CSZ := by
+  intro C A hA' hpos t ht i
+  have hA : MeasurableSet A := hA'
+  simp_rw [← multiCorr_symbolicModel S hA]
+  haveI : StandardBorelSpace (S.symbolicModel hA).X :=
+    (inferInstance : StandardBorelSpace (ℤ → Fin 2))
+  exact CSZ_of_forall_ergodic_CSZ_aux herg measurableSet_symbolicSet (by
+    change 0 < (Measure.map (S.codingMap A) S.m) symbolicSet
+    rw [Measure.map_apply (S.measurable_codingMap hA) measurableSet_symbolicSet]
+    have h := preimage_codingMap_shift S A 0
+    simp only [Function.iterate_zero, Set.preimage_id] at h
+    rw [h]; exact hpos) C t ht i
 
 end MPS
 

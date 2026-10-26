@@ -34,7 +34,7 @@ The first item is done; the rest are not started.
 | `lem:symbolic-model` | `CantorSzemeredi.MPS.symbolicModel`, `CantorSzemeredi.MPS.multiCorr_symbolicModel` | **done** (`SymbolicModel.lean`) |
 | `lem:ergodic-decomposition` | `CantorSzemeredi.MPS.ergodicKernel`, `ergodicKernel_comp_measure`, `ae_map_ergodicKernel_eq`, `ae_ergodic_ergodicKernel` | **proof complete** (`ErgodicDecomposition.lean`; `sorry` for `@CountablyGenerated S.X I.σ`; blueprint `\notready`) |
 | `lem:fatou-uniform` | `CantorSzemeredi.uniformLiminf_integral_ge` | **done** (`Basic.lean`) |
-| `prop:reduction` | `CantorSzemeredi.MPS.CSZ_of_forall_ergodic_CSZ` | not started |
+| `prop:reduction` | `CantorSzemeredi.MPS.CSZ_of_forall_ergodic_CSZ` | **proof complete** (`Structure.lean`; depends on `sorry` in `lem:ergodic-decomposition`; blueprint `\notready`) |
 | `thm:furstenberg-correspondence` | `CantorSzemeredi.furstenberg_correspondence` | not started |
 
 Notes:
@@ -50,4 +50,4 @@ Notes:
 
 ## Next step
 
-Start at `prop:reduction` in `structure.tex`.
+Start at `thm:furstenberg-correspondence` in `structure.tex`.

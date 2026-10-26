@@ -140,6 +140,23 @@ theorem integral_uniformAvg_swap {Y : Type*} [MeasurableSpace Y] {ν : Measure Y
   rw [← integral_finsetSum _ (fun n _ => hci n)]
   exact (integral_div _ _).symm
 
+open Filter in
+set_option maxHeartbeats 800000 in
+theorem uniformLiminf_nonneg {c : ℕ → ℝ} (hc0 : ∀ n, 0 ≤ c n)
+    (hc1 : ∀ n, c n ≤ 1) :
+    0 ≤ uniformLiminf c :=
+  le_liminf_of_le
+    (isCoboundedUnder_ge_of_le uniformFilter fun p => uniformAvg_le_one' hc1 p.1 p.2)
+    (Eventually.of_forall fun p => uniformAvg_nonneg hc0 p.1 p.2)
+
+open Filter in
+set_option maxHeartbeats 800000 in
+theorem uniformLiminf_le_one {c : ℕ → ℝ} (hc0 : ∀ n, 0 ≤ c n)
+    (hc1 : ∀ n, c n ≤ 1) :
+    uniformLiminf c ≤ 1 :=
+  liminf_le_of_le (isBoundedUnder_of ⟨0, fun p => uniformAvg_nonneg hc0 p.1 p.2⟩)
+    fun _ hc => by obtain ⟨p, hp⟩ := hc.exists; exact hp.trans (uniformAvg_le_one' hc1 p.1 p.2)
+
 open MeasureTheory ENNReal Filter in
 /-- **Lemma `lem:fatou-uniform`.**  Fatou's lemma for the uniform liminf: the uniform liminf
 of integrals dominates the integral of the pointwise uniform liminf. -/

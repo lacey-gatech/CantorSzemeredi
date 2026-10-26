@@ -7,6 +7,7 @@ Authors: Alex Burgin, Anastasios Fragkos, Michael T. Lacey, Dario Mena, Maria Ca
 import CantorSzemeredi.Dynamics.CSZ
 import CantorSzemeredi.Dynamics.Unfortunate
 import CantorSzemeredi.Dynamics.CondJensenPow
+import CantorSzemeredi.Basic
 
 /-!
 # The compact-extension theorem: the pointwise estimates
@@ -304,18 +305,6 @@ theorem density_of_uniformLiminf {a : ℕ → ℝ} (ha0 : ∀ n, 0 ≤ a n) (ha1
   linarith
 
 end MPS
-
-/-- A uniform average of a sequence with values in `[0,1]` is at most `1`. -/
-theorem uniformAvg_le_one' {a : ℕ → ℝ} (ha1 : ∀ n, a n ≤ 1) (M N : ℕ) :
-    uniformAvg a M N ≤ 1 := by
-  unfold uniformAvg
-  rcases Nat.eq_zero_or_pos (N - M) with h | h
-  · simp [h]
-  · have hpos : (0 : ℝ) < ((N - M : ℕ) : ℝ) := by exact_mod_cast h
-    rw [div_le_one hpos]
-    calc ∑ n ∈ Finset.Ico M N, a n ≤ ∑ n ∈ Finset.Ico M N, (1 : ℝ) :=
-          Finset.sum_le_sum fun n _ => ha1 n
-      _ = ((N - M : ℕ) : ℝ) := by simp
 
 /-- **Block sums.**  If each block `[δ u, δ(u+1))` of indices contains a point `v u` at which the
 sequence is at least `c2`, then a window `[M, N)` contains at least `c2 · #{u ∈ [M/δ+1, N/δ) : B u}`
