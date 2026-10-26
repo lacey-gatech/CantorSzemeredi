@@ -31,7 +31,7 @@ The first item is done; the rest are not started.
 | `lem:chain` | `CantorSzemeredi.MPS.CSZ_sSup_chain` | **done** (`Structure.lean`) |
 | `lem:dichotomy` | `CantorSzemeredi.MPS.weaklyMixingExtension_or_compactExtension` | **stated with `sorry`** (`Structure.lean`; blueprint `\notready`) |
 | `thm:ecsz` | `CantorSzemeredi.MPS.CSZ_of_ergodic` | **proof complete** (`Structure.lean`; depends on `sorry` in `lem:dichotomy`; blueprint `\notready`) |
-| `lem:symbolic-model` | `CantorSzemeredi.MPS.symbolicModel`, `CantorSzemeredi.MPS.multiCorr_symbolicModel` | not started |
+| `lem:symbolic-model` | `CantorSzemeredi.MPS.symbolicModel`, `CantorSzemeredi.MPS.multiCorr_symbolicModel` | **done** (`SymbolicModel.lean`) |
 | `lem:ergodic-decomposition` | `CantorSzemeredi.MPS.ergodicDecomposition` | not started |
 | `lem:fatou-uniform` | `CantorSzemeredi.uniformLiminf_integral_ge` | not started |
 | `prop:reduction` | `CantorSzemeredi.MPS.CSZ_of_forall_ergodic_CSZ` | not started |
@@ -50,4 +50,4 @@ Notes:
 
 ## Next step
 
-Start at `lem:symbolic-model` in `structure.tex`.
+Start at `lem:ergodic-decomposition` in `structure.tex`.
