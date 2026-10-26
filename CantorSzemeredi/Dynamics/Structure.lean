@@ -7,6 +7,7 @@ Authors: Alex Burgin, Anastasios Fragkos, Michael T. Lacey, Dario Mena, Maria Ca
 import CantorSzemeredi.Dynamics.System
 import CantorSzemeredi.Dynamics.CSZ
 import CantorSzemeredi.Dynamics.CompactExtensionCSZ
+import CantorSzemeredi.Dynamics.CompactSystem
 
 /-!
 # Chains of CSZ factors
@@ -385,6 +386,23 @@ theorem CSZ_sSup_chain {ι : Type*} [Nonempty ι]
       (fun n => S.multiCorr_nonneg E t _)
       (fun n => multiCorr_le_one E t _)
       (fun n => hcomp _)
+
+/-! ### The dichotomy -/
+
+/-- **Lemma `lem:dichotomy`.**  Let `D` be a factor with `D.σ ≠ 𝒜`.  Then either `𝒜` is a
+weakly mixing extension of `D`, or there is a strictly larger factor `E` which is a compact
+extension of `D`.
+
+This is Furstenberg's structure theorem for a single step; see Moreira, Proposition 8.6.1.
+The blueprint recommends stating it with `sorry` and completing the proof as its own project.
+See the remark after `lem:dichotomy` in `structure.tex` for what is already formalised
+towards it. -/
+theorem weaklyMixingExtension_or_compactExtension
+    (D : Factor S)
+    (hD : D.σ ≠ S.measurableSpace) :
+    WeaklyMixingExtension D (Factor.top S) ∨
+    ∃ E : Factor S, D.σ < E.σ ∧ CompactExtension D E := by
+  sorry
 
 end MPS
 
