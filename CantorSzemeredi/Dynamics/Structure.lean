@@ -6,6 +6,7 @@ Authors: Alex Burgin, Anastasios Fragkos, Michael T. Lacey, Dario Mena, Maria Ca
 -/
 import CantorSzemeredi.Dynamics.System
 import CantorSzemeredi.Dynamics.CSZ
+import CantorSzemeredi.Dynamics.CompactExtensionCSZ
 
 /-!
 # Chains of CSZ factors
@@ -269,6 +270,121 @@ theorem multiCorr_ge_half_of_condExp (D₀ : Factor S) {E : Set S.X} (hE : Measu
     _ = (S.m IH).toReal - (S.m (IH \ IE)).toReal := by linarith
     _ ≥ (S.m IH).toReal - 1 / 2 * (S.m IH).toReal := by linarith
     _ = 1 / 2 * (S.m IH).toReal := by ring
+
+/-! ### Chains of CSZ factors -/
+
+/-- A `multiCorr` value lies in `[0, 1]` (probability measure). -/
+theorem multiCorr_le_one (A : Set S.X) (t d : ℕ) : S.multiCorr A t d ≤ 1 := by
+  change (S.m _).toReal ≤ 1
+  calc (S.m _).toReal ≤ (S.m Set.univ).toReal :=
+    ENNReal.toReal_mono (measure_ne_top _ _) (measure_mono (Set.subset_univ _))
+  _ = 1 := by simp [measure_univ]
+
+/-- **Lemma `lem:chain`.**  The supremum of a nonempty totally ordered family of CSZ factors
+is itself CSZ. -/
+theorem CSZ_sSup_chain {ι : Type*} [Nonempty ι]
+    {D : ι → Factor S}
+    (hchain : ∀ i j, (D i).σ ≤ (D j).σ ∨ (D j).σ ≤ (D i).σ)
+    (hcsz : ∀ i, (D i).CSZ) :
+    (Factor.sSup D).CSZ := by
+  intro C E hE hEpos t ht i
+  have hE_amb : MeasurableSet E := (Factor.sSup D).le _ hE
+  set κ : ℝ := 1 / (2 * (↑t + 1)) with hκ_def
+  have hκ_pos : (0 : ℝ) < κ := by positivity
+  have hκ_lt : κ < 1 := by
+    rw [hκ_def, div_lt_one (by positivity : (0 : ℝ) < 2 * (↑t + 1))]
+    linarith [show (1 : ℝ) ≤ t from Nat.one_le_cast.mpr ht]
+  -- Choose α and E' ∈ D_α with m(E △ E') < κ²m(E)
+  have hη : (0 : ℝ≥0∞) < ENNReal.ofReal (κ ^ 2) * S.m E :=
+    ENNReal.mul_pos (ENNReal.ofReal_pos.mpr (sq_pos_of_pos hκ_pos)).ne' hEpos.ne'
+  obtain ⟨α, E', hE'_meas, hsd⟩ :=
+    Factor.exists_mem_chain_symmDiff_lt hchain hE hη
+  have hE'_amb : MeasurableSet E' := (D α).le _ hE'_meas
+  -- g = E[1_E | D_α], H = {g > 1 − κ}
+  set g := S.m[E.indicator (1 : S.X → ℝ) | (D α).σ]
+  set H := {x : S.X | 1 - κ < g x}
+  have hH_D : MeasurableSet[(D α).σ] H :=
+    (stronglyMeasurable_condExp (m := (D α).σ)).measurable measurableSet_Ioi
+  have hind_int : Integrable (E.indicator (1 : S.X → ℝ)) S.m :=
+    (integrable_indicator_iff hE_amb).2 integrableOn_const
+  -- m(H) > 0 by integral argument
+  have hH_pos : 0 < S.m H := by
+    by_contra hle
+    rw [not_lt, nonpos_iff_eq_zero] at hle
+    -- g ≤ 1 − κ a.e. (since H = {g > 1−κ} is null)
+    have hg_le : g ≤ᵐ[S.m] fun _ => 1 - κ := by
+      have : {x | ¬(g x ≤ 1 - κ)} = H := by ext x; simp [not_le, H]
+      exact ae_iff.mpr (this ▸ hle)
+    -- ∫_{E'} g dm = ∫_{E'} 1_E dm  (condExp defining property)
+    have hint_eq : ∫ x in E', g x ∂S.m = ∫ x in E', E.indicator (1 : S.X → ℝ) x ∂S.m :=
+      setIntegral_condExp (D α).le hind_int hE'_meas
+    -- ∫_{E'} 1_E dm = m(E' ∩ E).toReal
+    have hint_val : ∫ x in E', E.indicator (1 : S.X → ℝ) x ∂S.m =
+        (S.m (E' ∩ E)).toReal := by
+      rw [setIntegral_indicator hE_amb]; simp [smul_eq_mul, measureReal_def]
+    -- ∫_{E'} g dm ≤ (1−κ) · m(E').toReal  (pointwise bound)
+    have hint_le : ∫ x in E', g x ∂S.m ≤ (1 - κ) * (S.m E').toReal := by
+      calc ∫ x in E', g x ∂S.m
+          ≤ ∫ x in E', (1 - κ) ∂S.m :=
+            setIntegral_mono_ae integrable_condExp.integrableOn integrableOn_const hg_le
+        _ = (1 - κ) * (S.m E').toReal := by
+            simp [smul_eq_mul, measureReal_def, mul_comm]
+    -- m(E' ∩ E).toReal ≤ (1−κ) · m(E').toReal
+    have hineq1 : (S.m (E' ∩ E)).toReal ≤ (1 - κ) * (S.m E').toReal := by linarith
+    -- m(E') = m(E' ∩ E) + m(E' \ E) (as reals)
+    have hsplit : (S.m E').toReal = (S.m (E' ∩ E)).toReal + (S.m (E' \ E)).toReal := by
+      rw [← ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _)]
+      congr 1; exact (measure_inter_add_sdiff E' hE_amb).symm
+    have hsdiff_le : S.m (E' \ E) ≤ S.m (E ∆ E') :=
+      measure_mono le_sup_right
+    have hsdiff_le' : S.m (E \ E') ≤ S.m (E ∆ E') :=
+      measure_mono le_sup_left
+    -- m(E ∩ E').toReal = m(E).toReal − m(E \ E').toReal
+    have hsplit2 : (S.m (E ∩ E')).toReal + (S.m (E \ E')).toReal = (S.m E).toReal := by
+      rw [← ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _)]
+      congr 1; exact measure_inter_add_sdiff E hE'_amb
+    -- Key chain: κ · m(E'∩E) ≤ (1−κ) · m(E'\E) < (1−κ)κ²m(E)
+    -- But m(E'∩E) = m(E∩E') ≥ m(E) − m(E△E') > m(E)(1−κ²) = m(E)(1−κ)(1+κ)
+    -- These combined give (1+κ) < κ, contradiction.
+    have hsd_real : (S.m (E ∆ E')).toReal < κ ^ 2 * (S.m E).toReal := by
+      have h := (ENNReal.toReal_lt_toReal (measure_ne_top _ _)
+        (ENNReal.mul_ne_top ENNReal.ofReal_ne_top (measure_ne_top _ _))).mpr hsd
+      rwa [ENNReal.toReal_mul, ENNReal.toReal_ofReal (sq_nonneg κ)] at h
+    have inter_comm : S.m (E' ∩ E) = S.m (E ∩ E') := by rw [Set.inter_comm]
+    have hcomm : (S.m (E' ∩ E)).toReal = (S.m (E ∩ E')).toReal := by
+      rw [Set.inter_comm]
+    have h1 : κ * (S.m (E ∩ E')).toReal ≤
+        (1 - κ) * (S.m (E' \ E)).toReal := by nlinarith
+    have h2 : (S.m (E' \ E)).toReal ≤ (S.m (E ∆ E')).toReal :=
+      ENNReal.toReal_mono (measure_ne_top _ _) hsdiff_le
+    have h3 : (S.m (E \ E')).toReal ≤ (S.m (E ∆ E')).toReal :=
+      ENNReal.toReal_mono (measure_ne_top _ _) hsdiff_le'
+    have h4 : (S.m E).toReal > 0 :=
+      ENNReal.toReal_pos hEpos.ne' (measure_ne_top _ _)
+    have h5 : (1 - κ) * (S.m (E' \ E)).toReal < (1 - κ) * (κ ^ 2 * (S.m E).toReal) :=
+      mul_lt_mul_of_pos_left (lt_of_le_of_lt h2 hsd_real) (by linarith)
+    have h6 : (S.m (E \ E')).toReal < κ ^ 2 * (S.m E).toReal :=
+      lt_of_le_of_lt h3 hsd_real
+    nlinarith [mul_pos hκ_pos (sub_pos.mpr hκ_lt), sq_nonneg κ]
+  -- multiCorr E t d ≥ 1/2 · multiCorr H t d, for all d
+  have hcomp : ∀ d, S.multiCorr E t d ≥ 1 / 2 * S.multiCorr H t d :=
+    fun d => multiCorr_ge_half_of_condExp (D α) hE_amb ht d
+  -- D_α is CSZ, H ∈ D_α, m(H) > 0
+  have hH_liminf : 0 < uniformLiminf (fun n => S.multiCorr H t (C.base ^ i * C.enum n)) :=
+    hcsz α C H hH_D hH_pos t ht i
+  -- uniformLiminf of 1/2 · multiCorr H is positive
+  have hscaled : 0 < uniformLiminf (fun n => 1 / 2 * S.multiCorr H t (C.base ^ i * C.enum n)) :=
+    uniformLiminf_const_mul_pos (fun n => S.multiCorr_nonneg H t _)
+      (fun n => multiCorr_le_one H t _) (by linarith) hH_liminf
+  -- uniformLiminf(multiCorr E) ≥ uniformLiminf(1/2 · multiCorr H) > 0
+  calc (0 : ℝ) < uniformLiminf (fun n => 1 / 2 * S.multiCorr H t (C.base ^ i * C.enum n)) :=
+    hscaled
+  _ ≤ uniformLiminf (fun n => S.multiCorr E t (C.base ^ i * C.enum n)) :=
+    uniformLiminf_mono
+      (fun n => mul_nonneg (by linarith) (S.multiCorr_nonneg H t _))
+      (fun n => S.multiCorr_nonneg E t _)
+      (fun n => multiCorr_le_one E t _)
+      (fun n => hcomp _)
 
 end MPS
 
