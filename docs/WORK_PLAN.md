@@ -44,10 +44,10 @@ Notes:
 
 ### 2. Overview (`overview.tex`)
 
-- `thm:main-ergodic` → `CantorSzemeredi.main_ergodic`. Not started. Depends on the structure chapter.
+- `thm:main-ergodic` → `CantorSzemeredi.main_ergodic`. **proof complete** (`Main.lean`; sorry-free, but axioms include `sorryAx` via upstream `lem:dichotomy` and `lem:ergodic-decomposition`; blueprint `\notready`).
 - `cor:syndetic` → `CantorSzemeredi.syndetic_of_uniformLiminf_pos`. Done (`\leanok`).
-- `thm:main-integers` → `CantorSzemeredi.main_integers`. Not started. Depends on the structure chapter.
+- `thm:main-integers` → `CantorSzemeredi.main_integers`. **proof complete** (`Main.lean`; sorry-free, but axioms include `sorryAx` via upstream dependencies; blueprint `\notready`).
 
 ## Next step
 
-Formalize `thm:main-ergodic` and `thm:main-integers` in the overview chapter (`overview.tex`).
+Resolve remaining `sorry` in `lem:dichotomy` and `lem:ergodic-decomposition` to clear `sorryAx` from the main theorems and mark them `\leanok`.
