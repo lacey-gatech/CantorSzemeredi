@@ -22,6 +22,23 @@ By the Furstenberg correspondence principle, every set of integers of positive u
 density has, for a syndetic set of indices `n`, a positive-density set of `(ℓ+1)`-term
 progressions with step `k_n`.
 
+## Status
+
+The main theorems (`main_ergodic` and `main_integers` in `CantorSzemeredi/Main.lean`) are
+fully proved, modulo two `sorry` in upstream lemmas:
+
+1. **`lem:dichotomy`** (`Structure.lean`): the dichotomy that every ergodic extension is
+   either weakly mixing or compact. The blueprint flags this as a separate project-scale
+   effort.
+
+2. **`lem:ergodic-decomposition`** (`ErgodicDecomposition.lean`): the instance
+   `@CountablyGenerated S.X I.σ` for the invariant σ-algebra. This is the Blackwell–Mackey
+   theorem (every sub-σ-algebra of a standard Borel space is countably generated), which
+   Mathlib does not yet provide.
+
+Clearing these two sorries would remove all `sorryAx` from the axiom list of the main
+theorems.
+
 ## Blueprint
 
 The blueprint is the plan of the formalization: it restates every definition and result of the
