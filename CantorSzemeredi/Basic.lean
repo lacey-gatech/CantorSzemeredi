@@ -78,6 +78,23 @@ def uniformFilterInt : Filter (ℤ × ℤ) :=
   ⨅ L : ℕ, Filter.principal {p : ℤ × ℤ | (L : ℤ) ≤ p.2 - p.1}
 
 open scoped Classical in
+theorem uniformFilterInt_hasBasis :
+    uniformFilterInt.HasBasis (fun _ : ℕ => True) (fun L => {p : ℤ × ℤ | (L : ℤ) ≤ p.2 - p.1}) :=
+  by
+  refine Filter.hasBasis_iInf_principal ?_ |>.to_hasBasis ?_ ?_
+  · intro L₁ L₂
+    refine ⟨max L₁ L₂, fun p hp => ?_, fun p hp => ?_⟩ <;>
+      simp only [Set.mem_ofPred_eq, Nat.cast_max] at hp ⊢ <;> omega
+  · exact fun L _ => ⟨L, trivial, le_rfl⟩
+  · exact fun L _ => ⟨L, trivial, le_rfl⟩
+
+open scoped Classical in
+instance uniformFilterInt_neBot : uniformFilterInt.NeBot := by
+  refine uniformFilterInt_hasBasis.neBot_iff.2 ?_
+  intro L _
+  exact ⟨(0, ↑L), by simp⟩
+
+open scoped Classical in
 /-- The upper Banach density of `A ⊆ ℤ`:
 `limsup_{N - M → ∞} |A ∩ [M, N)| / (N - M)`.  See `def:banach-density`. -/
 noncomputable def upperBanachDensity (A : Set ℤ) : ℝ :=

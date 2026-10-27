@@ -35,7 +35,7 @@ The first item is done; the rest are not started.
 | `lem:ergodic-decomposition` | `CantorSzemeredi.MPS.ergodicKernel`, `ergodicKernel_comp_measure`, `ae_map_ergodicKernel_eq`, `ae_ergodic_ergodicKernel` | **proof complete** (`ErgodicDecomposition.lean`; `sorry` for `@CountablyGenerated S.X I.σ`; blueprint `\notready`) |
 | `lem:fatou-uniform` | `CantorSzemeredi.uniformLiminf_integral_ge` | **done** (`Basic.lean`) |
 | `prop:reduction` | `CantorSzemeredi.MPS.CSZ_of_forall_ergodic_CSZ` | **proof complete** (`Structure.lean`; depends on `sorry` in `lem:ergodic-decomposition`; blueprint `\notready`) |
-| `thm:furstenberg-correspondence` | `CantorSzemeredi.furstenberg_correspondence` | **stated with `sorry`** (`Correspondence.lean`; blueprint `\notready`) |
+| `thm:furstenberg-correspondence` | `CantorSzemeredi.furstenberg_correspondence` | **done** (`Correspondence.lean`; blueprint `\leanok`) |
 
 Notes:
 - The names above are placeholders from the blueprint. Confirm each one against the proof before writing it, and rename the blueprint entry if the final name differs.
@@ -50,4 +50,4 @@ Notes:
 
 ## Next step
 
-Fill in the proof of `thm:furstenberg-correspondence` in `Correspondence.lean`.
+Formalize `thm:main-ergodic` and `thm:main-integers` in the overview chapter (`overview.tex`).

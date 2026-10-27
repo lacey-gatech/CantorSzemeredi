@@ -773,7 +773,7 @@ ergodic decomposition, and a Fatou argument adapted to uniform liminfs.
 \begin{theorem}[Furstenberg correspondence principle]
   \label{thm:furstenberg-correspondence}
   \lean{CantorSzemeredi.furstenberg_correspondence}
-  \notready
+  \leanok
   \uses{def:banach-density, def:mps, lem:symbolic-model}
   Let $A \subset \ZZ$ with $\dstar(A) > 0$.  Then there are an invertible measure preserving
   system $(X,\Abb,m,T)$ and $\tilde A \in \Abb$ with $m(\tilde A) = \dstar(A)$ such that for every
@@ -786,6 +786,7 @@ ergodic decomposition, and a Fatou argument adapted to uniform liminfs.
 \end{theorem}
 
 \begin{proof}
+  \leanok
   \uses{def:banach-density, lem:symbolic-model}
   Let $d \coloneqq \dstar(A) > 0$.  Work in $\Omega = \{0,1\}^{\ZZ}$ with the shift $\tau$ and
   the clopen set $\widetilde A = \{\omega : \omega(0) = 1\}$ of Lemma~\ref{lem:symbolic-model}(i);
