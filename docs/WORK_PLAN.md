@@ -32,7 +32,7 @@ The first item is done; the rest are not started.
 | `lem:dichotomy` | `CantorSzemeredi.MPS.weaklyMixingExtension_or_compactExtension` | **stated with `sorry`** (`Structure.lean`; blueprint `\notready`) |
 | `thm:ecsz` | `CantorSzemeredi.MPS.CSZ_of_ergodic` | **proof complete** (`Structure.lean`; depends on `sorry` in `lem:dichotomy`; blueprint `\notready`) |
 | `lem:symbolic-model` | `CantorSzemeredi.MPS.symbolicModel`, `CantorSzemeredi.MPS.multiCorr_symbolicModel` | **done** (`SymbolicModel.lean`) |
-| `lem:ergodic-decomposition` | `CantorSzemeredi.MPS.ergodicKernel`, `ergodicKernel_comp_measure`, `ae_map_ergodicKernel_eq`, `ae_ergodic_ergodicKernel` | **proof complete** (`ErgodicDecomposition.lean`; `sorry` for `@CountablyGenerated S.X I.σ`; blueprint `\notready`) |
+| `lem:ergodic-decomposition` | `CantorSzemeredi.MPS.ergodicKernel`, `ergodicKernel_comp_measure`, `ae_map_ergodicKernel_eq`, `ae_ergodic_ergodicKernel` | **proof complete** (`ErgodicDecomposition.lean`; `sorry` for `@CountablyGenerated S.X I.σ` — needs Blackwell–Mackey: every sub-σ-algebra of a standard Borel space is countably generated, which Mathlib lacks; blueprint `\notready`) |
 | `lem:fatou-uniform` | `CantorSzemeredi.uniformLiminf_integral_ge` | **done** (`Basic.lean`) |
 | `prop:reduction` | `CantorSzemeredi.MPS.CSZ_of_forall_ergodic_CSZ` | **proof complete** (`Structure.lean`; depends on `sorry` in `lem:ergodic-decomposition`; blueprint `\notready`) |
 | `thm:furstenberg-correspondence` | `CantorSzemeredi.furstenberg_correspondence` | **done** (`Correspondence.lean`; blueprint `\leanok`) |

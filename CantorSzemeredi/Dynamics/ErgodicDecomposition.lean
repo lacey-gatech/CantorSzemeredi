@@ -159,6 +159,9 @@ theorem ae_map_ergodicKernel_eq :
 theorem ae_ergodic_ergodicKernel :
     ∀ᵐ y ∂S.m, Ergodic S.T (ergodicKernel S y) := by
   set I := Factor.invariantSets S
+  -- Every sub-σ-algebra of a standard Borel space is countably generated
+  -- (Blackwell–Mackey).  Mathlib has `CountablyGenerated` for the full σ-algebra
+  -- (`countablyGenerated_of_standardBorel`) but not for sub-σ-algebras.
   haveI : @CountablyGenerated S.X I.σ := sorry
   set G_I := @natGeneratingSequence S.X I.σ _
   let finInterI (F : Finset ℕ) : Set S.X := ⋂ i ∈ F, G_I i
