@@ -183,9 +183,10 @@ correspondence principle.
 [`docs/ERRATA-AND-DEVIATIONS.md`](docs/ERRATA-AND-DEVIATIONS.md) lists 1 erratum and 2 deviations
 for arXiv:2602.15299v2. None affects the main theorems.
 
-- The definition of conditional compactness (§2.2) places `min_q` outside the `L^∞` norm. Read
-  literally, this excludes standard compact extensions. The formalization uses Moreira's form,
-  where the choice of `q` may depend on the point, which is also the form the paper's proofs use.
+- In v2 the definition of conditional compactness (§2.2) places `min_q` outside the `L^∞` norm.
+  Read literally, this excludes standard compact extensions. The formalization uses Moreira's
+  form, where the choice of `q` may depend on the point, which is also the form the paper's own
+  proofs use. Corrected in v3: the display in `Prelim.tex` now has `min_q` inside the norm.
 - The reduction to ergodic systems is replaced by a dichotomy for all standard Borel systems, so
   the ergodic decomposition is not needed (it is proved anyway).
 
@@ -200,6 +201,13 @@ formalization did not complete, are proved independently in `CantorSzemeredi/Pro
 which are kept because they are proved: `Port/VdW/` (the Cantor-set van der Waerden theorem of
 §4), `Port/Dynamics/WMSystem.lean` (weakly mixing systems are CSZ),
 `Port/Dynamics/WienerAtoms.lean` and `Port/Dynamics/CompactRoots.lean`.
+
+## Acknowledgements
+
+This formalization made use of [Scott Armstrong's Lean autoformalization skill
+files](https://github.com/scottnarmstrong/LeanAutoformalizationSkills). They informed the working
+conventions followed here: the author-approved frozen statements, the source-level dependency
+graph behind the blueprint, the statement audits, and the Mathlib search and naming practice.
 
 ## License
 

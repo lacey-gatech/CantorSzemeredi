@@ -41,6 +41,9 @@ depend only on the axioms `propext`, `Classical.choice` and `Quot.sound`.
    `CondCompactZ` in [`CantorSzemeredi/Proof/Dichotomy/Defs.lean`](../CantorSzemeredi/Proof/Dichotomy/Defs.lean)
    and `CondCompact` in [`CantorSzemeredi/Port/Dynamics/Extensions.lean`](../CantorSzemeredi/Port/Dynamics/Extensions.lean).
    The counterexample is explained here, not proved in Lean.
+   **Status:** corrected in v3.  The display in §2.2 of the paper source now reads
+   `sup_{n∈ℤ} ‖ min_{1≤q≤r} ‖Tⁿf − g_q‖_{ℰ|𝒟} ‖_{L^∞(𝒟)} < ε`.  The erratum stands against
+   v2, which is the version this record is written about.
 
 
 ### Deviations
