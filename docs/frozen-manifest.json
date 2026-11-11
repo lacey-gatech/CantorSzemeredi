@@ -1,0 +1,247 @@
+{
+ "schema_version": 1,
+ "manifest_state": "AUTHOR_APPROVED",
+ "seal_limits": {
+  "max_body_lines": 3,
+  "max_body_bytes": 240
+ },
+ "anchors": [
+  {
+   "id": "cantorSet_v1",
+   "author_approval": {
+    "approved_by": "Anastasios Fragkos",
+    "approved_at": "2026-11-07",
+    "approval_ref": "docs/approved-statements.lean.txt",
+    "approval_version": "1"
+   },
+   "source": {
+    "revision": "arXiv:2602.15299v2 e-print sha256:cd4cae910396b1d553a567f3975b72668a08011d0a6841d77f1627285f3842e3",
+    "range": "arXiv:2602.15299v2 Intro.tex:41-51"
+   },
+   "contract": {
+    "id": "CSZ.e:Cantor",
+    "version": "1"
+   },
+   "path": "CantorSzemeredi/Frozen/CantorSet.lean",
+   "export": "CantorSzemeredi.cantorSet",
+   "split_policy": {
+    "source_group": "CSZ.e:Cantor",
+    "mode": "NOT_SPLIT",
+    "ruling_ref": "docs/approved-statements.lean.txt"
+   },
+   "abi_sha256": "4eeff13e4624436ad382b52c1b04bceb699e91b7e3f70882595026497937701f",
+   "kind": "definition",
+   "definition_closure": [],
+   "state": "SEALED",
+   "full_file_sha256": "a555b1fd30ec4c8fca9f5ef04f6bebb67a185401f584bca5a11a271b4aa53a47"
+  },
+  {
+   "id": "cantorEnum_v1",
+   "author_approval": {
+    "approved_by": "Anastasios Fragkos",
+    "approved_at": "2026-11-07",
+    "approval_ref": "docs/approved-statements.lean.txt",
+    "approval_version": "1"
+   },
+   "source": {
+    "revision": "arXiv:2602.15299v2 e-print sha256:cd4cae910396b1d553a567f3975b72668a08011d0a6841d77f1627285f3842e3",
+    "range": "arXiv:2602.15299v2 Intro.tex:53-55"
+   },
+   "contract": {
+    "id": "CSZ.enumeration",
+    "version": "1"
+   },
+   "path": "CantorSzemeredi/Frozen/CantorEnum.lean",
+   "export": "CantorSzemeredi.cantorEnum",
+   "split_policy": {
+    "source_group": "CSZ.enumeration",
+    "mode": "NOT_SPLIT",
+    "ruling_ref": "docs/approved-statements.lean.txt"
+   },
+   "abi_sha256": "3289fcc1602d1564ee6b25cb3f4190ccf0c5b3b7e08ff4a44887d57585260f6d",
+   "kind": "definition",
+   "definition_closure": [
+    {
+     "path": "CantorSzemeredi/Frozen/CantorSet.lean",
+     "sha256": "a555b1fd30ec4c8fca9f5ef04f6bebb67a185401f584bca5a11a271b4aa53a47"
+    }
+   ],
+   "state": "SEALED",
+   "full_file_sha256": "1c4e8b4cbeb86defa349acee5c5a6050aaacb6e72bd9c077fb3fc536cee94259"
+  },
+  {
+   "id": "upperBanachDensity_v1",
+   "author_approval": {
+    "approved_by": "Anastasios Fragkos",
+    "approved_at": "2026-11-07",
+    "approval_ref": "docs/approved-statements.lean.txt",
+    "approval_version": "1"
+   },
+   "source": {
+    "revision": "arXiv:2602.15299v2 e-print sha256:cd4cae910396b1d553a567f3975b72668a08011d0a6841d77f1627285f3842e3",
+    "range": "arXiv:2602.15299v2 Intro.tex:4-7"
+   },
+   "contract": {
+    "id": "CSZ.e:banach",
+    "version": "1"
+   },
+   "path": "CantorSzemeredi/Frozen/UpperBanachDensity.lean",
+   "export": "CantorSzemeredi.upperBanachDensity",
+   "split_policy": {
+    "source_group": "CSZ.e:banach",
+    "mode": "NOT_SPLIT",
+    "ruling_ref": "docs/approved-statements.lean.txt"
+   },
+   "abi_sha256": "2155ad1168e83e528ce0b50177d2b92a3f6336d3ea604630728b1947b2760d76",
+   "kind": "definition",
+   "definition_closure": [],
+   "state": "SEALED",
+   "full_file_sha256": "355a366ceda18e49115d2fcb6de37c51dc595c9ec41bd3cc1a758bf0d6d68712"
+  },
+  {
+   "id": "cantor_szemeredi_v1",
+   "author_approval": {
+    "approved_by": "Anastasios Fragkos",
+    "approved_at": "2026-11-07",
+    "approval_ref": "docs/approved-statements.lean.txt",
+    "approval_version": "1"
+   },
+   "source": {
+    "revision": "arXiv:2602.15299v2 e-print sha256:cd4cae910396b1d553a567f3975b72668a08011d0a6841d77f1627285f3842e3",
+    "range": "arXiv:2602.15299v2 Intro.tex:88-96; arXiv:2602.15299v2 Prelim.tex:14-16,24-25"
+   },
+   "contract": {
+    "id": "CSZ.t:CSZ",
+    "version": "1"
+   },
+   "path": "CantorSzemeredi/Frozen/MainTheorem.lean",
+   "export": "CantorSzemeredi.cantor_szemeredi",
+   "split_policy": {
+    "source_group": "CSZ.t:CSZ",
+    "mode": "NOT_SPLIT",
+    "ruling_ref": "docs/approved-statements.lean.txt"
+   },
+   "abi_sha256": "2c6a3a3a7a21e7f8a38ae2d20c7e813904c6b25161f00e18b41d8e102362fe72",
+   "kind": "theorem",
+   "implementation": {
+    "module": "CantorSzemeredi.Proof.MainTheorem",
+    "export": "CantorSzemeredi.Proof.cantor_szemeredi"
+   },
+   "definition_closure": [
+    {
+     "path": "CantorSzemeredi/Frozen/CantorSet.lean",
+     "sha256": "a555b1fd30ec4c8fca9f5ef04f6bebb67a185401f584bca5a11a271b4aa53a47"
+    },
+    {
+     "path": "CantorSzemeredi/Frozen/CantorEnum.lean",
+     "sha256": "1c4e8b4cbeb86defa349acee5c5a6050aaacb6e72bd9c077fb3fc536cee94259"
+    }
+   ],
+   "state": "SEALED",
+   "prefix_sha256": "cb9b21e6188c3e691729f1f0ae7f3a81cd4101b005683e03a9644c04cd819092",
+   "suffix_sha256": "705225ffc3a402888417e045a7a8f5ae792fb7a7d5bf9999e9c28b7dd894642d",
+   "draft_allowlist": {
+    "frozen_paths": [],
+    "audit_paths": []
+   }
+  },
+  {
+   "id": "cantor_szemeredi_syndetic_v1",
+   "author_approval": {
+    "approved_by": "Anastasios Fragkos",
+    "approved_at": "2026-11-07",
+    "approval_ref": "docs/approved-statements.lean.txt",
+    "approval_version": "1"
+   },
+   "source": {
+    "revision": "arXiv:2602.15299v2 e-print sha256:cd4cae910396b1d553a567f3975b72668a08011d0a6841d77f1627285f3842e3",
+    "range": "arXiv:2602.15299v2 Intro.tex:98-104; arXiv:2602.15299v2 Intro.tex:8-9"
+   },
+   "contract": {
+    "id": "CSZ.c:syndetic",
+    "version": "1"
+   },
+   "path": "CantorSzemeredi/Frozen/Syndetic.lean",
+   "export": "CantorSzemeredi.cantor_szemeredi_syndetic",
+   "split_policy": {
+    "source_group": "CSZ.c:syndetic",
+    "mode": "NOT_SPLIT",
+    "ruling_ref": "docs/approved-statements.lean.txt"
+   },
+   "abi_sha256": "d035ac2cfabfbfa5df78b4fd1febafb35fb4cc1b7274245df11ec398aca3c1dd",
+   "kind": "theorem",
+   "implementation": {
+    "module": "CantorSzemeredi.Proof.Syndetic",
+    "export": "CantorSzemeredi.Proof.cantor_szemeredi_syndetic"
+   },
+   "definition_closure": [
+    {
+     "path": "CantorSzemeredi/Frozen/CantorSet.lean",
+     "sha256": "a555b1fd30ec4c8fca9f5ef04f6bebb67a185401f584bca5a11a271b4aa53a47"
+    },
+    {
+     "path": "CantorSzemeredi/Frozen/CantorEnum.lean",
+     "sha256": "1c4e8b4cbeb86defa349acee5c5a6050aaacb6e72bd9c077fb3fc536cee94259"
+    }
+   ],
+   "state": "SEALED",
+   "prefix_sha256": "d56ae3fe0ab21b5473ccca9dc68306a6311269474a1c754653f4f62877d68312",
+   "suffix_sha256": "705225ffc3a402888417e045a7a8f5ae792fb7a7d5bf9999e9c28b7dd894642d",
+   "draft_allowlist": {
+    "frozen_paths": [],
+    "audit_paths": []
+   }
+  },
+  {
+   "id": "cantor_szemeredi_integers_v1",
+   "author_approval": {
+    "approved_by": "Anastasios Fragkos",
+    "approved_at": "2026-11-07",
+    "approval_ref": "docs/approved-statements.lean.txt",
+    "approval_version": "1"
+   },
+   "source": {
+    "revision": "arXiv:2602.15299v2 e-print sha256:cd4cae910396b1d553a567f3975b72668a08011d0a6841d77f1627285f3842e3",
+    "range": "arXiv:2602.15299v2 Intro.tex:114-122; arXiv:2602.15299v2 Intro.tex:3-9"
+   },
+   "contract": {
+    "id": "CSZ.t:CSZ-Integers",
+    "version": "1"
+   },
+   "path": "CantorSzemeredi/Frozen/Integers.lean",
+   "export": "CantorSzemeredi.cantor_szemeredi_integers",
+   "split_policy": {
+    "source_group": "CSZ.t:CSZ-Integers",
+    "mode": "NOT_SPLIT",
+    "ruling_ref": "docs/approved-statements.lean.txt"
+   },
+   "abi_sha256": "14c78147355c39d06c5f1d1823e34da78a2b6ba62958a39f561a35b99401fa59",
+   "kind": "theorem",
+   "implementation": {
+    "module": "CantorSzemeredi.Proof.Integers",
+    "export": "CantorSzemeredi.Proof.cantor_szemeredi_integers"
+   },
+   "definition_closure": [
+    {
+     "path": "CantorSzemeredi/Frozen/CantorSet.lean",
+     "sha256": "a555b1fd30ec4c8fca9f5ef04f6bebb67a185401f584bca5a11a271b4aa53a47"
+    },
+    {
+     "path": "CantorSzemeredi/Frozen/CantorEnum.lean",
+     "sha256": "1c4e8b4cbeb86defa349acee5c5a6050aaacb6e72bd9c077fb3fc536cee94259"
+    },
+    {
+     "path": "CantorSzemeredi/Frozen/UpperBanachDensity.lean",
+     "sha256": "355a366ceda18e49115d2fcb6de37c51dc595c9ec41bd3cc1a758bf0d6d68712"
+    }
+   ],
+   "state": "SEALED",
+   "prefix_sha256": "7300d01b04d3a7f7e51a6fc06e3acb7c6d92c4e734f52af04ed9acef7f9a3675",
+   "suffix_sha256": "705225ffc3a402888417e045a7a8f5ae792fb7a7d5bf9999e9c28b7dd894642d",
+   "draft_allowlist": {
+    "frozen_paths": [],
+    "audit_paths": []
+   }
+  }
+ ]
+}

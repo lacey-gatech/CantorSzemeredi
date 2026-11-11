@@ -11,7 +11,7 @@ the formalization.
 
 \begin{definition}[Integer Cantor set]
   \label{def:cantor}
-  \lean{CantorSzemeredi.CantorData, CantorSzemeredi.CantorData.enum, CantorSzemeredi.CantorData.set}
+  \lean{CSZPort.CantorData, CSZPort.CantorData.enum, CSZPort.CantorData.set}
   \leanok
   Given $b$ and $D$ as above, set
   $\Cantor_{b,D} \coloneqq \{ \sum_{j=0}^{k} d_j b^j : k \in \NNz,\ d_j \in D \}$,
@@ -30,7 +30,7 @@ the formalization.
 
 \begin{definition}[Syndetic set]
   \label{def:syndetic}
-  \lean{CantorSzemeredi.Syndetic}
+  \lean{CSZPort.Syndetic}
   \leanok
   A set $B \subset \NNz$ is \emph{syndetic} if there is an $L$ with
   $B \cap [n, n+L] \neq \emptyset$ for every $n$.
@@ -46,7 +46,7 @@ the formalization.
 
 \begin{definition}[Uniform average and uniform liminf]
   \label{def:uniform-liminf}
-  \lean{CantorSzemeredi.uniformAvg, CantorSzemeredi.uniformLiminf}
+  \lean{CSZPort.uniformAvg, CSZPort.uniformLiminf}
   \leanok
   For a bounded sequence $(a_n)_{n \geq 0}$ put $\unifavg a_n = \frac{1}{N-M}\sum_{M \leq n < N} a_n$,
   and $\unifliminf \unifavg a_n \coloneqq \sup_{L} \inf \{ \avg{M \leq n < M+L'} a_n : M \geq 0,\ L' \geq L \}$.
@@ -63,7 +63,7 @@ the formalization.
 
 \begin{lemma}[Positive uniform liminf gives a syndetic set]
   \label{lem:pos-liminf-syndetic}
-  \lean{CantorSzemeredi.syndetic_of_uniformLiminf_pos}
+  \lean{CSZPort.syndetic_of_uniformLiminf_pos}
   \leanok
   \uses{def:syndetic, def:uniform-liminf}
   Let $(a_n)_{n \geq 0}$ be non-negative with $\unifliminf \unifavg a_n > 0$.  Then
@@ -82,8 +82,7 @@ the formalization.
 
 \begin{lemma}[Enumeration of the Cantor set]
   \label{lem:diff}
-  \lean{CantorSzemeredi.CantorData.enum_strictMono, CantorSzemeredi.CantorData.mem_set_iff,
-    CantorSzemeredi.CantorData.enum_block}
+  \lean{CSZPort.CantorData.enum_strictMono, CSZPort.CantorData.mem_set_iff, CSZPort.CantorData.enum_block}
   \leanok
   \uses{def:cantor}
   Let $D = \{0 = d_0 < d_1 < \cdots < d_{\delta-1}\}$.  Then:
@@ -110,7 +109,7 @@ the formalization.
 
 \begin{corollary}[Self-similarity]
   \label{cor:self-similar}
-  \lean{CantorSzemeredi.CantorData.pow_mul_mem, CantorSzemeredi.CantorData.enum_pow_mul}
+  \lean{CSZPort.CantorData.pow_mul_mem, CSZPort.CantorData.enum_pow_mul}
   \leanok
   \uses{lem:diff}
   For $i \geq 0$, $b^i \Cantor \subset \Cantor$; explicitly $b^i k_n = k_{\delta^i n}$.
@@ -124,8 +123,7 @@ the formalization.
 
 \begin{corollary}[Absorption of small translates]
   \label{cor:absorb}
-  \lean{CantorSzemeredi.CantorData.enum_add_mem_block,
-    CantorSzemeredi.CantorData.pow_mul_enum_add_mem}
+  \lean{CSZPort.CantorData.enum_add_mem_block, CSZPort.CantorData.pow_mul_enum_add_mem}
   \leanok
   \uses{lem:diff}
   Let $i \geq 0$, let $a \in \Cantor \cap [0, b^i)$ and write $\iota(a) < \delta^i$ for the
@@ -152,8 +150,7 @@ the formalization.
 
 \begin{lemma}[Differences along a shift]
   \label{lem:differences}
-  \lean{CantorSzemeredi.CantorData.enum_sub_enum_eq,
-    CantorSzemeredi.CantorData.card_goodResidues_ge}
+  \lean{CSZPort.CantorData.enum_sub_enum_eq, CSZPort.CantorData.card_goodResidues_ge}
   \leanok
   \uses{lem:diff}
   Fix integers $h \geq 1$ and $\ell \geq 1$ with $\delta^\ell > h$.  For
@@ -182,7 +179,7 @@ the formalization.
 
 \begin{lemma}[Syndetic residues]
   \label{lem:syndetic-residues}
-  \lean{CantorSzemeredi.CantorData.syndetic_dvd_enum}
+  \lean{CSZPort.CantorData.syndetic_dvd_enum}
   \leanok
   \uses{lem:diff, def:syndetic}
   For every integer $q \geq 1$ the set $S_q \coloneqq \{ n \in \NNz : q \mid k_n \}$ is syndetic.
@@ -237,7 +234,7 @@ $\theta$ to the nearest integer.
 
 \begin{definition}
   \label{def:Phi}
-  \lean{CantorSzemeredi.CantorData.Phi}
+  \lean{CSZPort.CantorData.Phi}
   \leanok
   \uses{def:cantor}
   For $\beta \in \RR$ and $L \geq 1$,
@@ -246,8 +243,7 @@ $\theta$ to the nearest integer.
 
 \begin{lemma}[Block factorization, \eqref{eq:Pell}]
   \label{lem:blockAvg}
-  \lean{CantorSzemeredi.CantorData.blockAvg, CantorSzemeredi.CantorData.blockAvg_eq_prod,
-    CantorSzemeredi.CantorData.norm_blockAvg_le_one}
+  \lean{CSZPort.CantorData.blockAvg, CSZPort.CantorData.blockAvg_eq_prod, CSZPort.CantorData.norm_blockAvg_le_one}
   \leanok
   \uses{lem:diff}
   Let $\rho(\theta) \coloneqq \avg{d \in D} e(d\theta)$ and
@@ -266,7 +262,7 @@ $\theta$ to the nearest integer.
 
 \begin{lemma}[Window split, \eqref{eq:window-split}]
   \label{lem:window-split}
-  \lean{CantorSzemeredi.CantorData.norm_sum_Ico_le, CantorSzemeredi.CantorData.Phi_le}
+  \lean{CSZPort.CantorData.norm_sum_Ico_le, CSZPort.CantorData.Phi_le}
   \leanok
   \uses{lem:diff, lem:blockAvg, def:Phi}
   For every window $[M,N)$ of indices and every $i \geq 0$,
@@ -290,11 +286,7 @@ $\theta$ to the nearest integer.
 
 \begin{lemma}[Uniform exponential sum estimate]
   \label{lem:irrational}
-  \lean{CantorSzemeredi.CantorData.excSet, CantorSzemeredi.CantorData.norm_rhoRed_lt_one,
-    CantorSzemeredi.CantorData.exists_kappa, CantorSzemeredi.exists_nrm_ge,
-    CantorSzemeredi.CantorData.exists_norm_blockAvg_lt,
-    CantorSzemeredi.CantorData.tendsto_Phi_zero,
-    CantorSzemeredi.CantorData.countable_excSet}
+  \lean{CSZPort.CantorData.excSet, CSZPort.CantorData.norm_rhoRed_lt_one, CSZPort.CantorData.exists_kappa, CSZPort.exists_nrm_ge, CSZPort.CantorData.exists_norm_blockAvg_lt, CSZPort.CantorData.tendsto_Phi_zero, CSZPort.CantorData.countable_excSet}
   \leanok
   \uses{lem:diff, def:Phi, lem:window-split, lem:blockAvg}
   Let $E_0 \subset \TT$ be the set of $\beta$ for which $\gcd(D)\,\beta$ is a $b$-adic rational
@@ -357,9 +349,7 @@ $\theta$ to the nearest integer.
 
 \begin{lemma}[Uniform spectral lemma]
   \label{lem:uniform-spectral}
-  \lean{CantorSzemeredi.CantorData.PhiCircle, CantorSzemeredi.CantorData.measurable_Phi,
-    CantorSzemeredi.CantorData.excSetSmul_countable,
-    CantorSzemeredi.CantorData.tendsto_integral_Phi_zero}
+  \lean{CSZPort.CantorData.PhiCircle, CSZPort.CantorData.measurable_Phi, CSZPort.CantorData.excSetSmul_countable, CSZPort.CantorData.tendsto_integral_Phi_zero}
   \leanok
   \uses{lem:irrational, def:Phi}
   Let $\sigma$ be a finite positive Borel measure on $\TT$ without atoms and $s \geq 1$ an
@@ -384,7 +374,7 @@ $\theta$ to the nearest integer.
 
 \begin{corollary}[Uniform ergodic theorem along $\Cantor$]
   \label{cor:uniform-ergodic}
-  \lean{CantorSzemeredi.MPS.tendsto_uniformAvg_koopman_zero}
+  \lean{CSZPort.MPS.tendsto_uniformAvg_koopman_zero}
   \leanok
   \uses{lem:uniform-spectral, def:spectral-measure}
   If $f \in L^2(X)$ has atomless spectral measure $\sigma_f$ and $s \geq 1$, then

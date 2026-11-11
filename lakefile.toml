@@ -5,6 +5,7 @@ defaultTargets = ["CantorSzemeredi"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
+autoImplicit = false
 relaxedAutoImplicit = false
 weak.linter.mathlibStandardSet = true
 maxSynthPendingDepth = 3
@@ -14,11 +15,22 @@ name = "mathlib"
 scope = "leanprover-community"
 rev = "v4.35.0"
 
-[[lean_lib]]
-name = "CantorSzemeredi"
-
 # Used by `leanblueprint checkdecls` to verify that every declaration named in a
 # `\lean{...}` macro of the blueprint actually exists in this project.
 [[require]]
 name = "checkdecls"
 git = "https://github.com/PatrickMassot/checkdecls.git"
+
+[[lean_lib]]
+name = "CantorSzemeredi"
+globs = ["CantorSzemeredi.+"]
+
+# Palomar challenge and solution (comparator.json): the three main statements with Mathlib
+# imports only, and the module proving them from the development.
+[[lean_lib]]
+name = "Challenge"
+roots = ["Challenge"]
+
+[[lean_lib]]
+name = "Solution"
+roots = ["Solution"]

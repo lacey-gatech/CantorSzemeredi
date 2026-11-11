@@ -7,8 +7,7 @@ everywhere, and every identity between conditional norms below holds almost ever
 
 \begin{theorem}[Part (K) of the extension principles]
   \label{thm:compact-extension}
-  \lean{CantorSzemeredi.MPS.CSZ_of_compactExtension, CantorSzemeredi.MPS.compact_core,
-    CantorSzemeredi.MPS.csz_sets_of_compactExtension, CantorSzemeredi.MPS.csz_functions_of_csz}
+  \lean{CSZPort.MPS.CSZ_of_compactExtension, CSZPort.MPS.compact_core, CSZPort.MPS.csz_sets_of_compactExtension, CSZPort.MPS.csz_functions_of_csz}
   \leanok
   \uses{def:csz, def:compact-extension, lem:localize, lem:unfortunate, lem:return-time, cor:absorb, lem:diff, lem:csz-functions, lem:powers}
   Let $\Dbb$ be a CSZ factor of $(X,\Abb,m,T)$ and let $\Ebb$ be a compact extension of $\Dbb$.
@@ -71,8 +70,7 @@ everywhere, and every identity between conditional norms below holds almost ever
 
 \begin{lemma}[Pull-out property of the conditional norm]
   \label{lem:cnorm-pullout}
-  \lean{CantorSzemeredi.MPS.condNorm_indicator, CantorSzemeredi.MPS.condNorm_indicator_sub_le,
-    CantorSzemeredi.MPS.condNorm_comp_iterate}
+  \lean{CSZPort.MPS.condNorm_indicator, CSZPort.MPS.condNorm_indicator_sub_le, CSZPort.MPS.condNorm_comp_iterate}
   \leanok
   \uses{def:hilbert-module, lem:condexp-facts}
   Let $B \in \Dbb$ and $u, v \in L^2(\Ebb)$.  Then for almost every $x$,
@@ -98,7 +96,7 @@ everywhere, and every identity between conditional norms below holds almost ever
 
 \begin{lemma}[Localization]
   \label{lem:localize}
-  \lean{CantorSzemeredi.MPS.exists_condCompact_restrict}
+  \lean{CSZPort.MPS.exists_condCompact_restrict}
   \leanok
   \uses{def:compact-extension, lem:cnorm-pullout, lem:condexp-facts}
   Let $\Ebb \mid \Dbb$ be a compact extension.  For every $f \in L^2(\Ebb)$ and
@@ -198,7 +196,7 @@ $F \subset \Cantor$ is \emph{unfortunate at $x$} if no pair in $F$ is good at $x
 
 \begin{lemma}[Pigeonhole]
   \label{lem:unfortunate}
-  \lean{CantorSzemeredi.MPS.not_unfortunate_of_card_le, CantorSzemeredi.MPS.condNorm_neg}
+  \lean{CSZPort.MPS.not_unfortunate_of_card_le, CSZPort.MPS.condNorm_neg}
   \leanok
   \uses{def:compact-extension, lem:cond-cs}
   Set $M \coloneqq r^{t+1}+1$.  If $F \subset \Cantor$ is finite with $\abs{F} \geq M$ then for
@@ -238,7 +236,7 @@ also in $\Dbb$, the union being countable because $\Cantor$ is countable.
 
 \begin{lemma}[Almost every point has a maximal unfortunate set]
   \label{lem:maximal-unfortunate}
-  \lean{CantorSzemeredi.MPS.exists_maximal_unfortunate, CantorSzemeredi.MPS.CondUnfortunate}
+  \lean{CSZPort.MPS.exists_maximal_unfortunate, CSZPort.MPS.CondUnfortunate}
   \leanok
   \uses{lem:unfortunate}
   Let $Y' \coloneqq Y \setminus \bigcup\{ S(G) : \abs{G} \geq M \}$.  Then $Y'$ has full
@@ -292,7 +290,7 @@ $E \coloneqq E_q$.
 
 \begin{lemma}[Return time]
   \label{lem:return-time}
-  \lean{CantorSzemeredi.MPS.exists_good_translate}
+  \lean{CSZPort.MPS.exists_good_translate}
   \leanok
   \uses{cor:absorb, lem:unfortunate, lem:cond-cs, lem:condexp-facts}
   Let $u \geq 1$ and $n = b^i k_u$.  For almost every
@@ -334,7 +332,7 @@ $E \coloneqq E_q$.
 
 \begin{lemma}[Conditional Jensen for powers, by the tangent line]
   \label{lem:cond-jensen-power}
-  \lean{CantorSzemeredi.MPS.condExp_pow_ge}
+  \lean{CSZPort.MPS.condExp_pow_ge}
   \leanok
   \uses{lem:condexp-facts}
   Let $0 \leq f \leq 1$ be measurable, $g \coloneqq \Exp(f\mid\Dbb)$, and $p \geq 1$ an integer.
@@ -514,7 +512,7 @@ This section is independent of the main theorem and may be skipped.
 
 \begin{theorem}
   \label{thm:compact-roots-of-unity}
-  \lean{CantorSzemeredi.MPS.syndetic_of_rootsOfUnity_spectrum}
+  \lean{CSZPort.MPS.syndetic_of_rootsOfUnity_spectrum}
   \leanok
   \uses{lem:syndetic-residues, def:syndetic, lem:telescoping}
   Let $(X,\Abb,m,T)$ be a measure preserving system in which the functions $h \in L^2(X)$

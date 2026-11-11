@@ -1,0 +1,603 @@
+/-
+Copyright (c) 2026 Alex Burgin, Anastasios Fragkos, Michael T. Lacey, Dario Mena,
+Maria Carmen Reguera. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Alex Burgin, Anastasios Fragkos, Michael T. Lacey, Dario Mena, Maria Carmen Reguera
+Adapted from github.com/lacey-gatech/CantorSzemeredi@d29e8f9, CantorSzemeredi/Dynamics/Structure.lean.
+-/
+
+module
+
+public import CantorSzemeredi.Port.Basic
+public import CantorSzemeredi.Port.Dynamics.System
+public import CantorSzemeredi.Port.Dynamics.CSZ
+public import CantorSzemeredi.Port.Dynamics.CompactExtensionCSZ
+public import CantorSzemeredi.Port.Dynamics.CompactSystem
+public import CantorSzemeredi.Port.Dynamics.WMPartW
+public import CantorSzemeredi.Port.Dynamics.SymbolicModel
+public import Mathlib.Order.Zorn
+
+/-!
+# The structure theorem, assuming the dichotomy
+
+Chains of CSZ factors (paper Lemma `l:chain`), the Zorn argument (Theorem `t:ECSZ`) and the
+reduction to the symbolic model (Proposition `p:reduction`), with the Furstenberg–Zimmer dichotomy
+as the explicit hypothesis `DichotomyStatement`.  The reduction applies the Zorn argument directly
+to the symbolic model on `ℤ → Fin 2`, which is standard Borel; no ergodicity is needed.
+-/
+
+@[expose] public section
+
+namespace CantorSzemeredi.Proof
+
+open MeasureTheory CSZPort CSZPort.MPS
+open scoped ENNReal symmDiff
+
+
+
+variable {S : MPS}
+
+/-! ### Comap characterisation of invariance -/
+
+/-- The forward direction of invariance, restated: `T` is `D.σ`-`D.σ` measurable. -/
+theorem factor_measurable_T (D : Factor S) : @Measurable S.X S.X D.σ D.σ S.T :=
+  fun _ hs => D.measurableSet_preimage hs
+
+/-- `T⁻¹` is `D.σ`-`D.σ` measurable (image of a `D`-set is a `D`-set). -/
+theorem factor_measurable_Tinv (D : Factor S) : @Measurable S.X S.X D.σ D.σ S.Tinv := by
+  intro s hs
+  have : S.Tinv ⁻¹' s = S.T '' s := by
+    ext x
+    simp only [Set.mem_preimage, Set.mem_image]
+    exact ⟨fun h => ⟨S.Tinv x, h, by simp⟩, fun ⟨y, hy, hyx⟩ => by rwa [← hyx, S.Tinv_T]⟩
+  rw [this]
+  exact D.measurableSet_image hs
+
+/-- Invariance of a factor is equivalent to the comap identity `D.σ.comap T = D.σ`. -/
+theorem factor_comap_T_eq (D : Factor S) : D.σ.comap S.T = D.σ := by
+  apply le_antisymm
+  · exact (factor_measurable_T D).comap_le
+  · intro s hs
+    exact MeasurableSpace.measurableSet_comap.mpr
+      ⟨S.T '' s, D.measurableSet_image hs, S.preimage_T_image s⟩
+
+/-! ### The supremum of a family of factors is a factor -/
+
+/-- **Lemma `lem:sSup-factor`.**  The supremum of a family of factors is a factor.
+
+The σ-algebra `⨆ i, (D i).σ` is contained in the ambient σ-algebra because each factor is,
+and it is `T`-invariant because `comap T` distributes over the supremum
+(`MeasurableSpace.comap_iSup`) and each factor satisfies `D.σ.comap T = D.σ`. -/
+def factorSSup {ι : Type*} (D : ι → Factor S) : Factor S where
+  σ := ⨆ i, (D i).σ
+  le := iSup_le fun i => (D i).le
+  invariant s := by
+    set M := ⨆ i, (D i).σ
+    have hcomap : M.comap S.T = M := by
+      change (⨆ i, (D i).σ).comap S.T = ⨆ i, (D i).σ
+      rw [MeasurableSpace.comap_iSup]
+      exact iSup_congr fun i => (factor_comap_T_eq (D i))
+    have hT : @Measurable S.X S.X M M S.T :=
+      (@measurable_iff_comap_le S.X S.X M M S.T).mpr hcomap.le
+    have hTinv : @Measurable S.X S.X M M S.Tinv := by
+      rw [@measurable_iff_comap_le S.X S.X M M S.Tinv]
+      change (⨆ i, (D i).σ).comap S.Tinv ≤ ⨆ i, (D i).σ
+      rw [MeasurableSpace.comap_iSup]
+      exact iSup_le fun i =>
+        (factor_measurable_Tinv (D i)).comap_le.trans (le_iSup (fun j => (D j).σ) i)
+    constructor
+    · intro hs
+      rw [show s = S.Tinv ⁻¹' (S.T ⁻¹' s) from by ext x; simp]
+      exact hTinv hs
+    · intro hs
+      exact hT hs
+
+@[simp]
+theorem factorSSup_σ {ι : Type*} (D : ι → Factor S) : (factorSSup D).σ = ⨆ i, (D i).σ := rfl
+
+/-- Each member of the family is contained in the supremum. -/
+theorem le_factorSSup {ι : Type*} (D : ι → Factor S) (i : ι) : (D i).σ ≤ (factorSSup D).σ :=
+  le_iSup (fun i => (D i).σ) i
+
+/-! ### Approximation from a chain -/
+
+/-- **Lemma `lem:chain-approx`.**  Every set in the supremum of a totally ordered chain of
+sub-σ-algebras is approximated in symmetric difference by a set in some member of the chain. -/
+theorem exists_mem_chain_symmDiff_lt {ι : Type*} [Nonempty ι]
+    {D : ι → Factor S}
+    (hchain : ∀ i j, (D i).σ ≤ (D j).σ ∨ (D j).σ ≤ (D i).σ)
+    {E : Set S.X} (hE : MeasurableSet[(factorSSup D).σ] E)
+    {η : ℝ≥0∞} (hη : 0 < η) :
+    ∃ i, ∃ E' : Set S.X, MeasurableSet[(D i).σ] E' ∧ S.m (E ∆ E') < η := by
+  set U : Set (Set S.X) := {s | ∃ i, @MeasurableSet S.X (D i).σ s}
+  have hle : (factorSSup D).σ ≤ S.measurableSpace := (factorSSup D).le
+  have hU_ring : IsSetRing U := by
+    constructor
+    · exact ⟨‹Nonempty ι›.some, @MeasurableSet.empty S.X (D ‹Nonempty ι›.some).σ⟩
+    · rintro s t ⟨i, hi⟩ ⟨j, hj⟩
+      rcases hchain i j with h | h
+      · exact ⟨j, (h s hi).union hj⟩
+      · exact ⟨i, hi.union (h t hj)⟩
+    · rintro s t ⟨i, hi⟩ ⟨j, hj⟩
+      rcases hchain i j with h | h
+      · exact ⟨j, (h s hi).diff hj⟩
+      · exact ⟨i, hi.diff (h t hj)⟩
+  have hgen : (factorSSup D).σ = MeasurableSpace.generateFrom U := by
+    change (⨆ i, (D i).σ) = MeasurableSpace.generateFrom U
+    apply le_antisymm
+    · exact iSup_le fun i s hs =>
+        MeasurableSpace.measurableSet_generateFrom (show s ∈ U from ⟨i, hs⟩)
+    · exact MeasurableSpace.generateFrom_le fun s ⟨i, hs⟩ =>
+        le_iSup (fun i => (D i).σ) i s hs
+  set μ := S.m.trim hle
+  set_option linter.style.haveILetI false in
+  haveI : @IsProbabilityMeasure S.X (factorSSup D).σ μ := ⟨by
+    show μ Set.univ = 1
+    change (S.m.trim hle) Set.univ = 1
+    rw [trim_measurableSet_eq hle (@MeasurableSet.univ S.X (factorSSup D).σ)]
+    exact measure_univ⟩
+  have hcover : ∃ D' : Set (Set S.X), D'.Countable ∧ D' ⊆ U ∧ μ (⋃₀ D')ᶜ = 0 := by
+    refine ⟨{Set.univ}, Set.countable_singleton _, ?_, ?_⟩
+    · intro s hs
+      rw [Set.mem_singleton_iff] at hs; subst hs
+      exact ⟨‹Nonempty ι›.some, @MeasurableSet.univ S.X (D ‹Nonempty ι›.some).σ⟩
+    · simp
+  obtain ⟨t, htU, htε⟩ := @exists_measure_symmDiff_lt_of_generateFrom_isSetRing S.X
+    (factorSSup D).σ μ inferInstance U hU_ring hcover hgen E hE η hη
+  obtain ⟨i, hti⟩ := htU
+  refine ⟨i, t, hti, ?_⟩
+  have hmeas : @MeasurableSet S.X (factorSSup D).σ (t ∆ E) :=
+    (le_iSup (fun i => (D i).σ) i t hti).symmDiff hE
+  rw [symmDiff_comm, ← trim_measurableSet_eq hle hmeas]
+  exact htε
+
+
+/-! ### Comparison of multiple correlations -/
+
+variable {S : MPS}
+
+/-- Conditional expectation commutes with every iterate of `T` (local copy). -/
+private theorem condExp_comp_iterate' (D : Factor S) (n : ℕ) :
+    ∀ {a : S.X → ℝ}, Integrable a S.m →
+      S.m[a ∘ S.T^[n] | D.σ] =ᵐ[S.m] (S.m[a | D.σ]) ∘ S.T^[n] := by
+  induction n with
+  | zero => intro a _; simp
+  | succ n ih =>
+    intro a ha
+    have ha' : Integrable (a ∘ S.T) S.m :=
+      (S.measurePreserving.integrable_comp ha.aestronglyMeasurable).2 ha
+    rw [Function.iterate_succ', ← Function.comp_assoc, ← Function.comp_assoc]
+    exact (ih ha').trans
+      ((S.measurePreserving_T_iterate n).quasiMeasurePreserving.ae_eq_comp
+        (D.condExp_comp ha).symm)
+
+/-- **Lemma `lem:chain-comparison`.**  The multiple correlation along `E` is at least half
+that along `H = {E[𝟙_E ∣ D₀] > 1 − κ}`, where `κ = 1/(2(t+1))`. -/
+theorem multiCorr_ge_half_of_condExp (D₀ : Factor S) {E : Set S.X} (hE : MeasurableSet E)
+    {t : ℕ} (ht : 1 ≤ t) (d : ℕ) :
+    let g := S.m[E.indicator (1 : S.X → ℝ) | D₀.σ]
+    let κ : ℝ := 1 / (2 * (↑t + 1))
+    let H := {x : S.X | 1 - κ < g x}
+    S.multiCorr E t d ≥ 1 / 2 * S.multiCorr H t d := by
+  intro g κ H
+  show (S.m (⋂ s ∈ Finset.range (t + 1), (S.T^[s * d]) ⁻¹' E)).toReal ≥
+    1 / 2 * (S.m (⋂ s ∈ Finset.range (t + 1), (S.T^[s * d]) ⁻¹' H)).toReal
+  set IE := ⋂ s ∈ Finset.range (t + 1), (S.T^[s * d]) ⁻¹' E
+  set IH := ⋂ s ∈ Finset.range (t + 1), (S.T^[s * d]) ⁻¹' H
+  -- H is D₀-measurable (super-level set of the conditional expectation)
+  have hH_D : MeasurableSet[D₀.σ] H :=
+    (stronglyMeasurable_condExp (m := D₀.σ)).measurable measurableSet_Ioi
+  have hpreH_D : ∀ n, MeasurableSet[D₀.σ] ((S.T^[n]) ⁻¹' H) :=
+    fun n => (factor_measurable_T D₀).iterate n hH_D
+  have hIH_D : MeasurableSet[D₀.σ] IH :=
+    @Finset.measurableSet_biInter _ _ D₀.σ _ _ fun s _ => hpreH_D (s * d)
+  have hIH : MeasurableSet IH := D₀.le _ hIH_D
+  have hIE : MeasurableSet IE :=
+    Finset.measurableSet_biInter _ fun s _ => (S.measurable_T.iterate _) hE
+  have hind_int : Integrable (E.indicator (1 : S.X → ℝ)) S.m :=
+    (integrable_indicator_iff hE).2 integrableOn_const
+  -- Per-step bound: m(IH \ T^{-sd}E) ≤ κ · m(IH)
+  have per_step : ∀ s ∈ Finset.range (t + 1),
+      (S.m (IH \ (S.T^[s * d]) ⁻¹' E)).toReal ≤ κ * (S.m IH).toReal := by
+    intro s hs
+    have hTsd_E : MeasurableSet ((S.T^[s * d]) ⁻¹' E) := (S.measurable_T.iterate _) hE
+    have hgT_ge : ∀ x ∈ IH, 1 - κ ≤ g (S.T^[s * d] x) :=
+      fun x hx => le_of_lt (Set.mem_iInter₂.1 hx s hs)
+    have hgT_int : Integrable (g ∘ S.T^[s * d]) S.m :=
+      ((S.measurePreserving_T_iterate (s * d)).integrable_comp
+        integrable_condExp.aestronglyMeasurable).2 integrable_condExp
+    have hfT_int : Integrable (E.indicator 1 ∘ S.T^[s * d]) S.m :=
+      ((S.measurePreserving_T_iterate (s * d)).integrable_comp
+        hind_int.aestronglyMeasurable).2 hind_int
+    have hint_eq : ∫ x in IH, E.indicator (1 : S.X → ℝ) (S.T^[s * d] x) ∂S.m
+        = ∫ x in IH, g (S.T^[s * d] x) ∂S.m := by
+      trans ∫ x in IH, S.m[E.indicator 1 ∘ S.T^[s * d] | D₀.σ] x ∂S.m
+      · exact (setIntegral_condExp D₀.le hfT_int hIH_D).symm
+      · exact setIntegral_congr_ae hIH
+          ((condExp_comp_iterate' D₀ (s * d) hind_int).mono fun x hx _ => hx)
+    have hint_meas : ∫ x in IH, E.indicator (1 : S.X → ℝ) (S.T^[s * d] x) ∂S.m
+        = (S.m (IH ∩ (S.T^[s * d]) ⁻¹' E)).toReal := by
+      have hrw : (fun x => E.indicator (1 : S.X → ℝ) (S.T^[s * d] x))
+          = ((S.T^[s * d]) ⁻¹' E).indicator 1 := by
+        ext x; rfl
+      rw [hrw, setIntegral_indicator hTsd_E]
+      simp [smul_eq_mul, measureReal_def]
+    have hint_ge : (1 - κ) * (S.m IH).toReal ≤
+        ∫ x in IH, g (S.T^[s * d] x) ∂S.m := by
+      rw [← measureReal_def]
+      exact setIntegral_ge_of_const_le_real hIH (measure_ne_top _ _) hgT_ge
+        hgT_int.integrableOn
+    have hadd : (S.m (IH ∩ (S.T^[s * d]) ⁻¹' E)).toReal +
+        (S.m (IH \ (S.T^[s * d]) ⁻¹' E)).toReal = (S.m IH).toReal := by
+      rw [← ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _)]
+      congr 1; exact measure_inter_add_sdiff IH hTsd_E
+    have key : (1 - κ) * (S.m IH).toReal ≤ (S.m (IH ∩ (S.T^[s * d]) ⁻¹' E)).toReal :=
+      hint_meas ▸ hint_eq.symm ▸ hint_ge
+    linarith
+  -- Union bound: m(IH \ IE) ≤ ½ m(IH)
+  have hunion : (S.m (IH \ IE)).toReal ≤ 1 / 2 * (S.m IH).toReal := by
+    have hdiff_eq : IH \ IE =
+        ⋃ s ∈ Finset.range (t + 1), (IH \ (S.T^[s * d]) ⁻¹' E) := by
+      ext x
+      simp only [Set.mem_sdiff, IE, Set.mem_iUnion₂, Set.mem_iInter₂]
+      constructor
+      · rintro ⟨hx, h⟩; push Not at h; obtain ⟨i, hi, hni⟩ := h
+        exact ⟨i, hi, hx, hni⟩
+      · rintro ⟨i, hi, hx, hni⟩; exact ⟨hx, fun h => hni (h i hi)⟩
+    rw [hdiff_eq]
+    have hne : (∑ s ∈ Finset.range (t + 1),
+        S.m (IH \ (S.T^[s * d]) ⁻¹' E)) ≠ ⊤ :=
+      (ENNReal.sum_lt_top.2 fun s _ => measure_lt_top _ _).ne
+    calc (S.m (⋃ s ∈ Finset.range (t + 1),
+            (IH \ (S.T^[s * d]) ⁻¹' E))).toReal
+        ≤ (∑ s ∈ Finset.range (t + 1),
+            S.m (IH \ (S.T^[s * d]) ⁻¹' E)).toReal :=
+          ENNReal.toReal_mono hne (measure_biUnion_finset_le _ _)
+      _ = ∑ s ∈ Finset.range (t + 1),
+            (S.m (IH \ (S.T^[s * d]) ⁻¹' E)).toReal :=
+          ENNReal.toReal_sum fun s _ => (measure_ne_top _ _)
+      _ ≤ ∑ _ ∈ Finset.range (t + 1), κ * (S.m IH).toReal :=
+          Finset.sum_le_sum per_step
+      _ = ↑(t + 1) * κ * (S.m IH).toReal := by
+          rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_assoc]
+      _ = 1 / 2 * (S.m IH).toReal := by
+          congr 1
+          show (↑(t + 1) : ℝ) * (1 / (2 * (↑t + 1))) = 1 / 2
+          have : (↑t + (1 : ℝ)) ≠ 0 := by positivity
+          push_cast; field_simp
+  -- m(IE) ≥ m(IH ∩ IE) = m(IH) − m(IH \ IE) ≥ ½ m(IH)
+  have hadd : (S.m (IH ∩ IE)).toReal + (S.m (IH \ IE)).toReal = (S.m IH).toReal := by
+    rw [← ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _)]
+    congr 1; exact measure_inter_add_sdiff IH hIE
+  calc (S.m IE).toReal
+      ≥ (S.m (IH ∩ IE)).toReal :=
+        ENNReal.toReal_mono (measure_ne_top _ _) (measure_mono Set.inter_subset_right)
+    _ = (S.m IH).toReal - (S.m (IH \ IE)).toReal := by linarith
+    _ ≥ (S.m IH).toReal - 1 / 2 * (S.m IH).toReal := by linarith
+    _ = 1 / 2 * (S.m IH).toReal := by ring
+
+/-! ### Chains of CSZ factors -/
+
+/-- A `multiCorr` value lies in `[0, 1]` (probability measure). -/
+theorem multiCorr_le_one (A : Set S.X) (t d : ℕ) : S.multiCorr A t d ≤ 1 := by
+  change (S.m _).toReal ≤ 1
+  calc (S.m _).toReal ≤ (S.m Set.univ).toReal :=
+    ENNReal.toReal_mono (measure_ne_top _ _) (measure_mono (Set.subset_univ _))
+  _ = 1 := by simp [measure_univ]
+
+/-- **Lemma `lem:chain`.**  The supremum of a nonempty totally ordered family of CSZ factors
+is itself CSZ. -/
+theorem CSZ_sSup_chain {ι : Type*} [Nonempty ι]
+    {D : ι → Factor S}
+    (hchain : ∀ i j, (D i).σ ≤ (D j).σ ∨ (D j).σ ≤ (D i).σ)
+    (hcsz : ∀ i, (D i).CSZ) :
+    (factorSSup D).CSZ := by
+  intro C E hE hEpos t ht i
+  have hE_amb : MeasurableSet E := (factorSSup D).le _ hE
+  set κ : ℝ := 1 / (2 * (↑t + 1)) with hκ_def
+  have hκ_pos : (0 : ℝ) < κ := by positivity
+  have hκ_lt : κ < 1 := by
+    rw [hκ_def, div_lt_one (by positivity : (0 : ℝ) < 2 * (↑t + 1))]
+    linarith [show (1 : ℝ) ≤ t from Nat.one_le_cast.mpr ht]
+  -- Choose α and E' ∈ D_α with m(E △ E') < κ²m(E)
+  have hη : (0 : ℝ≥0∞) < ENNReal.ofReal (κ ^ 2) * S.m E :=
+    ENNReal.mul_pos (ENNReal.ofReal_pos.mpr (sq_pos_of_pos hκ_pos)).ne' hEpos.ne'
+  obtain ⟨α, E', hE'_meas, hsd⟩ :=
+    exists_mem_chain_symmDiff_lt hchain hE hη
+  have hE'_amb : MeasurableSet E' := (D α).le _ hE'_meas
+  -- g = E[1_E | D_α], H = {g > 1 − κ}
+  set g := S.m[E.indicator (1 : S.X → ℝ) | (D α).σ]
+  set H := {x : S.X | 1 - κ < g x}
+  have hH_D : MeasurableSet[(D α).σ] H :=
+    (stronglyMeasurable_condExp (m := (D α).σ)).measurable measurableSet_Ioi
+  have hind_int : Integrable (E.indicator (1 : S.X → ℝ)) S.m :=
+    (integrable_indicator_iff hE_amb).2 integrableOn_const
+  -- m(H) > 0 by integral argument
+  have hH_pos : 0 < S.m H := by
+    by_contra hle
+    rw [not_lt, nonpos_iff_eq_zero] at hle
+    -- g ≤ 1 − κ a.e. (since H = {g > 1−κ} is null)
+    have hg_le : g ≤ᵐ[S.m] fun _ => 1 - κ := by
+      have : {x | ¬(g x ≤ 1 - κ)} = H := by ext x; simp [not_le, H]
+      exact ae_iff.mpr (this ▸ hle)
+    -- ∫_{E'} g dm = ∫_{E'} 1_E dm  (condExp defining property)
+    have hint_eq : ∫ x in E', g x ∂S.m = ∫ x in E', E.indicator (1 : S.X → ℝ) x ∂S.m :=
+      setIntegral_condExp (D α).le hind_int hE'_meas
+    -- ∫_{E'} 1_E dm = m(E' ∩ E).toReal
+    have hint_val : ∫ x in E', E.indicator (1 : S.X → ℝ) x ∂S.m =
+        (S.m (E' ∩ E)).toReal := by
+      rw [setIntegral_indicator hE_amb]; simp [smul_eq_mul, measureReal_def]
+    -- ∫_{E'} g dm ≤ (1−κ) · m(E').toReal  (pointwise bound)
+    have hint_le : ∫ x in E', g x ∂S.m ≤ (1 - κ) * (S.m E').toReal := by
+      calc ∫ x in E', g x ∂S.m
+          ≤ ∫ x in E', (1 - κ) ∂S.m :=
+            setIntegral_mono_ae integrable_condExp.integrableOn integrableOn_const hg_le
+        _ = (1 - κ) * (S.m E').toReal := by
+            simp [smul_eq_mul, measureReal_def, mul_comm]
+    -- m(E' ∩ E).toReal ≤ (1−κ) · m(E').toReal
+    have hineq1 : (S.m (E' ∩ E)).toReal ≤ (1 - κ) * (S.m E').toReal := by linarith
+    -- m(E') = m(E' ∩ E) + m(E' \ E) (as reals)
+    have hsplit : (S.m E').toReal = (S.m (E' ∩ E)).toReal + (S.m (E' \ E)).toReal := by
+      rw [← ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _)]
+      congr 1; exact (measure_inter_add_sdiff E' hE_amb).symm
+    have hsdiff_le : S.m (E' \ E) ≤ S.m (E ∆ E') :=
+      measure_mono le_sup_right
+    have hsdiff_le' : S.m (E \ E') ≤ S.m (E ∆ E') :=
+      measure_mono le_sup_left
+    -- m(E ∩ E').toReal = m(E).toReal − m(E \ E').toReal
+    have hsplit2 : (S.m (E ∩ E')).toReal + (S.m (E \ E')).toReal = (S.m E).toReal := by
+      rw [← ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _)]
+      congr 1; exact measure_inter_add_sdiff E hE'_amb
+    -- Key chain: κ · m(E'∩E) ≤ (1−κ) · m(E'\E) < (1−κ)κ²m(E)
+    -- But m(E'∩E) = m(E∩E') ≥ m(E) − m(E△E') > m(E)(1−κ²) = m(E)(1−κ)(1+κ)
+    -- These combined give (1+κ) < κ, contradiction.
+    have hsd_real : (S.m (E ∆ E')).toReal < κ ^ 2 * (S.m E).toReal := by
+      have h := (ENNReal.toReal_lt_toReal (measure_ne_top _ _)
+        (ENNReal.mul_ne_top ENNReal.ofReal_ne_top (measure_ne_top _ _))).mpr hsd
+      rwa [ENNReal.toReal_mul, ENNReal.toReal_ofReal (sq_nonneg κ)] at h
+    have inter_comm : S.m (E' ∩ E) = S.m (E ∩ E') := by rw [Set.inter_comm]
+    have hcomm : (S.m (E' ∩ E)).toReal = (S.m (E ∩ E')).toReal := by
+      rw [Set.inter_comm]
+    have h1 : κ * (S.m (E ∩ E')).toReal ≤
+        (1 - κ) * (S.m (E' \ E)).toReal := by nlinarith
+    have h2 : (S.m (E' \ E)).toReal ≤ (S.m (E ∆ E')).toReal :=
+      ENNReal.toReal_mono (measure_ne_top _ _) hsdiff_le
+    have h3 : (S.m (E \ E')).toReal ≤ (S.m (E ∆ E')).toReal :=
+      ENNReal.toReal_mono (measure_ne_top _ _) hsdiff_le'
+    have h4 : (S.m E).toReal > 0 :=
+      ENNReal.toReal_pos hEpos.ne' (measure_ne_top _ _)
+    have h5 : (1 - κ) * (S.m (E' \ E)).toReal < (1 - κ) * (κ ^ 2 * (S.m E).toReal) :=
+      mul_lt_mul_of_pos_left (lt_of_le_of_lt h2 hsd_real) (by linarith)
+    have h6 : (S.m (E \ E')).toReal < κ ^ 2 * (S.m E).toReal :=
+      lt_of_le_of_lt h3 hsd_real
+    nlinarith [mul_pos hκ_pos (sub_pos.mpr hκ_lt), sq_nonneg κ]
+  -- multiCorr E t d ≥ 1/2 · multiCorr H t d, for all d
+  have hcomp : ∀ d, S.multiCorr E t d ≥ 1 / 2 * S.multiCorr H t d :=
+    fun d => multiCorr_ge_half_of_condExp (D α) hE_amb ht d
+  -- D_α is CSZ, H ∈ D_α, m(H) > 0
+  have hH_liminf : 0 < uniformLiminf (fun n => S.multiCorr H t (C.base ^ i * C.enum n)) :=
+    hcsz α C H hH_D hH_pos t ht i
+  -- uniformLiminf of 1/2 · multiCorr H is positive
+  have hscaled : 0 < uniformLiminf (fun n => 1 / 2 * S.multiCorr H t (C.base ^ i * C.enum n)) :=
+    uniformLiminf_const_mul_pos (fun n => S.multiCorr_nonneg H t _)
+      (fun n => multiCorr_le_one H t _) (by linarith) hH_liminf
+  -- uniformLiminf(multiCorr E) ≥ uniformLiminf(1/2 · multiCorr H) > 0
+  calc (0 : ℝ) < uniformLiminf (fun n => 1 / 2 * S.multiCorr H t (C.base ^ i * C.enum n)) :=
+    hscaled
+  _ ≤ uniformLiminf (fun n => S.multiCorr E t (C.base ^ i * C.enum n)) :=
+    uniformLiminf_mono
+      (fun n => mul_nonneg (by linarith) (S.multiCorr_nonneg H t _))
+      (fun n => S.multiCorr_nonneg E t _)
+      (fun n => multiCorr_le_one E t _)
+      (fun n => hcomp _)
+
+
+/-! ### The dichotomy as a hypothesis -/
+
+/-- The Furstenberg–Zimmer dichotomy for a single step, for every system on a standard Borel space:
+for every factor `D` strictly smaller than the ambient σ-algebra, either the top factor is a
+weakly mixing extension of `D`, or some strictly larger factor is a compact extension of `D`. -/
+def DichotomyStatement : Prop :=
+  ∀ (S : CSZPort.MPS.{0}) [StandardBorelSpace S.X] (D : Factor S),
+    D.σ ≠ S.measurableSpace →
+      WeaklyMixingExtension D (Factor.top S) ∨
+        ∃ E : Factor S, D.σ < E.σ ∧ CompactExtension D E
+
+/-! ### The structure theorem -/
+
+/-- **Theorem `t:ECSZ`.**  Assuming the dichotomy, every system on a standard Borel space is CSZ.
+(Ergodicity is not needed.) -/
+theorem csz_standardBorel (hdich : DichotomyStatement) (S : CSZPort.MPS.{0})
+    [StandardBorelSpace S.X] : (Factor.top S).CSZ := by
+  set K : Set (MeasurableSpace S.X) := {M | ∃ D : Factor S, D.σ = M ∧ D.CSZ}
+  have hchain_bound : ∀ c ⊆ K, IsChain (· ≤ ·) c → ∃ ub ∈ K, ∀ z ∈ c, z ≤ ub := by
+    intro c hcK hchain
+    rcases c.eq_empty_or_nonempty with rfl | hne
+    · exact ⟨(Factor.trivial S).σ, ⟨Factor.trivial S, rfl, Factor.trivial_CSZ S⟩,
+        fun _ hz => hz.elim⟩
+    · haveI : Nonempty ↥c := hne.to_subtype
+      choose D hDσ hDcsz using fun (x : ↥c) => hcK x.prop
+      have hchain_D : ∀ i j : ↥c, (D i).σ ≤ (D j).σ ∨ (D j).σ ≤ (D i).σ := by
+        intro i j
+        rcases eq_or_ne i.val j.val with heq | hne
+        · exact Or.inl (by rw [hDσ, hDσ, heq])
+        · have := hchain i.prop j.prop hne
+          rwa [← hDσ i, ← hDσ j] at this
+      refine ⟨(factorSSup D).σ, ⟨factorSSup D, rfl, CSZ_sSup_chain hchain_D hDcsz⟩,
+        fun z hz => ?_⟩
+      have := le_factorSSup D ⟨z, hz⟩
+      rwa [hDσ] at this
+  obtain ⟨M, hMK, hmax⟩ := zorn_le₀ K hchain_bound
+  obtain ⟨D, hDσ, hDcsz⟩ := hMK
+  by_cases hDne : D.σ = S.measurableSpace
+  · intro C A hA hpos t ht i
+    exact hDcsz C A (by rwa [hDne]) hpos t ht i
+  · rcases hdich S D hDne with hwm | ⟨E, hDE, hce⟩
+    · exact CSZ_of_weaklyMixingExtension D (Factor.top S) D.le hDcsz hwm
+    · exfalso
+      have hE_csz := csz_sets_of_compactExtension D E hDcsz hce
+      have hle : M ≤ E.σ := by rw [← hDσ]; exact hDE.le
+      have hEM := hmax ⟨E, rfl, hE_csz⟩ hle
+      rw [← hDσ] at hEM
+      exact lt_irrefl _ (lt_of_lt_of_le hDE hEM)
+
+/-! ### Reduction to the symbolic model -/
+
+/-- **Proposition `p:reduction`** (route through the symbolic model): every system, in any
+universe, is CSZ.  The multiple correlations of `S` along `A` are those of the symbolic model
+on `ℤ → Fin 2` along the cylinder `{ω 0 = 1}`, and the symbolic model is standard Borel. -/
+theorem csz_all (hdich : DichotomyStatement) (S : CSZPort.MPS) : (Factor.top S).CSZ := by
+  intro C A hA' hpos t ht i
+  have hA : MeasurableSet A := hA'
+  simp_rw [← multiCorr_symbolicModel S hA]
+  haveI : StandardBorelSpace (S.symbolicModel hA).X :=
+    (inferInstance : StandardBorelSpace (ℤ → Fin 2))
+  refine csz_standardBorel hdich (S.symbolicModel hA) C symbolicSet ?_ ?_ t ht i
+  · exact measurableSet_symbolicSet
+  · change 0 < (Measure.map (S.codingMap A) S.m) symbolicSet
+    rw [Measure.map_apply (S.measurable_codingMap hA) measurableSet_symbolicSet]
+    have h := preimage_codingMap_shift S A 0
+    simp only [Function.iterate_zero, Set.preimage_id] at h
+    rw [h]; exact hpos
+
+/-! ### The function form -/
+
+/-- Everywhere-bounded measurable version of the function form: if `0 ≤ g ≤ K` everywhere, `g` is
+measurable and not a.e. zero, then the multiple averages of `g` have positive uniform `liminf`. -/
+theorem csz_functions_bounded (hcsz : (Factor.top S).CSZ) (C : CantorData) (i ℓ : ℕ) (hℓ : 1 ≤ ℓ)
+    {g : S.X → ℝ} (hgm : Measurable g) {K : ℝ} (hK : 0 < K) (hg0 : ∀ x, 0 ≤ g x)
+    (hgK : ∀ x, g x ≤ K) (hgne : ¬ g =ᵐ[S.m] 0) :
+    0 < uniformLiminf fun n =>
+      ∫ x, ∏ j ∈ Finset.range (ℓ + 1), g (S.T^[j * (C.base ^ i * C.enum n)] x) ∂S.m := by
+  -- a level `δ` at which `{δ ≤ g}` has positive measure
+  obtain ⟨δ, hδ, hApos⟩ : ∃ δ : ℝ, 0 < δ ∧ 0 < S.m {x | δ ≤ g x} := by
+    by_contra hcon
+    push Not at hcon
+    apply hgne
+    have hnull : ∀ n : ℕ, S.m {x | ((n : ℝ) + 1)⁻¹ ≤ g x} = 0 := fun n =>
+      nonpos_iff_eq_zero.1 (hcon _ (by positivity))
+    have hall : ∀ᵐ x ∂S.m, ∀ n : ℕ, ¬ ((n : ℝ) + 1)⁻¹ ≤ g x :=
+      ae_all_iff.2 fun n => measure_eq_zero_iff_ae_notMem.1 (hnull n)
+    filter_upwards [hall] with x hx
+    by_contra hne
+    have hpos : 0 < g x := lt_of_le_of_ne (hg0 x) (Ne.symm hne)
+    obtain ⟨n, hn⟩ := exists_nat_one_div_lt hpos
+    exact hx n (by rw [one_div] at hn; exact hn.le)
+  set A : Set S.X := {x | δ ≤ g x} with hA
+  have hAm : MeasurableSet A := measurableSet_le measurable_const hgm
+  set h : S.X → ℝ := fun x => g x / K with hh
+  have hhm : Measurable h := hgm.div_const K
+  have hh0 : ∀ x, 0 ≤ h x := fun x => div_nonneg (hg0 x) hK.le
+  have hh1 : ∀ x, h x ≤ 1 := fun x => (div_le_one hK).2 (hgK x)
+  set ε : ℝ := δ / K with hε
+  have hεpos : 0 < ε := div_pos hδ hK
+  set a : ℕ → ℝ := fun n =>
+    ∫ x, ∏ j ∈ Finset.range (ℓ + 1), h (S.T^[j * (C.base ^ i * C.enum n)] x) ∂S.m with ha
+  have hprod_meas : ∀ d : ℕ, Measurable fun x =>
+      ∏ j ∈ Finset.range (ℓ + 1), h (S.T^[j * d] x) := fun d =>
+    Finset.measurable_prod _ fun j _ => hhm.comp (S.measurable_T.iterate _)
+  have hprod_int : ∀ d : ℕ, Integrable (fun x =>
+      ∏ j ∈ Finset.range (ℓ + 1), h (S.T^[j * d] x)) S.m := fun d =>
+    Integrable.of_bound (hprod_meas d).aestronglyMeasurable 1 (ae_of_all _ fun x => by
+      rw [Real.norm_eq_abs, abs_of_nonneg (Finset.prod_nonneg fun j _ => hh0 _)]
+      exact Finset.prod_le_one₀ (fun j _ => hh0 _) fun j _ => hh1 _)
+  have ha0 : ∀ n, 0 ≤ a n := fun n =>
+    integral_nonneg fun x => Finset.prod_nonneg fun j _ => hh0 _
+  have ha1 : ∀ n, a n ≤ 1 := fun n => by
+    have := integral_mono (hprod_int (C.base ^ i * C.enum n)) (integrable_const (1 : ℝ))
+      (fun x => Finset.prod_le_one₀ (fun j _ => hh0 _) fun j _ => hh1 _)
+    simpa using this
+  -- lower bound by the set correlation
+  have hlow : ∀ n, ε ^ (ℓ + 1) * S.multiCorr A ℓ (C.base ^ i * C.enum n) ≤ a n := by
+    intro n
+    set d := C.base ^ i * C.enum n
+    rw [S.multiCorr_eq_integral hAm, ← integral_const_mul]
+    refine integral_mono ?_ (hprod_int d) fun x => ?_
+    · have hm : Measurable fun x => ∏ j ∈ Finset.range (ℓ + 1),
+          A.indicator (1 : S.X → ℝ) (S.T^[j * d] x) :=
+        Finset.measurable_prod _ fun j _ =>
+          (measurable_const.indicator hAm).comp (S.measurable_T.iterate _)
+      refine Integrable.const_mul (Integrable.of_bound hm.aestronglyMeasurable 1
+        (ae_of_all _ fun x => ?_)) _
+      rw [Real.norm_eq_abs, abs_of_nonneg (Finset.prod_nonneg fun j _ =>
+        Set.indicator_nonneg (fun _ _ => zero_le_one) _)]
+      exact Finset.prod_le_one₀ (fun j _ => Set.indicator_nonneg (fun _ _ => zero_le_one) _)
+        fun j _ => Set.indicator_le_self' (fun _ _ => zero_le_one) _
+    · by_cases hx : ∀ j ∈ Finset.range (ℓ + 1), S.T^[j * d] x ∈ A
+      · have h1 : ∀ j ∈ Finset.range (ℓ + 1),
+            A.indicator (1 : S.X → ℝ) (S.T^[j * d] x) = 1 := fun j hj =>
+          Set.indicator_of_mem (hx j hj) _
+        have h2 : ∀ j ∈ Finset.range (ℓ + 1), ε ≤ h (S.T^[j * d] x) := fun j hj =>
+          (div_le_div_iff_of_pos_right hK).2 (hx j hj)
+        rw [Finset.prod_congr rfl h1, Finset.prod_const_one, mul_one]
+        calc ε ^ (ℓ + 1) = ∏ j ∈ Finset.range (ℓ + 1), ε := by simp
+          _ ≤ _ := Finset.prod_le_prod₀ (fun j _ => hεpos.le) h2
+      · push Not at hx
+        obtain ⟨j, hj, hjx⟩ := hx
+        rw [Finset.prod_eq_zero hj (Set.indicator_of_notMem hjx _), mul_zero]
+        exact Finset.prod_nonneg fun j _ => hh0 _
+  have hpos : 0 < uniformLiminf fun n =>
+      ε ^ (ℓ + 1) * S.multiCorr A ℓ (C.base ^ i * C.enum n) :=
+    uniformLiminf_const_mul_pos (fun n => S.multiCorr_nonneg _ _ _)
+      (fun n => multiCorr_le_one _ _ _) (pow_pos hεpos _) (hcsz C A hAm hApos ℓ hℓ i)
+  have hpos_a : 0 < uniformLiminf a :=
+    lt_of_lt_of_le hpos (uniformLiminf_mono
+      (fun n => mul_nonneg (pow_pos hεpos _).le (S.multiCorr_nonneg _ _ _)) ha0 ha1 hlow)
+  have hscale := uniformLiminf_const_mul_pos ha0 ha1 (pow_pos hK (ℓ + 1)) hpos_a
+  convert hscale using 2
+  funext n
+  rw [ha, ← integral_const_mul]
+  refine integral_congr_ae (ae_of_all _ fun x => ?_)
+  have : ∀ j ∈ Finset.range (ℓ + 1), g (S.T^[j * (C.base ^ i * C.enum n)] x) =
+      K * h (S.T^[j * (C.base ^ i * C.enum n)] x) := fun j _ => by
+    simp only [hh]; field_simp
+  beta_reduce
+  rw [Finset.prod_congr rfl this, Finset.prod_mul_distrib]
+  simp
+
+/-- **Sets to functions** (paper `e:CSZdef`, function form).  Assuming the dichotomy, for every
+system `S`, every Cantor set `C`, dilation `i`, `ℓ ≥ 1`, and every nonnegative essentially bounded
+`f` that is not a.e. zero, the uniform `liminf` of `𝔼_{M ≤ n < N} ∫ ∏_{j ≤ ℓ} f(T^{j b^i k_n} x) dm`
+is positive, where `k_n = C.enum n`. -/
+theorem csz_functions_all (hdich : DichotomyStatement) (S : CSZPort.MPS)
+    (C : CantorData) (i ℓ : ℕ) (hℓ : 1 ≤ ℓ)
+    (f : S.X → ℝ) (hf : MemLp f ⊤ S.m) (hf0 : 0 ≤ᵐ[S.m] f) (hfne : ¬ f =ᵐ[S.m] 0) :
+    0 < uniformLiminf fun n =>
+      ∫ x, ∏ j ∈ Finset.range (ℓ + 1), f (S.T^[j * (C.base ^ i * C.enum n)] x) ∂S.m := by
+  -- an everywhere bounded measurable representative
+  set K : ℝ := (eLpNormEssSup f S.m).toReal + 1 with hK
+  have hKpos : 0 < K := by positivity
+  have hfK : ∀ᵐ x ∂S.m, f x ≤ K := by
+    have hfin : eLpNormEssSup f S.m ≠ ⊤ := by
+      have h1 := hf.eLpNorm_lt_top
+      have h2 : eLpNormEssSup f S.m < ⊤ := by
+        rwa [eLpNorm_exponent_top hf.aestronglyMeasurable] at h1
+      exact h2.ne
+    filter_upwards [enorm_ae_le_eLpNormEssSup f S.m] with x hx
+    have h1 : ‖f x‖ ≤ (eLpNormEssSup f S.m).toReal := by
+      rw [← ofReal_norm] at hx
+      exact (ENNReal.ofReal_le_iff_le_toReal hfin).1 hx
+    linarith [le_abs_self (f x), Real.norm_eq_abs (f x)]
+  set g : S.X → ℝ := fun x => max 0 (min (hf.aestronglyMeasurable.mk f x) K) with hg
+  have hgm : Measurable g :=
+    measurable_const.max (hf.aestronglyMeasurable.stronglyMeasurable_mk.measurable.min measurable_const)
+  have hfg : f =ᵐ[S.m] g := by
+    filter_upwards [hf.aestronglyMeasurable.ae_eq_mk, hf0, hfK] with x h1 h2 h3
+    change f x = max 0 (min (hf.aestronglyMeasurable.mk f x) K)
+    rw [← h1, min_eq_left h3]
+    exact (max_eq_right h2).symm
+  have hg0 : ∀ x, 0 ≤ g x := fun x => le_max_left _ _
+  have hgK : ∀ x, g x ≤ K := fun x =>
+    max_le hKpos.le (min_le_right _ _)
+  have hgne : ¬ g =ᵐ[S.m] 0 := fun h => hfne (hfg.trans h)
+  have hcsz := csz_all hdich S
+  have := csz_functions_bounded hcsz C i ℓ hℓ hgm hKpos hg0 hgK hgne
+  refine this.trans_eq (congrArg uniformLiminf (funext fun n => ?_))
+  refine integral_congr_ae ?_
+  have hae : ∀ j : ℕ, ∀ᵐ x ∂S.m, f (S.T^[j * (C.base ^ i * C.enum n)] x) =
+      g (S.T^[j * (C.base ^ i * C.enum n)] x) := fun j =>
+    (S.measurePreserving_T_iterate _).quasiMeasurePreserving.ae_eq_comp hfg
+  filter_upwards [ae_all_iff.2 hae] with x hx
+  exact (Finset.prod_congr rfl fun j _ => hx j).symm
+
+end CantorSzemeredi.Proof

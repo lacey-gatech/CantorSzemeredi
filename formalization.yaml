@@ -1,0 +1,144 @@
+version: v0.4
+project:
+  name: Szemerédi's Theorem Along Cantor Sets of Integers
+  description: >-
+    Lean 4 formalization of the three main results of Szemerédi's Theorem Along
+    Cantor Sets of Integers. For an integer Cantor set C = {0 = k_0 < k_1 < ...}
+    with base b >= 3 and digit set D containing 0 (2 <= |D| < b), every invertible
+    measure preserving system has positive uniform lower averages of the multiple
+    correlations of a non-negative non-zero bounded function along the steps
+    j k_n (Theorem t:CSZ); the indices with positive correlation form a syndetic
+    set (Corollary c:syndetic); and every set of integers of positive upper Banach
+    density has a syndetic set of indices n for which the progressions with step
+    k_n occur with positive upper Banach density (Theorem t:CSZ-Integers). The
+    Furstenberg-Zimmer dichotomy, which the paper cites, is proved here for all
+    measure preserving systems on standard Borel spaces.
+  authors:
+  - Michael Lacey
+  responsible_maintainers:
+  - Michael Lacey
+  license: Apache-2.0
+repository:
+  role: substantive-development
+sources:
+- title: Szemerédi's Theorem Along Cantor Sets of Integers
+  authors:
+  - Alex Burgin
+  - Anastasios Fragkos
+  - Michael T. Lacey
+  - Dario Mena
+  - Maria Carmen Reguera
+  type: paper
+  location: Theorem t:CSZ, Corollary c:syndetic, Theorem t:CSZ-Integers
+  relationship: formalizes
+  note: >-
+    arXiv:2602.15299v2. Errata and deviations, with locations, are in
+    docs/ERRATA-AND-DEVIATIONS.md. The files in CantorSzemeredi/Port/ are ported,
+    unchanged in their mathematics, from the authors' earlier partial
+    formalization github.com/lacey-gatech/CantorSzemeredi (commit d29e8f9).
+  author_endorsement: participated
+classification:
+  arxiv:
+  - math.DS
+  - math.NT
+  msc2020:
+  - 37A45
+  - 11B25
+  - 11A63
+automation:
+  methods:
+  - method: agent
+    models:
+    - claude-opus-5-5
+    - claude-sonnet-5-5
+    framework: Claude Code
+    tool_setup: >-
+      Agent-assisted Lean development under author direction: an orchestrating
+      agent drafted the statements for author approval, froze them, built a
+      reviewed source dependency graph, and delegated proof tasks and
+      independent reviews to subagents; Lean checks every claimed formal result.
+  - method: manual
+    framework: Lean 4
+    tool_setup: >-
+      Author approval of the exact Lean statements and definitions before any
+      proof was written, and of the formalization scope, license and release.
+  notes: >-
+    The ported files come from an earlier partial formalization by the same
+    authors, which the paper reports was organized with Claude AI. The author
+    approved exactly three statement-only placeholders in Challenge. Solution
+    proofs have no placeholders or custom axioms.
+status:
+  scope: >-
+    All three main theorems are proved with no sorry, and their statements
+    elaborate to exactly the author-approved statements. Full local lake build,
+    axiom audit (propext, Classical.choice, Quot.sound only), frozen-statement
+    checks and a local challenge/solution comparison (identical elaborated
+    statements and definitions) pass, including from a fresh clone. The
+    sandboxed Linux Comparator and an independent kernel replay have not been
+    run yet. Registry/editorial acceptance is not claimed.
+  sorry_count: 3
+  sorry_in_definitions: 0
+  axioms:
+  - propext
+  - Classical.choice
+  - Quot.sound
+  main_results:
+  - declaration: CantorSzemeredi.cantor_szemeredi
+    file: CantorSzemeredi/Frozen/MainTheorem.lean
+    sorry_count: 0
+    axioms:
+    - propext
+    - Classical.choice
+    - Quot.sound
+  - declaration: CantorSzemeredi.cantor_szemeredi_syndetic
+    file: CantorSzemeredi/Frozen/Syndetic.lean
+    sorry_count: 0
+    axioms:
+    - propext
+    - Classical.choice
+    - Quot.sound
+  - declaration: CantorSzemeredi.cantor_szemeredi_integers
+    file: CantorSzemeredi/Frozen/Integers.lean
+    sorry_count: 0
+    axioms:
+    - propext
+    - Classical.choice
+    - Quot.sound
+review:
+  status: self-assessed
+  reviewers: []
+  notes: >-
+    Independent agent reviews, each by an agent that did not write the work: a
+    statement audit before approval, slice and global reviews of the source
+    dependency graph, a seal audit of the three theorems, and a release review.
+    No human reviewer other than the author. The sandboxed Linux Comparator
+    (scripts/verify-comparator.sh, workflow palomar-preflight) has not been run.
+fidelity:
+  divergences: >-
+    "Invertible" is read as a bijection measurable in both directions
+    (T : X ≃ᵐ X) preserving a probability measure; "not identically zero" for
+    f in L^∞ as ¬ f =ᵐ[m] 0; the uniform liminf of averages as "there are c > 0
+    and L with every average over an index interval of length at least L at
+    least c"; the upper Banach density as inf over L of the sup of interval
+    densities over intervals of length at least L. The proof uses conditional
+    compactness with the minimum inside the L^∞ norm, as in the paper's proofs
+    (see erratum E1), and reaches every system through the dichotomy for standard
+    Borel systems rather than the ergodic decomposition (deviation V1).
+alignment:
+  namespace: CantorSzemeredi.Palomar
+  statements:
+  - source: Theorem t:CSZ
+    lean: CantorSzemeredi.Palomar.cantor_szemeredi
+    module: Solution.lean
+    checked_core: CantorSzemeredi.cantor_szemeredi
+    status: proved-and-axiom-audited; local challenge match passed; linux sandbox comparator not yet run
+  - source: Corollary c:syndetic
+    lean: CantorSzemeredi.Palomar.cantor_szemeredi_syndetic
+    module: Solution.lean
+    checked_core: CantorSzemeredi.cantor_szemeredi_syndetic
+    status: proved-and-axiom-audited; local challenge match passed; linux sandbox comparator not yet run
+  - source: Theorem t:CSZ-Integers
+    lean: CantorSzemeredi.Palomar.cantor_szemeredi_integers
+    module: Solution.lean
+    checked_core: CantorSzemeredi.cantor_szemeredi_integers
+    status: proved-and-axiom-audited; local challenge match passed; linux sandbox comparator not yet run

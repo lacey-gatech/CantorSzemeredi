@@ -11,7 +11,7 @@ the approximating factor.
 
 \begin{lemma}[The supremum of a chain of factors is a factor]
   \label{lem:sSup-factor}
-  \lean{CantorSzemeredi.MPS.Factor.sSup}
+  \lean{CantorSzemeredi.Proof.factorSSup}
   \leanok
   \uses{def:factor}
   Let $\{\Dbb_\alpha\}_{\alpha \in I}$ be a family of factors and $\Dbb \coloneqq \bigvee_\alpha \Dbb_\alpha$
@@ -34,7 +34,7 @@ the approximating factor.
 
 \begin{lemma}[Approximation from a chain]
   \label{lem:chain-approx}
-  \lean{CantorSzemeredi.MPS.Factor.exists_mem_chain_symmDiff_lt}
+  \lean{CantorSzemeredi.Proof.exists_mem_chain_symmDiff_lt}
   \leanok
   \uses{def:factor, lem:sSup-factor}
   Let $\{\Dbb_\alpha\}_{\alpha \in I}$ be a non-empty family of sub-$\sigma$-algebras of $\Abb$
@@ -70,7 +70,7 @@ the approximating factor.
 
 \begin{lemma}[Comparison of multiple correlations, one step at a time]
   \label{lem:chain-comparison}
-  \lean{CantorSzemeredi.MPS.multiCorr_ge_half_of_condExp}
+  \lean{CantorSzemeredi.Proof.multiCorr_ge_half_of_condExp}
   \leanok
   \uses{def:factor, lem:condexp-facts}
   Let $\Dbb_0$ be a factor, $E \in \Abb$, $t \geq 1$, $\kappa \coloneqq 1/(2(t+1))$, and put
@@ -108,7 +108,7 @@ the approximating factor.
 
 \begin{lemma}[Chains]
   \label{lem:chain}
-  \lean{CantorSzemeredi.MPS.CSZ_sSup_chain}
+  \lean{CantorSzemeredi.Proof.CSZ_sSup_chain}
   \leanok
   \uses{def:csz, def:factor, lem:sSup-factor, lem:chain-approx, lem:chain-comparison}
   Let $\{\Dbb_\alpha\}_{\alpha \in I}$ be a non-empty family of CSZ factors of $(X,\Abb,m,T)$
@@ -157,8 +157,8 @@ the approximating factor.
 
 \begin{lemma}[Dichotomy]
   \label{lem:dichotomy}
-  \lean{CantorSzemeredi.MPS.weaklyMixingExtension_or_compactExtension}
-  \notready
+  \lean{CantorSzemeredi.Proof.dichotomy}
+  \leanok
   \uses{lem:wiener}
   \uses{def:factor, def:cwm, def:compact-extension}
   Let $(X,\Abb,m,T)$ be an ergodic system satisfying the standing assumption, and let
@@ -166,6 +166,11 @@ the approximating factor.
   there is a factor $\Ebb$ with $\Dbb \subsetneq \Ebb \subset \Abb$ which is a compact extension
   of $\Dbb$.
 \end{lemma}
+\emph{Formalization note.}  The Lean proof (\texttt{CantorSzemeredi.Proof.dichotomy}) establishes
+this for every invertible measure preserving system on a standard Borel space, without assuming
+ergodicity, along the Furstenberg--Zimmer route.  It also uses the corrected form of conditional
+compactness; see \texttt{docs/ERRATA-AND-DEVIATIONS.md}, erratum E1.
+
 
 \begin{proof}
   Due to Furstenberg; see Moreira's notes, Proposition 8.6.1, for a proof in the present
@@ -485,11 +490,16 @@ the approximating factor.
 
 \begin{theorem}
   \label{thm:ecsz}
-  \lean{CantorSzemeredi.MPS.CSZ_of_ergodic}
-  \notready
+  \lean{CantorSzemeredi.Proof.csz_standardBorel}
+  \leanok
   \uses{lem:chain, lem:dichotomy, lem:extensions, lem:trivial-csz, def:csz}
   Every ergodic system satisfying the standing assumption is CSZ.
 \end{theorem}
+\emph{Formalization note.}  The Lean statement \texttt{CantorSzemeredi.Proof.csz\_standardBorel}
+proves the conclusion for every invertible measure preserving system on a standard Borel space,
+without assuming ergodicity, from the dichotomy of Lemma~\ref{lem:dichotomy}, which is itself
+proved.  This is stronger than the statement above.
+
 
 \begin{proof}
   \uses{lem:chain, lem:dichotomy, lem:extensions, lem:trivial-csz}
@@ -539,7 +549,7 @@ ergodic decomposition, and a Fatou argument adapted to uniform liminfs.
 
 \begin{lemma}[Symbolic model]
   \label{lem:symbolic-model}
-  \lean{CantorSzemeredi.MPS.symbolicModel, CantorSzemeredi.MPS.multiCorr_symbolicModel}
+  \lean{CSZPort.MPS.symbolicModel, CSZPort.MPS.multiCorr_symbolicModel}
   \leanok
   \uses{def:mps, def:csz}
   Let $(X,\Abb,m,T)$ be an invertible measure preserving system and $A \in \Abb$.  Let
@@ -592,8 +602,8 @@ ergodic decomposition, and a Fatou argument adapted to uniform liminfs.
 
 \begin{lemma}[Ergodic decomposition]
   \label{lem:ergodic-decomposition}
-  \lean{CantorSzemeredi.MPS.ergodicKernel, CantorSzemeredi.MPS.ergodicKernel_comp_measure, CantorSzemeredi.MPS.ae_map_ergodicKernel_eq, CantorSzemeredi.MPS.ae_ergodic_ergodicKernel}
-  \notready
+  \lean{CantorSzemeredi.Proof.exists_ergodic_decomposition}
+  \leanok
   \uses{def:mps, def:factor, def:joining}
   Let $(\Omega,\mathcal B,\mu,\tau)$ be an invertible measure preserving system on a standard
   Borel space with countably generated $\mathcal B$.  There is a measurable family
@@ -677,7 +687,7 @@ ergodic decomposition, and a Fatou argument adapted to uniform liminfs.
 
 \begin{lemma}[Fatou for uniform liminfs]
   \label{lem:fatou-uniform}
-  \lean{CantorSzemeredi.uniformLiminf_integral_ge}
+  \lean{CSZPort.uniformLiminf_integral_ge}
   \leanok
   \uses{def:uniform-liminf}
   Let $(Y,\nu)$ be a probability space and $c : \NNz \times Y \to [0,1]$ with
@@ -726,12 +736,17 @@ ergodic decomposition, and a Fatou argument adapted to uniform liminfs.
 
 \begin{proposition}
   \label{prop:reduction}
-  \lean{CantorSzemeredi.MPS.CSZ_of_forall_ergodic_CSZ}
-  \notready
+  \lean{CantorSzemeredi.Proof.csz_all}
+  \leanok
   \uses{thm:ecsz, def:csz, lem:symbolic-model, lem:ergodic-decomposition, lem:fatou-uniform}
   Suppose every ergodic system satisfying the standing assumption is CSZ.  Then every invertible
   measure preserving system is CSZ.
 \end{proposition}
+\emph{Formalization note.}  The formalization does not use this reduction:
+\texttt{CantorSzemeredi.Proof.csz\_all} proves directly that every invertible measure preserving
+system is CSZ, so neither the ergodic decomposition nor Fatou's lemma is needed for the main
+theorems.  See \texttt{docs/ERRATA-AND-DEVIATIONS.md}, deviation V1.
+
 
 \begin{proof}
   \uses{thm:ecsz, def:csz, lem:symbolic-model, lem:ergodic-decomposition, lem:fatou-uniform}
@@ -772,7 +787,7 @@ ergodic decomposition, and a Fatou argument adapted to uniform liminfs.
 
 \begin{theorem}[Furstenberg correspondence principle]
   \label{thm:furstenberg-correspondence}
-  \lean{CantorSzemeredi.furstenberg_correspondence}
+  \lean{CSZPort.furstenberg_correspondence}
   \leanok
   \uses{def:banach-density, def:mps, lem:symbolic-model}
   Let $A \subset \ZZ$ with $\dstar(A) > 0$.  Then there are an invertible measure preserving

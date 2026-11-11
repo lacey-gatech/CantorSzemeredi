@@ -19,7 +19,7 @@ slightly different dress.
 
 \begin{lemma}[Disjoint digit ranges add]
   \label{lem:digit-ranges}
-  \lean{CantorSzemeredi.CantorData.pow_mul_add_mem_of_lt_pow}
+  \lean{CSZPort.CantorData.pow_mul_add_mem_of_lt_pow}
   \leanok
   \uses{cor:absorb, cor:self-similar}
   Let $0 \leq h \leq h'$, let $a \in b^h\Cantor$ with $a < b^{h'}$, and let $c \in b^{h'}\Cantor$.
@@ -38,7 +38,7 @@ slightly different dress.
 
 \begin{theorem}[Cantor van der Waerden, dynamical form]
   \label{thm:cvdw}
-  \lean{CantorSzemeredi.CantorData.topological_vdW}
+  \lean{CSZPort.CantorData.topological_vdW}
   \leanok
   \uses{cor:self-similar, thm:cvdw-minimal}
   Let $(X,T)$ be a topological dynamical system and $(U_\alpha)_{\alpha \in A}$ an open cover of
@@ -69,7 +69,7 @@ slightly different dress.
 
 \begin{theorem}[Minimal case]
   \label{thm:cvdw-minimal}
-  \lean{CantorSzemeredi.CantorData.topological_vdW_minimal}
+  \lean{CSZPort.CantorData.topological_vdW_minimal}
   \leanok
   \uses{lem:color-focusing, cor:self-similar}
   Let $(X,T)$ be a minimal topological dynamical system, $U \subset X$ non-empty open,
@@ -79,8 +79,7 @@ slightly different dress.
 
 \begin{lemma}[Two consequences of minimality]
   \label{lem:minimal-facts}
-  \lean{CantorSzemeredi.IsMinimalSys.surjective, CantorSzemeredi.IsMinimalSys.exists_iterate_mem,
-    CantorSzemeredi.IsMinimalSys.exists_finset_cover}
+  \lean{CSZPort.IsMinimalSys.surjective, CSZPort.IsMinimalSys.exists_iterate_mem, CSZPort.IsMinimalSys.exists_finset_cover}
   \leanok
   Let $(X,T)$ be minimal.  Then (a) $T$ is onto; (b) for every $x \in X$ and non-empty open
   $U$ there is $n \geq 0$ with $T^nx \in U$; consequently (c) $X = \bigcup_{n \geq 0}T^{-n}U$,
@@ -125,7 +124,7 @@ slightly different dress.
 
 \begin{lemma}[Color focusing]
   \label{lem:color-focusing}
-  \lean{CantorSzemeredi.CantorData.color_focusing}
+  \lean{CSZPort.CantorData.color_focusing}
   \leanok
   \uses{cor:self-similar, lem:digit-ranges, lem:minimal-facts}
   In the setting of the proof of Theorem~\ref{thm:cvdw-minimal} --- a minimal $(X,T)$, a
@@ -202,7 +201,7 @@ slightly different dress.
 
 \begin{corollary}[Finitary form]
   \label{cor:vdw-finitary}
-  \lean{CantorSzemeredi.vdW_finitary}
+  \lean{CSZPort.vdW_finitary}
   \leanok
   \uses{thm:cvdw, lem:vdw-infinite}
   For all integers $L, \ell \geq 1$ there is $W = W(L,\ell)$ such that for every
@@ -212,7 +211,7 @@ slightly different dress.
 
 \begin{lemma}[Infinite colourings]
   \label{lem:vdw-infinite}
-  \lean{CantorSzemeredi.vdW_infinite}
+  \lean{CSZPort.vdW_infinite}
   \leanok
   \uses{thm:cvdw}
   Every $\chi : \NN \to \{1,\dots,L\}$ has a monochromatic $\ell$-term progression with common

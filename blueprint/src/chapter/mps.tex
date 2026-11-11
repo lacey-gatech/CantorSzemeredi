@@ -8,7 +8,7 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{definition}[Measure preserving system]
   \label{def:mps}
-  \lean{CantorSzemeredi.MPS}
+  \lean{CSZPort.MPS}
   \leanok
   A probability space $(X,\Abb,m)$ together with a measurable $T : X \to X$ with
   $m(T^{-1}A) = m(A)$ for all $A \in \Abb$.  \emph{Invertible} means $T$ is a measurable
@@ -25,11 +25,7 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{definition}[Spectral measure]
   \label{def:spectral-measure}
-  \lean{CantorSzemeredi.HasSpectralMeasure, CantorSzemeredi.Torus,
-    CantorSzemeredi.HasSpectralMeasure.norm_sum_sq,
-    CantorSzemeredi.HasSpectralMeasure.inner_zpow,
-    CantorSzemeredi.HasSpectralMeasure.measure_univ_eq,
-    CantorSzemeredi.hasSpectralMeasure_specMeasure, CantorSzemeredi.specMeasure}
+  \lean{CSZPort.HasSpectralMeasure, CSZPort.Torus, CSZPort.HasSpectralMeasure.norm_sum_sq, CSZPort.HasSpectralMeasure.inner_zpow, CSZPort.HasSpectralMeasure.measure_univ_eq, CSZPort.hasSpectralMeasure_specMeasure, CSZPort.specMeasure}
   \leanok
   For a unitary $U$ on a Hilbert space and a vector $v$, $\sigma_v$ is the finite positive Borel
   measure on $\TT = \RR/\ZZ$ with $\langle U^n v, v \rangle = \int_{\TT} e(n\alpha) \, d\sigma_v(\alpha)$
@@ -76,9 +72,7 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{lemma}[Wiener's lemma]
   \label{lem:wiener}
-  \lean{CantorSzemeredi.cesaroChar, CantorSzemeredi.tendsto_cesaroChar_of_ne_zero,
-    CantorSzemeredi.norm_cesaroChar_le_one, CantorSzemeredi.cesaroChar_zero,
-    CantorSzemeredi.tendsto_cesaro_sq_atoms, CantorSzemeredi.noAtoms_iff_tendsto_cesaro_zero}
+  \lean{CSZPort.cesaroChar, CSZPort.tendsto_cesaroChar_of_ne_zero, CSZPort.norm_cesaroChar_le_one, CSZPort.cesaroChar_zero, CSZPort.tendsto_cesaro_sq_atoms, CSZPort.noAtoms_iff_tendsto_cesaro_zero}
   \leanok
   For a finite positive measure $\sigma$ on $\TT$,
   $\sum_{\theta} \sigma(\{\theta\})^2 = \lim_N \avg{1 \leq n \leq N} \abs{\widehat\sigma(n)}^2$.
@@ -87,7 +81,7 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{definition}[Weak mixing]
   \label{def:weak-mixing}
-  \lean{CantorSzemeredi.MPS.WeaklyMixing}
+  \lean{CSZPort.MPS.WeaklyMixing}
   \leanok
   \uses{def:mps}
   $(X,\Abb,m,T)$ is \emph{weakly mixing} if
@@ -97,7 +91,7 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{definition}[Compact system]
   \label{def:compact-system}
-  \lean{CantorSzemeredi.MPS.CompactSystem, CantorSzemeredi.MPS.CompactFunction}
+  \lean{CSZPort.MPS.CompactSystem, CSZPort.MPS.CompactFunction}
   \leanok
   \uses{def:mps}
   $f \in L^2(X)$ is \emph{compact} if $\overline{\{T^n f : n \in \ZZ\}}$ is compact in $L^2(X)$;
@@ -106,7 +100,7 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{definition}[Factor, extension]
   \label{def:factor}
-  \lean{CantorSzemeredi.MPS.Factor, CantorSzemeredi.MPS.Factor.trivial}
+  \lean{CSZPort.MPS.Factor, CSZPort.MPS.Factor.trivial}
   \leanok
   \uses{def:mps}
   A \emph{factor} of $(X,\Abb,m,T)$ is a $T$-invariant sub-$\sigma$-algebra $\Dbb \subset \Abb$,
@@ -118,7 +112,7 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{definition}[Conditional inner product, Hilbert module]
   \label{def:hilbert-module}
-  \lean{CantorSzemeredi.MPS.condInner, CantorSzemeredi.MPS.condNorm}
+  \lean{CSZPort.MPS.condInner, CSZPort.MPS.condNorm}
   \leanok
   \uses{def:factor}
   For $f,g \in L^2(\Ebb)$ put $\cip{f}{g} \coloneqq \Exp_m(f \bar g \mid \Dbb) \in L^2(\Dbb)$,
@@ -128,8 +122,7 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{lemma}[Conditional Cauchy--Schwarz and triangle inequalities]
   \label{lem:cond-cs}
-  \lean{CantorSzemeredi.MPS.abs_condInner_le,
-    CantorSzemeredi.MPS.condInner_quadratic_nonneg}
+  \lean{CSZPort.MPS.abs_condInner_le, CSZPort.MPS.condInner_quadratic_nonneg}
   \leanok
   \uses{def:hilbert-module}
   $\abs{\cip{f}{g}} \leq \cnorm{f}\,\cnorm{g}$ and $\cnorm{f+g} \leq \cnorm{f} + \cnorm{g}$,
@@ -138,7 +131,7 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{lemma}[Conditional expectation commutes with $T$]
   \label{lem:condexp-commutes}
-  \lean{CantorSzemeredi.MPS.condExp_comp}
+  \lean{CSZPort.MPS.Factor.condExp_comp}
   \leanok
   \uses{def:factor}
   If $\Dbb$ is $T$-invariant then $\Exp(a \circ T \mid \Dbb) = \Exp(a \mid \Dbb) \circ T$.
@@ -146,7 +139,7 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{definition}[Conditionally weakly mixing function; weakly mixing extension]
   \label{def:cwm}
-  \lean{CantorSzemeredi.MPS.CondWeaklyMixing, CantorSzemeredi.MPS.WeaklyMixingExtension}
+  \lean{CSZPort.MPS.CondWeaklyMixing, CSZPort.MPS.WeaklyMixingExtension}
   \leanok
   \uses{def:hilbert-module}
   $f \in L^2(\Ebb)$ is \emph{conditionally weakly mixing} if
@@ -185,8 +178,7 @@ $\sigma$-algebra.  Proposition~\ref{prop:reduction} removes this assumption at t
 
 \begin{definition}[Conditionally compact function; compact extension]
   \label{def:compact-extension}
-  \lean{CantorSzemeredi.MPS.CondCompact, CantorSzemeredi.MPS.CompactExtension,
-    CantorSzemeredi.MPS.MemL2}
+  \lean{CSZPort.MPS.CondCompact, CSZPort.MPS.CompactExtension, CSZPort.MPS.MemL2}
   \leanok
   \uses{def:hilbert-module}
   $f \in L^2(\Ebb)$ is \emph{conditionally compact} if for every $\epsilon > 0$ there are
@@ -247,7 +239,7 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
 
 \begin{definition}[Relatively independent self-joining]
   \label{def:joining}
-  \lean{CantorSzemeredi.MPS.joining, CantorSzemeredi.MPS.condKernel}
+  \lean{CSZPort.MPS.joining, CSZPort.MPS.condKernel}
   \leanok
   \uses{def:factor}
   $\lambda \coloneqq \int m_x \otimes m_x \, dm(x)$, a probability measure on $X \times X$.
@@ -255,9 +247,7 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
 
 \begin{lemma}[Properties of $\lambda$]
   \label{lem:joining}
-  \lean{CantorSzemeredi.MPS.joining_invariant, CantorSzemeredi.MPS.joining_prod_apply,
-    CantorSzemeredi.MPS.condKernel_comp, CantorSzemeredi.MPS.prodMap,
-    CantorSzemeredi.MPS.integral_joining}
+  \lean{CSZPort.MPS.joining_invariant, CSZPort.MPS.joining_prod_apply, CSZPort.MPS.condKernel_comp, CSZPort.MPS.prodMap, CSZPort.MPS.integral_joining}
   \leanok
   \uses{def:joining, lem:condexp-commutes}
   For $a, a' \in L^\infty(X)$,
@@ -300,13 +290,7 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
 
 \begin{lemma}[Conditional weak mixing gives atomless spectral measures]
   \label{lem:atomless}
-  \lean{CantorSzemeredi.MPS.koopman, CantorSzemeredi.MPS.coeFn_koopman_zpow,
-    CantorSzemeredi.MPS.inner_koopman_zpow_eq_integral, CantorSzemeredi.MPS.toLpC,
-    CantorSzemeredi.MPS.inner_toLpC, CantorSzemeredi.MPS.integral_eq_integral_condInner,
-    CantorSzemeredi.MPS.tendsto_cesaro_integral_abs_condInner,
-    CantorSzemeredi.MPS.noAtoms_specMeasure_of_condWeaklyMixing,
-    CantorSzemeredi.MPS.prodSystem, CantorSzemeredi.MPS.integral_tensorSq_comp,
-    CantorSzemeredi.MPS.noAtoms_specMeasure_prod_of_condWeaklyMixing}
+  \lean{CSZPort.MPS.koopman, CSZPort.MPS.coeFn_koopman_zpow, CSZPort.MPS.inner_koopman_zpow_eq_integral, CSZPort.MPS.toLpC, CSZPort.MPS.inner_toLpC, CSZPort.MPS.integral_eq_integral_condInner, CSZPort.MPS.tendsto_cesaro_integral_abs_condInner, CSZPort.MPS.noAtoms_specMeasure_of_condWeaklyMixing, CSZPort.MPS.prodSystem, CSZPort.MPS.integral_tensorSq_comp, CSZPort.MPS.noAtoms_specMeasure_prod_of_condWeaklyMixing}
   \leanok
   \uses{def:cwm, lem:joining, lem:wiener, def:spectral-measure}
   Let $f \in L^\infty(\Ebb)$ be conditionally weakly mixing and set $G \coloneqq f \otimes \bar f$.
@@ -338,10 +322,7 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
 
 \begin{lemma}[Powers]
   \label{lem:powers}
-  \lean{CantorSzemeredi.MPS.CompactExtension.pow, CantorSzemeredi.MPS.CondCompact.pow,
-    CantorSzemeredi.MPS.pow, CantorSzemeredi.MPS.pow_iter_eq,
-    CantorSzemeredi.MPS.tendsto_pow_pair, CantorSzemeredi.MPS.CondWeaklyMixing.pow,
-    CantorSzemeredi.MPS.avg_subsample_le}
+  \lean{CSZPort.MPS.CompactExtension.pow, CSZPort.MPS.CondCompact.pow, CSZPort.MPS.pow, CSZPort.MPS.pow_iter_eq, CSZPort.MPS.tendsto_pow_pair, CSZPort.MPS.CondWeaklyMixing.pow, CSZPort.MPS.avg_subsample_le}
   \leanok
   \uses{def:compact-extension, def:cwm}
   Let $k \geq 1$.
@@ -382,8 +363,7 @@ so that $\Exp(a \mid \Dbb)(x) = \int a \, dm_x$ for $a \in L^\infty(X)$ and a.e.
 
 \begin{lemma}[van der Corput]
   \label{lem:vdc}
-  \lean{CantorSzemeredi.VdCData, CantorSzemeredi.corr,
-    CantorSzemeredi.VdCData.van_der_corput, CantorSzemeredi.VdCData.van_der_corput_avg}
+  \lean{CSZPort.VdCData, CSZPort.corr, CSZPort.VdCData.van_der_corput, CSZPort.VdCData.van_der_corput_avg}
   \leanok
   Let $u_M,\dots,u_{N-1}$ be vectors of norm at most $1$ in a Hilbert space and $1 \leq H < N-M$.
   Then

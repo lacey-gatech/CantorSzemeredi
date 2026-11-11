@@ -1,53 +1,67 @@
-# Work plan
+# Work plan and status
 
-Status as of the handoff (git HEAD `6c9969b`, "Van der Waerden chapter formalized"). Working tree was clean. Conventions are in `CLAUDE.md`.
+## Status
 
-## Done (sorry-free, axioms checked, blueprint annotated)
+The formalization is complete. The three main theorems are proved with no `sorry` and depend only
+on `propext`, `Classical.choice` and `Quot.sound`:
 
-- **Cantor** (`cantor.tex`): `Cantor/Enum.lean`, `Cantor/Residues.lean`, `Cantor/Defs.lean`. Includes `pow_mul_enum_add_mem`, `enum_block`, `enum_sub_enum_eq`, `card_goodResidues_ge`, `enum_zero`.
-- **MPS and extensions** (`mps.tex`): `Dynamics/System.lean`, `Dynamics/Extensions.lean` (`WeaklyMixing`, `CondWeaklyMixing`, `WeaklyMixingExtension`, `MemModule`, `MemL2`, `Factor.toPow`).
-- **CSZ and compact systems** (`csz.tex`, `compact.tex`): `Dynamics/CSZ.lean` (`Factor.CSZ`, `multiCorr`, `trivial_CSZ`), `Dynamics/CompactSystem.lean` (`Factor.top`, `CSZ_of_compactSystem`).
-- **Weak mixing** (`weakmixing.tex`):
-  - Main estimate, in `WMInduction.lean` through `WMMainFinal.lean`. Final result: `MPS.wm_extension_tendsto`.
-  - `WMShift`, `WMTransfer`, `WMPair`, `WMAverage`, `WMLimit`, `WMClass`, `WMPerShift`, `WMCorr`, `WMSpectral`, `WMAverageShift`, `WMVdC`, `WMStar`.
-  - Sets to functions: `MPS.cesaroTo0_L2`, `MPS.weaklyMixingExtension_of_weaklyMixing`.
-  - Part (W) of the extension principles: `WMPartW.lean`, `MPS.CSZ_of_weaklyMixingExtension`.
-  - `cor:wm-system`: `MPS.weaklyMixing_tendsto_prod`.
-  - Weakly mixing part of `cor:wm-compact-are-csz`: `MPS.CSZ_of_weaklyMixing`.
-- **Van der Waerden** (`vdw.tex`): `VdW/Digits.lean`, `VdW/Minimal.lean`, `VdW/Focus.lean`, `VdW/Cvdw.lean`, `VdW/Infinite.lean`, `VdW/Finitary.lean`. Final results: `CantorData.topological_vdW`, `vdW_infinite`, `vdW_finitary`.
-- **Basic**: `CantorSzemeredi/Basic.lean` holds `syndetic_of_uniformLiminf_pos` (used by `cor:syndetic`).
-
-## Remaining
-
-### 1. Structure chapter (`structure.tex`), in document order
-
-The first item is done; the rest are not started.
-
-| Label | Lean name in blueprint | Status |
+| Blueprint | Lean | File |
 |---|---|---|
-| `lem:sSup-factor` | `CantorSzemeredi.MPS.Factor.sSup` | **done** (`Structure.lean`) |
-| `lem:chain-approx` | `CantorSzemeredi.MPS.Factor.exists_mem_chain_symmDiff_lt` | **done** (`Structure.lean`) |
-| `lem:chain-comparison` | `CantorSzemeredi.MPS.multiCorr_ge_half_of_condExp` | **done** (`Structure.lean`) |
-| `lem:chain` | `CantorSzemeredi.MPS.CSZ_sSup_chain` | **done** (`Structure.lean`) |
-| `lem:dichotomy` | `CantorSzemeredi.MPS.weaklyMixingExtension_or_compactExtension` | **stated with `sorry`** (`Structure.lean`; blueprint `\notready`) |
-| `thm:ecsz` | `CantorSzemeredi.MPS.CSZ_of_ergodic` | **proof complete** (`Structure.lean`; depends on `sorry` in `lem:dichotomy`; blueprint `\notready`) |
-| `lem:symbolic-model` | `CantorSzemeredi.MPS.symbolicModel`, `CantorSzemeredi.MPS.multiCorr_symbolicModel` | **done** (`SymbolicModel.lean`) |
-| `lem:ergodic-decomposition` | `CantorSzemeredi.MPS.ergodicKernel`, `ergodicKernel_comp_measure`, `ae_map_ergodicKernel_eq`, `ae_ergodic_ergodicKernel` | **proof complete** (`ErgodicDecomposition.lean`; `sorry` for `@CountablyGenerated S.X I.σ` — needs Blackwell–Mackey: every sub-σ-algebra of a standard Borel space is countably generated, which Mathlib lacks; blueprint `\notready`) |
-| `lem:fatou-uniform` | `CantorSzemeredi.uniformLiminf_integral_ge` | **done** (`Basic.lean`) |
-| `prop:reduction` | `CantorSzemeredi.MPS.CSZ_of_forall_ergodic_CSZ` | **proof complete** (`Structure.lean`; depends on `sorry` in `lem:ergodic-decomposition`; blueprint `\notready`) |
-| `thm:furstenberg-correspondence` | `CantorSzemeredi.furstenberg_correspondence` | **done** (`Correspondence.lean`; blueprint `\leanok`) |
+| `thm:main-ergodic` (`t:CSZ`) | `CantorSzemeredi.cantor_szemeredi` | `CantorSzemeredi/Frozen/MainTheorem.lean` |
+| `cor:syndetic` (`c:syndetic`) | `CantorSzemeredi.cantor_szemeredi_syndetic` | `CantorSzemeredi/Frozen/Syndetic.lean` |
+| `thm:main-integers` (`t:CSZ-Integers`) | `CantorSzemeredi.cantor_szemeredi_integers` | `CantorSzemeredi/Frozen/Integers.lean` |
 
-Notes:
-- The names above are placeholders from the blueprint. Confirm each one against the proof before writing it, and rename the blueprint entry if the final name differs.
-- Before starting, check the `Dynamics/Fibre.lean` import in `CantorSzemeredi.lean`. Its role in this chapter is unknown, so read it first.
-- Work through the chapter in the order listed. `lem:chain` depends on `lem:sSup-factor` and `lem:chain-approx`.
+Every blueprint item carries `\leanok` except `lem:extensions`, which has a statement only. Every
+`\lean{...}` name in the blueprint resolves to a declaration in this repository.
 
-### 2. Overview (`overview.tex`)
+Verified on the merged tree: `lake build` (9129 jobs, no errors), `lake build Challenge Solution`,
+and all five scripts in `scripts/` (axiom audit, frozen anchors, frozen ABI, module check,
+challenge match). See `README.md` for the commands.
 
-- `thm:main-ergodic` → `CantorSzemeredi.main_ergodic`. **proof complete** (`Main.lean`; sorry-free, but axioms include `sorryAx` via upstream `lem:dichotomy` and `lem:ergodic-decomposition`; blueprint `\notready`).
-- `cor:syndetic` → `CantorSzemeredi.syndetic_of_uniformLiminf_pos`. Done (`\leanok`).
-- `thm:main-integers` → `CantorSzemeredi.main_integers`. **proof complete** (`Main.lean`; sorry-free, but axioms include `sorryAx` via upstream dependencies; blueprint `\notready`).
+## How this repository was assembled
 
-## Next step
+Two formalizations were merged.
 
-Resolve remaining `sorry` in `lem:dichotomy` and `lem:ergodic-decomposition` to clear `sorryAx` from the main theorems and mark them `\leanok`.
+1. **The partial formalization** developed here through commit `d29e8f9`: the Cantor set, measure
+   preserving systems and factors, the CSZ property, the compact and weakly mixing extension
+   principles, the symbolic model, Furstenberg correspondence, and the van der Waerden chapter.
+   It had two `sorry`: the Furstenberg–Zimmer dichotomy (`lem:dichotomy`) and the
+   `CountablyGenerated` instance in the ergodic decomposition (`lem:ergodic-decomposition`).
+
+2. **A completion of it** that removed both. Its `Port/` tree is that same development, ported
+   unchanged in its mathematics to Lean's module system under the namespace `CSZPort`, plus a
+   `Proof/` tree proving the dichotomy along the Furstenberg–Zimmer route and the ergodic
+   decomposition independently, and a `Frozen/` tree holding the author-approved statements.
+
+The merge took the second as the base, since it is the superset on the main line and is verified
+end to end, and carried over the parts of the first that it had left out as not needed:
+
+- `Port/VdW/` — the Cantor-set van der Waerden theorem of §4 (`topological_vdW`, `vdW_infinite`,
+  `vdW_finitary`);
+- `Port/Dynamics/WMSystem.lean` — weakly mixing systems are CSZ (`cor:wm-system`,
+  `cor:wm-compact-are-csz`);
+- `Port/Dynamics/WienerAtoms.lean` and `Port/Dynamics/CompactRoots.lean`.
+
+Those nine files were converted to the module system and the `CSZPort` namespace by the same
+recipe as the rest of `Port/`, and each names its origin in its header.
+
+The blueprint was kept and repointed: ported declarations moved from `CantorSzemeredi.…` to
+`CSZPort.…`, and the structure and overview chapters now name the declarations in `Proof/` and
+`Frozen/`. Where the Lean statement is stronger than the blueprint's, the item carries a
+formalization note; see `docs/ERRATA-AND-DEVIATIONS.md`.
+
+## Deviations worth remembering
+
+- The reduction to ergodic systems (`prop:reduction`) is not used. The dichotomy is proved for
+  every system on a standard Borel space, without ergodicity, so `csz_all` gives the conclusion
+  directly. The ergodic decomposition is proved anyway. (Deviation V1.)
+- The paper's definition of conditional compactness places `min_q` outside the `L^∞` norm, which
+  read literally excludes standard compact extensions. The formalization uses Moreira's form.
+  (Erratum E1.)
+
+## If work resumes
+
+- `lem:extensions` (`csz_sets_of_compactExtension`) is the one blueprint item with a statement but
+  no `\leanok`; check whether the proved parts now cover it.
+- The frozen statements and their hashes must not change. Anything else is ordinary work under the
+  conventions in `CLAUDE.md`.

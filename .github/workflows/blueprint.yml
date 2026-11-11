@@ -58,8 +58,7 @@ jobs:
           leanblueprint web
 
       - name: Check that every \lean declaration exists
-        continue-on-error: true
-        run: leanblueprint checkdecls
+        run: python3 -I scripts/check_blueprint_decls.py
 
       - name: Assemble the site
         run: |

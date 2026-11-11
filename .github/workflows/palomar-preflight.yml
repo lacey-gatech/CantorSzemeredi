@@ -1,0 +1,53 @@
+name: Private Palomar preflight
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_label:
+        description: "Enabled GitHub-hosted Linux runner meeting the capacity floors"
+        required: true
+        type: string
+        default: ubuntu-latest
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ${{ inputs.runner_label }}
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Check runner capacity
+        env:
+          RUNNER_ENVIRONMENT: ${{ runner.environment }}
+          RUNNER_OS: ${{ runner.os }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import shutil
+          from pathlib import Path
+
+          if os.environ.get("RUNNER_ENVIRONMENT") != "github-hosted" or os.environ.get("RUNNER_OS") != "Linux":
+              raise SystemExit("A GitHub-hosted Linux runner is required.")
+          memory_kib = next(int(line.split()[1]) for line in Path("/proc/meminfo").read_text().splitlines() if line.startswith("MemTotal:"))
+          free = shutil.disk_usage(os.environ["GITHUB_WORKSPACE"]).free
+          print(f"Memory: {memory_kib * 1024 / 1024**3:.2f} GiB; workspace free: {free / 1024**3:.2f} GiB")
+          if memory_kib * 1024 < 14 * 1024**3 or free < 20 * 1024**3:
+              raise SystemExit("Runner needs at least 14 GiB memory and 20 GiB free workspace.")
+          PY
+      - name: Set up pinned Lean
+        uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9
+        with:
+          build: false
+      - name: Install Comparator sandbox
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bubblewrap
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+      - name: Build and run sandboxed Comparator
+        run: bash scripts/verify-comparator.sh
