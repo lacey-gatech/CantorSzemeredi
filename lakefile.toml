@@ -15,12 +15,6 @@ name = "mathlib"
 scope = "leanprover-community"
 rev = "v4.35.0"
 
-# Used by `leanblueprint checkdecls` to verify that every declaration named in a
-# `\lean{...}` macro of the blueprint actually exists in this project.
-[[require]]
-name = "checkdecls"
-git = "https://github.com/PatrickMassot/checkdecls.git"
-
 [[lean_lib]]
 name = "CantorSzemeredi"
 globs = ["CantorSzemeredi.+"]
