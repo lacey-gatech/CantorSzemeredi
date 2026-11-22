@@ -48,6 +48,7 @@ classification:
   msc2020:
   - 37A45
   - 11B25
+  - 11B30
   - 11A63
 automation:
   methods:
