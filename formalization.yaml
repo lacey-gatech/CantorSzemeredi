@@ -35,7 +35,11 @@ sources:
     arXiv:2602.15299v2. Errata and deviations, with locations, are in
     docs/ERRATA-AND-DEVIATIONS.md. The files in CantorSzemeredi/Port/ are ported,
     unchanged in their mathematics, from the authors' earlier partial
-    formalization github.com/lacey-gatech/CantorSzemeredi (commit d29e8f9).
+    formalization at commit d29e8f9 of this same repository
+    (github.com/lacey-gatech/CantorSzemeredi), into which this development has
+    since been merged. Port/ also carries that formalization's van der Waerden
+    chapter and other results the three main theorems do not use; they are proved
+    and are kept, but nothing outside the main line is claimed here.
   author_endorsement: participated
 classification:
   arxiv:
@@ -51,6 +55,10 @@ automation:
     models:
     - claude-opus-5-5
     - claude-sonnet-5-5
+    - claude-opus-5
+    - claude-haiku-5-5
+    - claude-opus-4-6
+    - claude-fable-5-1
     framework: Claude Code
     tool_setup: >-
       Agent-assisted Lean development under author direction: an orchestrating
@@ -64,7 +72,11 @@ automation:
       proof was written, and of the formalization scope, license and release.
   notes: >-
     The ported files come from an earlier partial formalization by the same
-    authors, which the paper reports was organized with Claude AI. The author
+    authors, which the paper reports was organized with Claude AI. The model list
+    is the union over both developments, now merged: the first two models built
+    CantorSzemeredi/Proof/ and Frozen/, and the remaining four are those recorded
+    in the Co-Authored-By trailers of this repository's own history, which
+    produced CantorSzemeredi/Port/ and carried out the merge. The author
     approved exactly three statement-only placeholders in Challenge. Solution
     proofs have no placeholders or custom axioms.
 status:
@@ -73,9 +85,11 @@ status:
     elaborate to exactly the author-approved statements. Full local lake build,
     axiom audit (propext, Classical.choice, Quot.sound only), frozen-statement
     checks and a local challenge/solution comparison (identical elaborated
-    statements and definitions) pass, including from a fresh clone. The
-    sandboxed Linux Comparator and an independent kernel replay have not been
-    run yet. Registry/editorial acceptance is not claimed.
+    statements and definitions) pass, and were re-run from a fresh clone after
+    the two developments were merged into this repository. Mathlib and its
+    transitive packages are the only dependencies. The sandboxed Linux
+    Comparator and an independent kernel replay have not been run yet.
+    Registry/editorial acceptance is not claimed.
   sorry_count: 3
   sorry_in_definitions: 0
   axioms:

@@ -57,7 +57,7 @@ python3 -I scripts/challenge_match.py
   first, or `lake env lean` uses a stale `.olean`.
 - Blueprint: `python3 -I scripts/check_blueprint_decls.py` verifies every `\lean{...}` name
   exists. Do not use `leanblueprint checkdecls`; it imports `Challenge` too and clashes with the
-  frozen definitions.
+  frozen definitions, and it is deliberately not a dependency (Mathlib is the only one).
 
 ## Work order
 

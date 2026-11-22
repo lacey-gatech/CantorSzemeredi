@@ -101,7 +101,8 @@ python3 -I scripts/check_blueprint_decls.py   # checks every \lean{...} declarat
 `leanblueprint checkdecls` is not used: it imports every library of the package, including
 `Challenge`, which by design re-declares the three definitions from Mathlib alone, so the import
 clashes before any name is checked. `scripts/check_blueprint_decls.py` does the same job against
-the `CantorSzemeredi` library alone.
+the `CantorSzemeredi` library alone, so `checkdecls` is not a dependency of this project:
+Mathlib is the only one.
 
 `.github/workflows/blueprint.yml` builds the PDF and the web version on every push and runs that
 check. Publishing to
