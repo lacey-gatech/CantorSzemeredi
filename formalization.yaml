@@ -88,8 +88,12 @@ status:
     statements and definitions) pass, and were re-run from a fresh clone after
     the two developments were merged into this repository. Mathlib and its
     transitive packages are the only dependencies. The sandboxed Linux
-    Comparator and an independent kernel replay have not been run yet.
-    Registry/editorial acceptance is not claimed.
+    Comparator has been run and passed, on the palomar-preflight workflow at
+    commit f317be8: inside the sandbox it rebuilt the project, re-ran the
+    frozen-statement guard, the axiom audit and the challenge/solution
+    comparison, and had the exported solution accepted independently by three
+    kernels, con-ron (58192 declarations, --verified), nanoda and the Lean
+    default kernel. Registry/editorial acceptance is not claimed.
   sorry_count: 3
   sorry_in_definitions: 0
   axioms:
@@ -126,7 +130,9 @@ review:
     statement audit before approval, slice and global reviews of the source
     dependency graph, a seal audit of the three theorems, and a release review.
     No human reviewer other than the author. The sandboxed Linux Comparator
-    (scripts/verify-comparator.sh, workflow palomar-preflight) has not been run.
+    (scripts/verify-comparator.sh, workflow palomar-preflight) was run at commit
+    f317be8 and passed, the solution being accepted by the con-ron, nanoda and
+    Lean default kernels.
 fidelity:
   divergences: >-
     "Invertible" is read as a bijection measurable in both directions
@@ -145,14 +151,17 @@ alignment:
     lean: CantorSzemeredi.Palomar.cantor_szemeredi
     module: Solution.lean
     checked_core: CantorSzemeredi.cantor_szemeredi
-    status: proved-and-axiom-audited; local challenge match passed; linux sandbox comparator not yet run
+    status: proved-and-axiom-audited; challenge match passed; sandboxed Linux Comparator
+      passed at f317be8 (con-ron, nanoda and Lean default kernels)
   - source: Corollary c:syndetic
     lean: CantorSzemeredi.Palomar.cantor_szemeredi_syndetic
     module: Solution.lean
     checked_core: CantorSzemeredi.cantor_szemeredi_syndetic
-    status: proved-and-axiom-audited; local challenge match passed; linux sandbox comparator not yet run
+    status: proved-and-axiom-audited; challenge match passed; sandboxed Linux Comparator
+      passed at f317be8 (con-ron, nanoda and Lean default kernels)
   - source: Theorem t:CSZ-Integers
     lean: CantorSzemeredi.Palomar.cantor_szemeredi_integers
     module: Solution.lean
     checked_core: CantorSzemeredi.cantor_szemeredi_integers
-    status: proved-and-axiom-audited; local challenge match passed; linux sandbox comparator not yet run
+    status: proved-and-axiom-audited; challenge match passed; sandboxed Linux Comparator
+      passed at f317be8 (con-ron, nanoda and Lean default kernels)
